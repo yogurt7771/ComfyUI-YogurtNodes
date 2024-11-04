@@ -13,7 +13,8 @@ class StringLinesSwitch:
             }
         }
 
-    RETURN_TYPES = ("STRING",)
+    RETURN_TYPES = ("STRING", "INT",)
+    RETURN_NAMES = ("line", "count")
     FUNCTION = "get_line"
     DESCRIPTION = "Get line from multiline string by index"
     CATEGORY = "YogurtNodes/Utils"
@@ -21,8 +22,9 @@ class StringLinesSwitch:
 
     def get_line(self, text: str, index: int):
         lines = str(text).splitlines()
+        count = len(lines)
         try:
             result = lines[index]
         except IndexError:
             result = ""
-        return {"ui": result, "result": (result,)}
+        return {"ui": {"text": result}, "result": (result, count)}
