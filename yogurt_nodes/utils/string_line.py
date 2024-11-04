@@ -20,8 +20,9 @@ class StringLinesSwitch:
     NODE_NAME = "String Lines Switch"
 
     def get_line(self, text: str, index: int):
-        lines = text.splitlines()
+        lines = str(text).splitlines()
         try:
-            return lines[index]
+            result = lines[index]
         except IndexError:
-            return ""
+            result = ""
+        return {"ui": result, "result": (result,)}
