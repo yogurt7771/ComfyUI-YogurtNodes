@@ -19,6 +19,7 @@ class StringLinesSwitch:
     DESCRIPTION = "Get line from multiline string by index"
     CATEGORY = "YogurtNodes/Utils"
     NODE_NAME = "String Lines Switch"
+    OUTPUT_NODE = True
 
     def get_line(self, text: str, index: int):
         lines = str(text).splitlines()
