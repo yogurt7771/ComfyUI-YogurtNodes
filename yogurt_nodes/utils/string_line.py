@@ -8,8 +8,8 @@ class StringLinesSwitch:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "text": ("STRING", {"multiline": True, "tooltip": "Input multiline text"}),
-                "index": ("INTEGER", {"tooltip": "Line index, starting from 0"}),
+                "text": ("STRING", {"multiline": True}),
+                "index": ("INT", {"default": 0, "step": 1}),
             }
         }
 
@@ -21,6 +21,7 @@ class StringLinesSwitch:
 
     def get_line(self, text: str, index: int):
         lines = text.splitlines()
-        if index < 0 or index >= len(lines):
+        try:
+            return lines[index]
+        except IndexError:
             return ""
-        return lines[index]
