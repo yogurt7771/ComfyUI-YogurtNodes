@@ -1,6 +1,75 @@
 {
-  "image": "mcr.microsoft.com/devcontainers/universal:2",
-  "features": {
-    "ghcr.io/devcontainers/features/python:1": {}
-  }
+    "image": "mcr.microsoft.com/devcontainers/base:jammy",
+    "features": {
+        "ghcr.io/rocker-org/devcontainer-features/miniforge:1": {
+            "version": "latest",
+            "variant": "Miniforge3"
+        },
+        "ghcr.io/devcontainers-community/features/llvm:3": {}
+    },
+    "containerEnv": {
+        "PIP_ROOT_USER_ACTION": "ignore"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "aaron-bond.better-comments",
+                "benjamin-simmonds.pythoncpp-debug",
+                "bennycode.sort-everything",
+                "christian-kohler.path-intellisense",
+                "christian-kohler.path-intellisense",
+                "codezombiech.gitignore",
+                "cschlosser.doxdocgen",
+                "cstrap.python-snippets",
+                "cweijan.vscode-typora",
+                "donjayamanne.githistory",
+                "DotJoshJohnson.xml",
+                "EditorConfig.EditorConfig",
+                "eriklynd.json-tools",
+                "GitHub.copilot-chat",
+                "GitHub.copilot",
+                "github.vscode-github-actions",
+                "github.vscode-github-actions",
+                "GitHub.vscode-pull-request-github",
+                "huangyuyao.pycuda-highlighter",
+                "huizhou.githd",
+                "iterative.dvc",
+                "JackBoosY.vcpkg-cmake-tools",
+                "KevinRose.vsc-python-indent",
+                "kriegalex.vscode-cudacpp",
+                "mechatroner.rainbow-csv",
+                "mhutchie.git-graph",
+                "ms-python.black-formatter",
+                "ms-python.isort",
+                "ms-python.python",
+                "ms-toolsai.datawrangler",
+                "ms-toolsai.jupyter-renderers",
+                "ms-toolsai.jupyter",
+                "ms-toolsai.jupyter",
+                "ms-toolsai.tensorboard",
+                "ms-toolsai.vscode-jupyter-cell-tags",
+                "ms-toolsai.vscode-jupyter-slideshow",
+                "ms-vscode.cpptools",
+                "ms-vscode.live-server",
+                "njpwerner.autodocstring",
+                "njqdev.vscode-python-typehint",
+                "redhat.vscode-xml",
+                "redhat.vscode-yaml",
+                "richie5um2.vscode-sort-json",
+                "tamasfe.even-better-toml",
+                "theqtcompany.qt",
+                "ultram4rine.vscode-choosealicense",
+                "vscode-icons-team.vscode-icons"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/opt/conda/bin/python",
+                "python.terminal.activateEnvInCurrentTerminal": true,
+                "python.terminal.activateEnvironment": true,
+                "workbench.iconTheme": "vscode-icons"
+            }
+        }
+    },
+    "name": "Python 3",
+    "postCreateCommand": "bash .devcontainer/setup.sh",
+    "remoteUser": "root"
 }

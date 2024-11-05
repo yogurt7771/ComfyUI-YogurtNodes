@@ -14,10 +14,13 @@ class CreateDirectory:
         }
 
     RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("path",)
+
     FUNCTION = "create_directory"
+
+    _NODE_NAME = "Create Directory"
     DESCRIPTION = "Create a directory"
-    CATEGORY = "YogurtNodes/Utils"
-    NODE_NAME = "Create Directory"
+    CATEGORY = "YogurtNodes/IO"
 
     def create_directory(self, path):
         Path(path).mkdir(parents=True, exist_ok=True)
@@ -37,10 +40,13 @@ class CreateParentDirectory:
         }
 
     RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("path",)
+
     FUNCTION = "create_parent_directory"
+
+    _NODE_NAME = "Create Parent Directory"
     DESCRIPTION = "Create a parent directory"
-    CATEGORY = "YogurtNodes/Utils"
-    NODE_NAME = "Create Parent Directory"
+    CATEGORY = "YogurtNodes/IO"
 
     def create_parent_directory(self, path):
         Path(path).parent.mkdir(parents=True, exist_ok=True)
