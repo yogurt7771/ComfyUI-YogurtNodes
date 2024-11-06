@@ -29,4 +29,4 @@ class StringLinesSwitch:
             result = lines[index]
         except IndexError:
             result = ""
-        return {"result": (result, count), "ui": {"text": result}}
+        return {"ui": {"text": [result]}, "result": (result, count)}

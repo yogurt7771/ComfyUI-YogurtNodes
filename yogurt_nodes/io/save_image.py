@@ -74,7 +74,7 @@ class SaveImageBridge:
             })
             counter += 1
 
-        return { "ui": { "images": results }, "result": (results,) }
+        return { "ui": { "images": results }, "result": (images,) }
 
 
 class PreviewImageBridge(SaveImageBridge):
