@@ -23,8 +23,8 @@ class SaveImageBridge:
                 "images": ("IMAGE", {"tooltip": "The images to save."}),
                 "output_dir": ("STRING", {"default": "", "tooltip": "The directory to save the images to, default is the ComfyUI output directory."}),
                 "filename_prefix": ("STRING", {"default": "ComfyUI", "tooltip": "The prefix for the file to save. This may include formatting information such as %date:yyyy-MM-dd% or %Empty Latent Image.width% to include values from nodes."}),
-                "disable_metadata": ("BOOL", {"default": False, "tooltip": "Disable saving metadata to the PNG file."}),
-                "overwrite": ("BOOL", {"default": False, "tooltip": "Overwrite existing files."}),
+                "disable_metadata": (["true", "false"], {"default": "false", "tooltip": "Disable saving metadata to the PNG file."}),
+                "overwrite": (["true", "false"], {"default": "false", "tooltip": "Overwrite existing files."}),
             },
             "hidden": {
                 "prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"
@@ -41,7 +41,7 @@ class SaveImageBridge:
     CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Saves the input images to your ComfyUI output directory."
 
-    def save_images(self, images, output_dir="", filename_prefix="ComfyUI", disable_metadata=False, overwrite=False, prompt=None, extra_pnginfo=None):
+    def save_images(self, images, output_dir="", filename_prefix="ComfyUI", disable_metadata="false", overwrite="false", prompt=None, extra_pnginfo=None):
         filename_prefix += self.prefix_append
         if os.path.isabs(output_dir):
             full_output_folder = output_dir
@@ -53,7 +53,7 @@ class SaveImageBridge:
             i = 255. * image.cpu().numpy()
             img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
             metadata = None
-            if not disable_metadata:
+            if not (disable_metadata == "true"):
                 metadata = PngInfo()
                 if prompt is not None:
                     metadata.add_text("prompt", json.dumps(prompt))
@@ -62,7 +62,7 @@ class SaveImageBridge:
                         metadata.add_text(x, json.dumps(extra_pnginfo[x]))
 
             filename_with_batch_num = filename.replace("%batch_num%", str(batch_number))
-            if overwrite:
+            if overwrite == "true":
                 file = f"{filename_with_batch_num}.png"
             else:
                 file = f"{filename_with_batch_num}_{counter:05}_.png"
