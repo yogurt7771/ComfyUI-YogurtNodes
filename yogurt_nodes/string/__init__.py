@@ -1,1 +1,1 @@
-from .string_line import StringLinesSwitch  # noqa
+from .string_lines_switch import StringLinesSwitch  # noqa

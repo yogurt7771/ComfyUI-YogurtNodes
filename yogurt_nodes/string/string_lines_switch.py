@@ -12,8 +12,8 @@ class StringLinesSwitch:
             }
         }
 
-    RETURN_TYPES = ("STRING", "INT",)
-    RETURN_NAMES = ("text", "count")
+    RETURN_TYPES = ("STRING", "INT", "FLOAT", "INT",)
+    RETURN_NAMES = ("string", "int", "float", "count")
     OUTPUT_NODE = True
 
     FUNCTION = "get_line"
@@ -29,4 +29,12 @@ class StringLinesSwitch:
             result = lines[index]
         except IndexError:
             result = ""
-        return {"ui": {"text": [result]}, "result": (result, count)}
+        try:
+            int_result = int(result.strip())
+        except ValueError:
+            int_result = 0
+        try:
+            float_result = float(result.strip())
+        except ValueError:
+            float_result = 0.0
+        return {"ui": {"text": [result]}, "result": (result, int_result, float_result, count)}
