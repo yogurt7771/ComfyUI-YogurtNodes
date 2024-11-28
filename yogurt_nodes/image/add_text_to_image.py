@@ -37,7 +37,7 @@ class AddTextToImage:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "images": ("IMAGE", {"tooltip": "The images to save."}),
+                "images": ("IMAGE", {"tooltip": "The images to draw."}),
                 "location": (["top", "bottom"], {"default": "top", "tooltip": "The location of the text."}),
                 "centered": (["false", "true"], {"default": "true", "tooltip": "Center the text."}),
                 "font": ([font.name for font in FONT_DIR.iterdir()], {"default": "msyh.ttc", "tooltip": "The font to use."}),
@@ -76,7 +76,7 @@ class AddTextToImage:
             _type_: _description_
         """
         device = images.device
-        image_w, image_h = images[0].shape[1], images[0].shape[0]
+        image_w, image_h = images.shape[2], images.shape[1]
         font = ImageFont.truetype(str(FONT_DIR / font), font_size)
         # create a text banner and concatenate it with the image
         lines, (text_width, text_height) = wraptext(font, text, image_w - font_size // 2)
@@ -93,17 +93,12 @@ class AddTextToImage:
             y = current_height
             draw.text((x, y), line, text_color, font=font)
             current_height += bbox[3]
-        result_images = []
-        for image in images:
-            image = Image.fromarray(np.uint8((image * 255).detach().cpu().numpy()))
-            result_image = Image.new("RGBA", (image_w, image_h + text_height), background_color)
-            if location == "top":
-                result_image.paste(text_image, (0, 0))
-                result_image.paste(image, (0, text_height))
-            else:
-                result_image.paste(image, (0, 0))
-                result_image.paste(text_image, (0, image_h))
-            result_image = torch.from_numpy(np.array(result_image).astype(np.float32)).to(device) / 255
-            result_images.append(result_image)
-        result_images = torch.stack(result_images)
+        text_image = (torch.from_numpy(np.array(text_image)).to(images.dtype).to(device) / 255).unsqueeze(0)[..., :images.shape[-1]]
+        text_image = text_image.repeat(images.shape[0], 1, 1, 1)
+        if location == "top":
+            result_images = torch.cat([text_image, images], dim=1)
+        elif location == "bottom":
+            result_images = torch.cat([images, text_image], dim=1)
+        else:
+            result_images = images
         return (result_images,)
