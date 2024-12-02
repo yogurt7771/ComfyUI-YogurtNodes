@@ -122,7 +122,7 @@ class BatchImages:
                 "method": (["stretch", "fill / crop", "pad"], {"default": "pad"}),
                 "pad_value": ("FLOAT", {"default": 1.0}),
                 "start_index": ("INT", {"default": 0, "tooltip": "The start index. Same as Python slicing."}),
-                "end_index": ("INT", {"default": 8, "tooltip": "The end index. Same as Python slicing."}),
+                "end_index": ("INT", {"default": 0, "tooltip": "The end index. Same as Python slicing. 0 means the end. Negative values are also supported."}),
                 "step": ("INT", {"default": 1, "tooltip": "The step. Same as Python slicing."}),
             },
             "optional": {
@@ -161,7 +161,7 @@ class BatchImages:
         method="pad",
         pad_value=1.0,
         start_index=0,
-        end_index=8,
+        end_index=0,
         step=1,
     ):
         """
@@ -177,7 +177,10 @@ class BatchImages:
             if new_height != images[i].shape[1] or new_width != images[i].shape[2]:
                 images[i] = resize_image(images[i], new_width, new_height, method=method, interpolation=interpolation, condition="always", multiple_of=0, keep_proportion=False, pad_value=pad_value)
         batch = (torch.cat(images, dim=0),)
-        batch = batch[start_index:end_index:step]
+        if end_index == 0:
+            batch = batch[start_index::step]
+        else:
+            batch = batch[start_index:end_index:step]
         if len(batch) == 0:
             return (None,)
         return batch
