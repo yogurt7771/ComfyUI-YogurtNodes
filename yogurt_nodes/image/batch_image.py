@@ -176,7 +176,7 @@ class BatchImages:
         for i in range(len(images)):
             if new_height != images[i].shape[1] or new_width != images[i].shape[2]:
                 images[i] = resize_image(images[i], new_width, new_height, method=method, interpolation=interpolation, condition="always", multiple_of=0, keep_proportion=False, pad_value=pad_value)
-        batch = (torch.cat(images, dim=0),)
+        batch = torch.cat(images, dim=0)
         if end_index == 0:
             batch = batch[start_index::step]
         else:
