@@ -137,8 +137,8 @@ class BatchImages:
             },
         }
 
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("images",)
+    RETURN_TYPES = ("IMAGE", "INT", "INT", "INT", "INT")
+    RETURN_NAMES = ("images", "count", "width", "height", "channels")
     FUNCTION = "batch_image"
 
     OUTPUT_NODE = False
@@ -170,7 +170,7 @@ class BatchImages:
         images = [images1, images2, images3, images4, images5, images6, images7, images8]
         images = [image for image in images if image is not None]
         if len(images) == 0:
-            return (None,)
+            return (None, 0, 0, 0, 0)
         new_height = max([image.shape[1] for image in images])
         new_width = max([image.shape[2] for image in images])
         for i in range(len(images)):
@@ -182,5 +182,5 @@ class BatchImages:
         else:
             batch = batch[start_index:end_index:step]
         if len(batch) == 0:
-            return (None,)
-        return batch
+            return (None, 0, 0, 0, 0)
+        return (batch, len(batch), batch.shape[2], batch.shape[1], batch.shape[3])
