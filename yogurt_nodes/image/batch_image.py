@@ -4,6 +4,7 @@ import comfy
 
 
 MAX_RESOLUTION=16384
+IMAGE_COUNT = 16
 
 
 def resize_image(image, width, height, method="stretch", interpolation="nearest", condition="always", multiple_of=0, keep_proportion=False, pad_value=1):
@@ -126,14 +127,8 @@ class BatchImages:
                 "step": ("INT", {"default": 1, "tooltip": "The step. Same as Python slicing."}),
             },
             "optional": {
-                "images1": ("IMAGE", {"tooltip": "The images to batch."}),
-                "images2": ("IMAGE", {"tooltip": "The images to batch."}),
-                "images3": ("IMAGE", {"tooltip": "The images to batch."}),
-                "images4": ("IMAGE", {"tooltip": "The images to batch."}),
-                "images5": ("IMAGE", {"tooltip": "The images to batch."}),
-                "images6": ("IMAGE", {"tooltip": "The images to batch."}),
-                "images7": ("IMAGE", {"tooltip": "The images to batch."}),
-                "images8": ("IMAGE", {"tooltip": "The images to batch."}),
+                f"images{i}": ("IMAGE", {"tooltip": "The images to batch."})
+                for i in range(1, IMAGE_COUNT + 1)
             },
         }
 
@@ -157,6 +152,14 @@ class BatchImages:
         images6: torch.Tensor = None,
         images7: torch.Tensor = None,
         images8: torch.Tensor = None,
+        images9: torch.Tensor = None,
+        images10: torch.Tensor = None,
+        images11: torch.Tensor = None,
+        images12: torch.Tensor = None,
+        images13: torch.Tensor = None,
+        images14: torch.Tensor = None,
+        images15: torch.Tensor = None,
+        images16: torch.Tensor = None,
         interpolation="nearest",
         method="pad",
         pad_value=1.0,
@@ -167,7 +170,7 @@ class BatchImages:
         """
         Batch images.
         """
-        images = [images1, images2, images3, images4, images5, images6, images7, images8]
+        images = [images1, images2, images3, images4, images5, images6, images7, images8, images9, images10, images11, images12, images13, images14, images15, images16]
         images = [image for image in images if image is not None]
         if len(images) == 0:
             return (None, 0, 0, 0, 0)
