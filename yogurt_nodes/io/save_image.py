@@ -57,7 +57,6 @@ class SaveImageBridge:
         self.temp_dir = folder_paths.get_temp_directory()
         self.type = "output"
         self.prefix_append = ""
-        self.compress_level = 4
         self.temp_prefix_append = "_temp_" + "".join(
             random.choice("abcdefghijklmnopqrstupvxyz") for x in range(5)
         )
@@ -67,10 +66,13 @@ class SaveImageBridge:
         return {
             "required": {
                 "images": ("IMAGE", {"tooltip": "The images to save."}),
-                "output_dir": ("STRING", {"default": "", "tooltip": "The directory to save the images to, default is the ComfyUI output directory."}),
+                "output_dir": ("STRING", {"default": "", "tooltip": "The directory to save the images to, leave blank to save to the ComfyUI output directory."}),
                 "filename_prefix": ("STRING", {"default": "ComfyUI", "tooltip": "The prefix for the file to save. This may include formatting information such as %date:yyyy-MM-dd% or %Empty Latent Image.width% to include values from nodes."}),
                 "disable_metadata": (["true", "false"], {"default": "false", "tooltip": "Disable saving metadata to the PNG file."}),
                 "overwrite": (["true", "false"], {"default": "false", "tooltip": "Overwrite existing files."}),
+                "suffix": ([".png", ".jpg"], {"default": ".png", "tooltip": "The file extension to save the images as."}),
+                "png_compression": ("INT", {"default": 4, "min": 0, "max": 9, "tooltip": "The level of compression to use for PNG images."}),
+                "jpeg_quality": ("INT", {"default": 100, "min": 0, "max": 100, "tooltip": "The quality of the JPEG image."}),
             },
             "hidden": {
                 "prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"
@@ -87,7 +89,7 @@ class SaveImageBridge:
     CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Saves the input images to your ComfyUI output directory."
 
-    def save_images(self, images, output_dir="", filename_prefix="ComfyUI", disable_metadata="false", overwrite="false", prompt=None, extra_pnginfo=None):
+    def save_images(self, images, output_dir="", filename_prefix="ComfyUI", disable_metadata="false", overwrite="false", suffix=".png", png_compression=4, jpeg_quality=100, prompt=None, extra_pnginfo=None):
         filename_prefix += self.prefix_append
         if os.path.isabs(output_dir):
             output_folder = output_dir
@@ -116,11 +118,14 @@ class SaveImageBridge:
 
             filename_with_batch_num = filename.replace("%batch_num%", str(batch_number))
             if overwrite == "true":
-                file = f"{filename_with_batch_num}.png"
+                file = f"{filename_with_batch_num}{suffix}"
             else:
-                file = f"{filename_with_batch_num}_{counter:05}_.png"
+                file = f"{filename_with_batch_num}_{counter:05}{suffix}"
             os.makedirs(full_output_folder, exist_ok=True)
-            img.save(os.path.join(full_output_folder, file), pnginfo=metadata, compress_level=self.compress_level)
+            if suffix == ".jpg":
+                img.save(os.path.join(full_output_folder, file), quality=jpeg_quality)
+            else:
+                img.save(os.path.join(full_output_folder, file), pnginfo=metadata, compress_level=png_compression)
             if output_dir != "" and os.path.isabs(output_dir):
                 temp_filename_prefix = (
                     filename_with_batch_num + self.temp_prefix_append
@@ -137,7 +142,7 @@ class SaveImageBridge:
                     images[0].shape[1],
                     images[0].shape[0],
                 )
-                temp_file = f"{temp_filename}.png"
+                temp_file = f"{temp_filename}{suffix}"
                 shutil.copyfile(
                     os.path.join(full_output_folder, file),
                     os.path.join(temp_output_folder, temp_file),
