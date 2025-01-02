@@ -1,9 +1,11 @@
+import io
 import json
 import os
 import random
 import time
 
-from PIL import Image
+from PIL import Image, ExifTags
+import piexif
 from PIL.PngImagePlugin import PngInfo
 import numpy as np
 import shutil
@@ -49,6 +51,48 @@ def get_save_image_path(filename_prefix: str, output_dir: str, image_width=0, im
         os.makedirs(full_output_folder, exist_ok=True)
         counter = 1
     return full_output_folder, filename, counter, subfolder, filename_prefix
+
+
+def save_image(
+    image,
+    path,
+    jpeg_quality=95,
+    png_compression_level=6,
+    metadata: PngInfo = None,
+):
+    """
+    Save an image to a file with optional metadata for JPEG and PNG formats.
+
+    Parameters:
+        image (PIL.Image.Image): The image to save.
+        path (str): The output file path (must end with .jpg, .jpeg, or .png).
+        jpeg_quality (int): The quality of the JPEG file (1-100).
+        png_compression_level (int): The compression level for PNG (0-9).
+        metadata (PngImagePlugin.PngInfo): A PngInfo object for PNG metadata.
+
+    Raises:
+        ValueError: If the file extension is unsupported.
+    """
+    # Determine the file format based on the extension
+    ext = path.lower().split(".")[-1]
+
+    if ext not in ("jpg", "jpeg", "png"):
+        raise ValueError("Unsupported file format. Use .jpg, .jpeg, or .png.")
+
+    if ext in ("jpg", "jpeg"):
+        # Convert to RGB for JPEG (no alpha channel)
+        rgb_image = image.convert("RGB")
+
+        # Save as JPEG with EXIF metadata
+        rgb_image.save(path, "JPEG", quality=jpeg_quality)
+
+    elif ext == "png":
+        # Save as PNG with metadata if provided
+        if metadata is None:
+            metadata = PngImagePlugin.PngInfo()
+        image.save(path, "PNG", compress_level=png_compression_level, pnginfo=metadata)
+
+    print(f"Image saved to {path} with metadata: {metadata}")
 
 
 class SaveImageBridge:
@@ -122,10 +166,8 @@ class SaveImageBridge:
             else:
                 file = f"{filename_with_batch_num}_{counter:05}{suffix}"
             os.makedirs(full_output_folder, exist_ok=True)
-            if suffix == ".jpg":
-                img.save(os.path.join(full_output_folder, file), quality=jpeg_quality)
-            else:
-                img.save(os.path.join(full_output_folder, file), pnginfo=metadata, compress_level=png_compression)
+            # img.save(os.path.join(full_output_folder, file), pnginfo=metadata, quality=jpeg_quality, compress_level=png_compression)
+            save_image(img, os.path.join(full_output_folder, file), jpeg_quality=jpeg_quality, png_compression_level=png_compression, metadata=metadata)
             if output_dir != "" and os.path.isabs(output_dir):
                 temp_filename_prefix = (
                     filename_with_batch_num + self.temp_prefix_append
@@ -169,7 +211,6 @@ class PreviewImageBridge(SaveImageBridge):
         self.prefix_append = "_temp_" + "".join(
             random.choice("abcdefghijklmnopqrstupvxyz") for x in range(5)
         )
-        self.compress_level = 1
 
     @classmethod
     def INPUT_TYPES(s):
@@ -180,4 +221,8 @@ class PreviewImageBridge(SaveImageBridge):
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
         }
 
+    FUNCTION = "preview_images"
     _NODE_NAME = "Preview Image Bridge"
+
+    def preview_images(self, images, prompt=None, extra_pnginfo=None):
+        return self.save_images(images, suffix=".png", png_compression=9, prompt=prompt, extra_pnginfo=extra_pnginfo)
