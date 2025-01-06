@@ -1,24 +1,24 @@
-import io
 import json
 import os
 import random
+import shutil
 import time
 
-from PIL import Image, ExifTags
-import piexif
-from PIL.PngImagePlugin import PngInfo
 import numpy as np
-import shutil
+from PIL import Image
+from PIL.PngImagePlugin import PngInfo
 
 import folder_paths
 
 
-def get_save_image_path(filename_prefix: str, output_dir: str, image_width=0, image_height=0) -> tuple[str, str, int, str, str]:
+def get_save_image_path(
+    filename_prefix: str, output_dir: str, image_width=0, image_height=0
+) -> tuple[str, str, int, str, str]:
     def map_filename(filename: str) -> tuple[int, str]:
         prefix_len = len(os.path.basename(filename_prefix))
-        prefix = filename[:prefix_len + 1]
+        prefix = filename[: prefix_len + 1]
         try:
-            digits = int(filename[prefix_len + 1:].split('_')[0])
+            digits = int(filename[prefix_len + 1 :].split("_")[0])
         except:
             digits = 0
         return digits, prefix
@@ -44,7 +44,16 @@ def get_save_image_path(filename_prefix: str, output_dir: str, image_width=0, im
     full_output_folder = os.path.join(output_dir, subfolder)
 
     try:
-        counter = max(filter(lambda a: os.path.normcase(a[1][:-1]) == os.path.normcase(filename) and a[1][-1] == "_", map(map_filename, os.listdir(full_output_folder))))[0] + 1
+        counter = (
+            max(
+                filter(
+                    lambda a: os.path.normcase(a[1][:-1]) == os.path.normcase(filename)
+                    and a[1][-1] == "_",
+                    map(map_filename, os.listdir(full_output_folder)),
+                )
+            )[0]
+            + 1
+        )
     except ValueError:
         counter = 1
     except FileNotFoundError:
@@ -89,7 +98,7 @@ def save_image(
     elif ext == "png":
         # Save as PNG with metadata if provided
         if metadata is None:
-            metadata = PngImagePlugin.PngInfo()
+            metadata = PngInfo()
         image.save(path, "PNG", compress_level=png_compression_level, pnginfo=metadata)
 
     print(f"Image saved to {path} with metadata: {metadata}")
@@ -110,17 +119,58 @@ class SaveImageBridge:
         return {
             "required": {
                 "images": ("IMAGE", {"tooltip": "The images to save."}),
-                "output_dir": ("STRING", {"default": "", "tooltip": "The directory to save the images to, leave blank to save to the ComfyUI output directory."}),
-                "filename_prefix": ("STRING", {"default": "ComfyUI", "tooltip": "The prefix for the file to save. This may include formatting information such as %date:yyyy-MM-dd% or %Empty Latent Image.width% to include values from nodes."}),
-                "disable_metadata": (["true", "false"], {"default": "false", "tooltip": "Disable saving metadata to the PNG file."}),
-                "overwrite": (["true", "false"], {"default": "false", "tooltip": "Overwrite existing files."}),
-                "suffix": ([".png", ".jpg"], {"default": ".png", "tooltip": "The file extension to save the images as."}),
-                "png_compression": ("INT", {"default": 4, "min": 0, "max": 9, "tooltip": "The level of compression to use for PNG images."}),
-                "jpeg_quality": ("INT", {"default": 100, "min": 0, "max": 100, "tooltip": "The quality of the JPEG image."}),
+                "output_dir": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "tooltip": "The directory to save the images to, leave blank to save to the ComfyUI output directory.",
+                    },
+                ),
+                "filename_prefix": (
+                    "STRING",
+                    {
+                        "default": "ComfyUI",
+                        "tooltip": "The prefix for the file to save. This may include formatting information such as %date:yyyy-MM-dd% or %Empty Latent Image.width% to include values from nodes.",
+                    },
+                ),
+                "disable_metadata": (
+                    ["true", "false"],
+                    {
+                        "default": "false",
+                        "tooltip": "Disable saving metadata to the PNG file.",
+                    },
+                ),
+                "overwrite": (
+                    ["true", "false"],
+                    {"default": "false", "tooltip": "Overwrite existing files."},
+                ),
+                "suffix": (
+                    [".png", ".jpg"],
+                    {
+                        "default": ".png",
+                        "tooltip": "The file extension to save the images as.",
+                    },
+                ),
+                "png_compression": (
+                    "INT",
+                    {
+                        "default": 4,
+                        "min": 0,
+                        "max": 9,
+                        "tooltip": "The level of compression to use for PNG images.",
+                    },
+                ),
+                "jpeg_quality": (
+                    "INT",
+                    {
+                        "default": 100,
+                        "min": 0,
+                        "max": 100,
+                        "tooltip": "The quality of the JPEG image.",
+                    },
+                ),
             },
-            "hidden": {
-                "prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"
-            },
+            "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
         }
 
     RETURN_TYPES = ("IMAGE",)
@@ -133,7 +183,19 @@ class SaveImageBridge:
     CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Saves the input images to your ComfyUI output directory."
 
-    def save_images(self, images, output_dir="", filename_prefix="ComfyUI", disable_metadata="false", overwrite="false", suffix=".png", png_compression=4, jpeg_quality=100, prompt=None, extra_pnginfo=None):
+    def save_images(
+        self,
+        images,
+        output_dir="",
+        filename_prefix="ComfyUI",
+        disable_metadata="false",
+        overwrite="false",
+        suffix=".png",
+        png_compression=4,
+        jpeg_quality=100,
+        prompt=None,
+        extra_pnginfo=None,
+    ):
         filename_prefix += self.prefix_append
         if os.path.isabs(output_dir):
             output_folder = output_dir
@@ -148,8 +210,8 @@ class SaveImageBridge:
             )
         )
         results = list()
-        for (batch_number, image) in enumerate(images):
-            i = 255. * image.cpu().numpy()
+        for batch_number, image in enumerate(images):
+            i = 255.0 * image.cpu().numpy()
             img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
             metadata = None
             if not (disable_metadata == "true"):
@@ -167,11 +229,15 @@ class SaveImageBridge:
                 file = f"{filename_with_batch_num}_{counter:05}{suffix}"
             os.makedirs(full_output_folder, exist_ok=True)
             # img.save(os.path.join(full_output_folder, file), pnginfo=metadata, quality=jpeg_quality, compress_level=png_compression)
-            save_image(img, os.path.join(full_output_folder, file), jpeg_quality=jpeg_quality, png_compression_level=png_compression, metadata=metadata)
+            save_image(
+                img,
+                os.path.join(full_output_folder, file),
+                jpeg_quality=jpeg_quality,
+                png_compression_level=png_compression,
+                metadata=metadata,
+            )
             if output_dir != "" and os.path.isabs(output_dir):
-                temp_filename_prefix = (
-                    filename_with_batch_num + self.temp_prefix_append
-                )
+                temp_filename_prefix = filename_with_batch_num + self.temp_prefix_append
                 (
                     temp_output_folder,
                     temp_filename,
@@ -194,14 +260,12 @@ class SaveImageBridge:
                     {"filename": temp_file, "subfolder": temp_subfolder, "type": "temp"}
                 )
             else:
-                results.append({
-                    "filename": file,
-                    "subfolder": subfolder,
-                    "type": self.type
-                })
+                results.append(
+                    {"filename": file, "subfolder": subfolder, "type": self.type}
+                )
             counter += 1
 
-        return { "ui": { "images": results }, "result": (images,) }
+        return {"ui": {"images": results}, "result": (images,)}
 
 
 class PreviewImageBridge(SaveImageBridge):
@@ -225,4 +289,10 @@ class PreviewImageBridge(SaveImageBridge):
     _NODE_NAME = "Preview Image Bridge"
 
     def preview_images(self, images, prompt=None, extra_pnginfo=None):
-        return self.save_images(images, suffix=".png", png_compression=9, prompt=prompt, extra_pnginfo=extra_pnginfo)
+        return self.save_images(
+            images,
+            suffix=".png",
+            png_compression=9,
+            prompt=prompt,
+            extra_pnginfo=extra_pnginfo,
+        )
