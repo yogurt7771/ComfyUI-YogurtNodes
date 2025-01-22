@@ -226,7 +226,7 @@ class SaveImageBridge:
             if overwrite == "true":
                 file = f"{filename_with_batch_num}{suffix}"
             else:
-                file = f"{filename_with_batch_num}_{counter:05}{suffix}"
+                file = f"{filename_with_batch_num}_{counter:05}_{suffix}"
             os.makedirs(full_output_folder, exist_ok=True)
             # img.save(os.path.join(full_output_folder, file), pnginfo=metadata, quality=jpeg_quality, compress_level=png_compression)
             save_image(
