@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 import random
 import shutil
 import time
@@ -40,6 +41,7 @@ def get_save_image_path(
 
     subfolder = os.path.dirname(os.path.normpath(filename_prefix))
     filename = os.path.basename(os.path.normpath(filename_prefix))
+    suffix = Path(filename).suffix
 
     full_output_folder = os.path.join(output_dir, subfolder)
 
@@ -49,7 +51,7 @@ def get_save_image_path(
                 filter(
                     lambda a: os.path.normcase(a[1][:-1]) == os.path.normcase(filename)
                     and a[1][-1] == "_",
-                    map(map_filename, os.listdir(full_output_folder)),
+                    map(map_filename, map(lambda x: x.name, Path(full_output_folder).glob(f"*{suffix}"))),
                 )
             )[0]
             + 1
@@ -83,12 +85,12 @@ def save_image(
         ValueError: If the file extension is unsupported.
     """
     # Determine the file format based on the extension
-    ext = path.lower().split(".")[-1]
+    ext = Path(path).suffix
 
-    if ext not in ("jpg", "jpeg", "png"):
+    if ext.lower() not in Image.registered_extensions():
         raise ValueError("Unsupported file format. Use .jpg, .jpeg, or .png.")
 
-    if ext in ("jpg", "jpeg"):
+    if ext in (".jpg", ".jpeg"):
         # Convert to RGB for JPEG (no alpha channel)
         rgb_image = image.convert("RGB")
 
@@ -100,6 +102,9 @@ def save_image(
         if metadata is None:
             metadata = PngInfo()
         image.save(path, "PNG", compress_level=png_compression_level, pnginfo=metadata)
+
+    else:
+        image.save(path)
 
     print(f"Image saved to {path} with metadata: {metadata}")
 
@@ -151,6 +156,13 @@ class SaveImageBridge:
                         "tooltip": "The file extension to save the images as.",
                     },
                 ),
+                "other_suffix": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "tooltip": "The file extension to save the images as. If this is not empty, the suffix option will be ignored. Otherwise, the suffix option will override above suffix option.",
+                    },
+                ),
                 "png_compression": (
                     "INT",
                     {
@@ -191,6 +203,7 @@ class SaveImageBridge:
         disable_metadata="false",
         overwrite="false",
         suffix=".png",
+        other_suffix="",
         png_compression=4,
         jpeg_quality=100,
         prompt=None,
@@ -222,6 +235,8 @@ class SaveImageBridge:
                     for x in extra_pnginfo:
                         metadata.add_text(x, json.dumps(extra_pnginfo[x]))
 
+            if other_suffix != "":
+                suffix = other_suffix
             filename_with_batch_num = filename.replace("%batch_num%", str(batch_number))
             if overwrite == "true":
                 file = f"{filename_with_batch_num}{suffix}"
