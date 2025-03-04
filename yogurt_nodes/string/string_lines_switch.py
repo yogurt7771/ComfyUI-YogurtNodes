@@ -8,6 +8,8 @@ class StringLinesSwitch:
         return {
             "required": {
                 "text": ("STRING", {"multiline": True}),
+                "no_strip": ("BOOLEAN", {"default": False}),
+                "keep_empty_lines": ("BOOLEAN", {"default": False}),
                 "index": ("INT", {"default": 0, "step": 1}),
             }
         }
@@ -22,8 +24,12 @@ class StringLinesSwitch:
     DESCRIPTION = "Get line from multiline string by index"
     CATEGORY = "YogurtNodes/String"
 
-    def get_line(self, text: str, index: int):
-        lines = str(text).splitlines()
+    def get_line(self, text: str = "", no_strip: bool = False, keep_empty_lines: bool = False, index: int = 0):
+        lines = str(text).split("\n")
+        if not no_strip:
+            lines = [line.strip() for line in lines]
+        if not keep_empty_lines:
+            lines = [line for line in lines if line]
         count = len(lines)
         try:
             result = lines[index]

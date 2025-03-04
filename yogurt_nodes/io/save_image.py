@@ -16,13 +16,11 @@ def get_save_image_path(
     filename_prefix: str, output_dir: str, image_width=0, image_height=0
 ) -> tuple[str, str, int, str, str]:
     def map_filename(filename: str) -> tuple[int, str]:
-        prefix_len = len(os.path.basename(filename_prefix))
-        prefix = filename[: prefix_len + 1]
-        try:
-            digits = int(filename[prefix_len + 1 :].split("_")[0])
-        except:
-            digits = 0
-        return digits, prefix
+        prefix, digits = Path(filename).stem.rsplit("_", maxsplit=2)
+        if digits.isdigit():
+            return int(digits), prefix
+        else:
+            return 0, filename
 
     def compute_vars(input: str, image_width: int, image_height: int) -> str:
         input = input.replace("%width%", str(image_width))
@@ -46,16 +44,14 @@ def get_save_image_path(
     full_output_folder = os.path.join(output_dir, subfolder)
 
     try:
-        counter = (
-            max(
-                filter(
-                    lambda a: os.path.normcase(a[1][:-1]) == os.path.normcase(filename)
-                    and a[1][-1] == "_",
-                    map(map_filename, map(lambda x: x.name, Path(full_output_folder).glob(f"*{suffix}"))),
-                )
-            )[0]
-            + 1
-        )
+        exists_files = list(Path(full_output_folder).glob(f"{filename}*{suffix}"))
+        counter = max(
+            map(
+                lambda x: map_filename(x.name)[0],
+                exists_files,
+            ),
+            default=0,
+        ) + 1
     except ValueError:
         counter = 1
     except FileNotFoundError:
@@ -241,7 +237,7 @@ class SaveImageBridge:
             if overwrite == "true":
                 file = f"{filename_with_batch_num}{suffix}"
             else:
-                file = f"{filename_with_batch_num}_{counter:05}_{suffix}"
+                file = f"{filename_with_batch_num}_{counter:05}{suffix}"
             os.makedirs(full_output_folder, exist_ok=True)
             # img.save(os.path.join(full_output_folder, file), pnginfo=metadata, quality=jpeg_quality, compress_level=png_compression)
             save_image(

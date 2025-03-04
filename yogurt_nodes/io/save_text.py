@@ -5,17 +5,13 @@ from pathlib import Path
 import folder_paths
 
 
-def get_save_text_path(
-    filename_prefix: str, output_dir: str
-) -> tuple[str, str, int, str, str]:
+def get_save_text_path(filename_prefix: str, output_dir: str):
     def map_filename(filename: str) -> tuple[int, str]:
-        prefix_len = len(os.path.basename(filename_prefix))
-        prefix = filename[: prefix_len + 1]
-        try:
-            digits = int(filename[prefix_len + 1 :].split("_")[0])
-        except:
-            digits = 0
-        return digits, prefix
+        prefix, digits = Path(filename).stem.rsplit("_", maxsplit=2)
+        if digits.isdigit():
+            return int(digits), prefix
+        else:
+            return 0, filename
 
     def compute_vars(input: str) -> str:
         now = time.localtime()
@@ -37,16 +33,14 @@ def get_save_text_path(
     full_output_folder = os.path.join(output_dir, subfolder)
 
     try:
-        counter = (
-            max(
-                filter(
-                    lambda a: os.path.normcase(a[1][:-1]) == os.path.normcase(filename)
-                    and a[1][-1] == "_",
-                    map(map_filename, map(lambda x: x.name, Path(full_output_folder).glob(f"*{suffix}"))),
-                )
-            )[0]
-            + 1
-        )
+        exists_files = list(Path(full_output_folder).glob(f"{filename}*{suffix}"))
+        counter = max(
+            map(
+                lambda x: map_filename(x.name)[0],
+                exists_files,
+            ),
+            default=0,
+        ) + 1
     except ValueError:
         counter = 1
     except FileNotFoundError:
