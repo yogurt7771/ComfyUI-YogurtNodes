@@ -13,7 +13,7 @@ import folder_paths
 
 
 def get_save_image_path(
-    filename_prefix: str, output_dir: str, image_width=0, image_height=0
+    filename_prefix: str, filename_suffix: str, output_dir: str, image_width=0, image_height=0
 ) -> tuple[str, str, int, str, str]:
     def map_filename(filename: str) -> tuple[int, str]:
         prefix, digits = Path(filename).stem.rsplit("_", maxsplit=2)
@@ -37,14 +37,13 @@ def get_save_image_path(
     if "%" in filename_prefix:
         filename_prefix = compute_vars(filename_prefix, image_width, image_height)
 
-    subfolder = os.path.dirname(os.path.normpath(filename_prefix))
-    filename = os.path.basename(os.path.normpath(filename_prefix))
-    suffix = Path(filename).suffix
+    subfolder = str(Path(filename_prefix).parent)
+    filename = str(Path(filename_prefix).name)
 
     full_output_folder = os.path.join(output_dir, subfolder)
 
     try:
-        exists_files = list(Path(full_output_folder).glob(f"{filename}*{suffix}"))
+        exists_files = list(Path(full_output_folder).glob(f"{filename}*{filename_suffix}"))
         counter = max(
             map(
                 lambda x: map_filename(x.name)[0],
@@ -146,13 +145,13 @@ class SaveImageBridge:
                     {"default": "false", "tooltip": "Overwrite existing files."},
                 ),
                 "suffix": (
-                    [".png", ".jpg"],
+                    [".png", ".jpg", "Custom"],
                     {
                         "default": ".png",
                         "tooltip": "The file extension to save the images as.",
                     },
                 ),
-                "other_suffix": (
+                "custom_suffix": (
                     "STRING",
                     {
                         "default": "",
@@ -199,20 +198,26 @@ class SaveImageBridge:
         disable_metadata="false",
         overwrite="false",
         suffix=".png",
-        other_suffix="",
+        custom_suffix="",
         png_compression=4,
         jpeg_quality=100,
         prompt=None,
         extra_pnginfo=None,
     ):
         filename_prefix += self.prefix_append
+
+        if suffix == "Custom":
+            suffix = custom_suffix
+
         if os.path.isabs(output_dir):
             output_folder = output_dir
         else:
             output_folder = os.path.join(self.output_dir, output_dir)
+
         full_output_folder, filename, counter, subfolder, filename_prefix = (
             get_save_image_path(
                 filename_prefix,
+                suffix,
                 output_folder,
                 images[0].shape[1],
                 images[0].shape[0],
@@ -231,8 +236,6 @@ class SaveImageBridge:
                     for x in extra_pnginfo:
                         metadata.add_text(x, json.dumps(extra_pnginfo[x]))
 
-            if other_suffix != "":
-                suffix = other_suffix
             filename_with_batch_num = filename.replace("%batch_num%", str(batch_number))
             if overwrite == "true":
                 file = f"{filename_with_batch_num}{suffix}"

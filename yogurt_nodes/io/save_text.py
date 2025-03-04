@@ -5,7 +5,7 @@ from pathlib import Path
 import folder_paths
 
 
-def get_save_text_path(filename_prefix: str, output_dir: str):
+def get_save_text_path(filename_prefix: str, filename_suffix: str, output_dir: str):
     def map_filename(filename: str) -> tuple[int, str]:
         prefix, digits = Path(filename).stem.rsplit("_", maxsplit=2)
         if digits.isdigit():
@@ -26,14 +26,15 @@ def get_save_text_path(filename_prefix: str, output_dir: str):
     if "%" in filename_prefix:
         filename_prefix = compute_vars(filename_prefix)
 
-    subfolder = os.path.dirname(os.path.normpath(filename_prefix))
-    filename = os.path.basename(os.path.normpath(filename_prefix))
-    suffix = Path(filename).suffix
+    subfolder = str(Path(filename_prefix).parent)
+    filename = str(Path(filename_prefix).name)
 
     full_output_folder = os.path.join(output_dir, subfolder)
 
     try:
-        exists_files = list(Path(full_output_folder).glob(f"{filename}*{suffix}"))
+        exists_files = list(
+            Path(full_output_folder).glob(f"{filename}*{filename_suffix}")
+        )
         counter = max(
             map(
                 lambda x: map_filename(x.name)[0],
@@ -97,13 +98,13 @@ class SaveTextBridge:
                     {"default": "false", "tooltip": "Overwrite existing files."},
                 ),
                 "suffix": (
-                    [".txt", ".json", ".md", ".csv"],
+                    [".txt", ".json", ".md", ".csv", "Custom"],
                     {
                         "default": ".txt",
                         "tooltip": "The file extension to save the text as.",
                     },
                 ),
-                "other_suffix": (
+                "custom_suffix": (
                     "STRING",
                     {
                         "default": "",
@@ -130,20 +131,21 @@ class SaveTextBridge:
         filename_prefix="ComfyUI",
         overwrite="false",
         suffix=".txt",
-        other_suffix="",
+        custom_suffix="",
     ):
         filename_prefix += self.prefix_append
+
+        if suffix == "Custom":
+            suffix = custom_suffix
+
         if os.path.isabs(output_dir):
             output_folder = output_dir
         else:
             output_folder = os.path.join(self.output_dir, output_dir)
 
         full_output_folder, filename, counter, subfolder, filename_prefix = (
-            get_save_text_path(filename_prefix, output_folder)
+            get_save_text_path(filename_prefix, suffix, output_folder)
         )
-
-        if other_suffix != "":
-            suffix = other_suffix
 
         if overwrite == "true":
             file = f"{filename}{suffix}"
