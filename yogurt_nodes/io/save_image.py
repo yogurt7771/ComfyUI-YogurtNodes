@@ -13,7 +13,11 @@ import folder_paths
 
 
 def get_save_image_path(
-    filename_prefix: str, filename_suffix: str, output_dir: str, image_width=0, image_height=0
+    filename_prefix: str,
+    filename_suffix: str,
+    output_dir: str,
+    image_width=0,
+    image_height=0,
 ) -> tuple[str, str, int, str, str]:
     def map_filename(filename: str) -> tuple[int, str]:
         prefix, digits = Path(filename).stem.rsplit("_", maxsplit=2)
@@ -43,14 +47,16 @@ def get_save_image_path(
     full_output_folder = os.path.join(output_dir, subfolder)
 
     try:
-        exists_files = list(Path(full_output_folder).glob(f"{filename}*{filename_suffix}"))
-        counter = max(
-            map(
-                lambda x: map_filename(x.name)[0],
-                exists_files,
-            ),
-            default=0,
-        ) + 1
+        exists_files = list(
+            Path(full_output_folder).glob(f"{filename}*{filename_suffix}")
+        )
+        counter = (
+            max(
+                (map_filename(x.name)[0] for x in exists_files),
+                default=0,
+            )
+            + 1
+        )
     except ValueError:
         counter = 1
     except FileNotFoundError:
@@ -223,7 +229,7 @@ class SaveImageBridge:
                 images[0].shape[0],
             )
         )
-        results = list()
+        results = []
         for batch_number, image in enumerate(images):
             i = 255.0 * image.cpu().numpy()
             img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
@@ -260,6 +266,7 @@ class SaveImageBridge:
                     temp_filename_prefix,
                 ) = get_save_image_path(
                     temp_filename_prefix,
+                    suffix,
                     self.temp_dir,
                     images[0].shape[1],
                     images[0].shape[0],
