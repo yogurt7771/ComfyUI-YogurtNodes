@@ -99,7 +99,7 @@ class GeminiGenerateText:
                 )
                 text = response.text
                 if len(text) > 0:
-                    return text
+                    return (text,)
             except Exception as e:
                 print(f"Error {model_name} generating text: {e}")
-        return ""
+        return ("",)
