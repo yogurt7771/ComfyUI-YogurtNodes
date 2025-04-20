@@ -3,7 +3,7 @@ print("Loading Yogurt Nodes...")
 import inspect
 
 from .yogurt_nodes import *
-import inspect
+
 
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
@@ -13,4 +13,4 @@ for name, obj in list(globals().items()):
         NODE_CLASS_MAPPINGS[name] = obj
         NODE_DISPLAY_NAME_MAPPINGS[name] = f"{obj._NODE_NAME} (Yogurt Nodes)"
 
-print("Yogurt Nodes loaded!")
+print(f"Yogurt Nodes loaded: {NODE_DISPLAY_NAME_MAPPINGS.values()}")
