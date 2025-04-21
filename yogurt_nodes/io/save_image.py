@@ -12,6 +12,30 @@ from PIL.PngImagePlugin import PngInfo
 import folder_paths
 
 
+def map_filename(filename: str) -> tuple[int, str]:
+    try:
+        prefix, digits = Path(filename).stem.rsplit("_", maxsplit=2)
+        if digits.isdigit():
+            return int(digits), prefix
+        else:
+            return 0, filename
+    except Exception:
+        return 0, filename
+
+
+def compute_vars(input: str, image_width: int, image_height: int) -> str:
+    input = input.replace("%width%", str(image_width))
+    input = input.replace("%height%", str(image_height))
+    now = time.localtime()
+    input = input.replace("%year%", str(now.tm_year))
+    input = input.replace("%month%", str(now.tm_mon).zfill(2))
+    input = input.replace("%day%", str(now.tm_mday).zfill(2))
+    input = input.replace("%hour%", str(now.tm_hour).zfill(2))
+    input = input.replace("%minute%", str(now.tm_min).zfill(2))
+    input = input.replace("%second%", str(now.tm_sec).zfill(2))
+    return input
+
+
 def get_save_image_path(
     filename_prefix: str,
     filename_suffix: str,
@@ -19,24 +43,6 @@ def get_save_image_path(
     image_width=0,
     image_height=0,
 ) -> tuple[str, str, int, str, str]:
-    def map_filename(filename: str) -> tuple[int, str]:
-        prefix, digits = Path(filename).stem.rsplit("_", maxsplit=2)
-        if digits.isdigit():
-            return int(digits), prefix
-        else:
-            return 0, filename
-
-    def compute_vars(input: str, image_width: int, image_height: int) -> str:
-        input = input.replace("%width%", str(image_width))
-        input = input.replace("%height%", str(image_height))
-        now = time.localtime()
-        input = input.replace("%year%", str(now.tm_year))
-        input = input.replace("%month%", str(now.tm_mon).zfill(2))
-        input = input.replace("%day%", str(now.tm_mday).zfill(2))
-        input = input.replace("%hour%", str(now.tm_hour).zfill(2))
-        input = input.replace("%minute%", str(now.tm_min).zfill(2))
-        input = input.replace("%second%", str(now.tm_sec).zfill(2))
-        return input
 
     if "%" in filename_prefix:
         filename_prefix = compute_vars(filename_prefix, image_width, image_height)
@@ -117,7 +123,7 @@ class SaveImageBridgeEx:
         self.type = "output"
         self.prefix_append = ""
         self.temp_prefix_append = "_temp_" + "".join(
-            random.choice("abcdefghijklmnopqrstupvxyz") for x in range(5)
+            random.choice("abcdefghijklmnopqrstupvxyz") for _ in range(5)
         )
 
     @classmethod
