@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from folder_paths import get_filename_list
+import folder_paths
 
 
 class LoraSelector:
@@ -15,7 +16,7 @@ class LoraSelector:
         return {
             "required": {
                 "lora": (
-                    ["None"] + cls.initial_list,
+                    ["None"] + folder_paths.get_filename_list("loras"),
                     {"default": "None", "tooltip": "Lora model to use."},
                 ),
                 "model_strength": (

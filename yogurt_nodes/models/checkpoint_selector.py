@@ -15,7 +15,7 @@ class CheckpointSelector:
         return {
             "required": {
                 "checkpoint": (
-                    ["None"] + cls.initial_list,
+                    ["None"] + get_filename_list("checkpoints"),
                     {"default": "None", "tooltip": "Checkpoint to use."},
                 ),
                 "trigger_word": (

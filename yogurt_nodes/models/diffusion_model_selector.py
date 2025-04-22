@@ -15,7 +15,7 @@ class DiffusionModelSelector:
         return {
             "required": {
                 "diffusion_model": (
-                    ["None"] + cls.initial_list,
+                    ["None"] + get_filename_list("diffusion_models"),
                     {"default": "None", "tooltip": "Diffusion Model to use."},
                 ),
                 "trigger_word": (

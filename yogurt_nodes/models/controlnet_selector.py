@@ -15,7 +15,7 @@ class ControlNetSelector:
         return {
             "required": {
                 "controlnet": (
-                    ["None"] + cls.initial_list,
+                    ["None"] + get_filename_list("controlnet"),
                     {"default": "None", "tooltip": "ControlNet to use."},
                 ),
                 "strength": (
