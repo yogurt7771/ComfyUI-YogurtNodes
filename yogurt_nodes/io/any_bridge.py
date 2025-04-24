@@ -1,3 +1,11 @@
+class AlwaysEqualProxy(str):
+    def __eq__(self, _):
+        return True
+
+    def __ne__(self, _):
+        return False
+
+
 class AnyBridge:
     def __init__(self):
         pass
@@ -9,7 +17,22 @@ class AnyBridge:
                 "data": ("*", {}),
             },
             "optional": {
-                "blackhole": ("*", {"help": "If true, the data will not be returned."}),
+                "blackhole1": (
+                    "*",
+                    {"help": "the data will not be returned."},
+                ),
+                "blackhole2": (
+                    "*",
+                    {"help": "the data will not be returned."},
+                ),
+                "blackhole3": (
+                    "*",
+                    {"help": "the data will not be returned."},
+                ),
+                "blackhole4": (
+                    "*",
+                    {"help": "the data will not be returned."},
+                ),
             },
         }
 
@@ -17,7 +40,7 @@ class AnyBridge:
     def VALIDATE_INPUTS(s, input_types):
         return True
 
-    RETURN_TYPES = ("*",)
+    RETURN_TYPES = (AlwaysEqualProxy("*"),)
     RETURN_NAMES = ("data",)
     FUNCTION = "execute"
     OUTPUT_NODE = True
@@ -26,5 +49,5 @@ class AnyBridge:
     DESCRIPTION = "Any Bridge"
     CATEGORY = "YogurtNodes/IO"
 
-    def execute(self, data, blackhole=None):
+    def execute(self, data, *blackholes):
         return (data,)
