@@ -3,7 +3,7 @@ import torch.nn.functional as F
 import comfy
 
 
-MAX_RESOLUTION=16384
+MAX_RESOLUTION = 16384
 IMAGE_COUNT = 16
 
 
@@ -67,9 +67,13 @@ def resize_image(image, width, height, method="stretch", interpolation="nearest"
         width = width if width > 0 else ow
         height = height if height > 0 else oh
 
-    if "always" in condition \
-        or ("downscale if bigger" == condition and (oh > height or ow > width)) or ("upscale if smaller" == condition and (oh < height or ow < width)) \
-        or ("bigger area" in condition and (oh * ow > height * width)) or ("smaller area" in condition and (oh * ow < height * width)):
+    if (
+        "always" in condition
+        or ("downscale if bigger" == condition and (oh > height or ow > width))
+        or ("upscale if smaller" == condition and (oh < height or ow < width))
+        or ("bigger area" in condition and (oh * ow > height * width))
+        or ("smaller area" in condition and (oh * ow < height * width))
+    ):
 
         outputs = image.permute(0,3,1,2)
 
@@ -98,7 +102,7 @@ def resize_image(image, width, height, method="stretch", interpolation="nearest"
         x2 = width - ((width % multiple_of) - x)
         y2 = height - ((height % multiple_of) - y)
         outputs = outputs[:, y:y2, x:x2, :]
-    
+
     outputs = torch.clamp(outputs, 0, 1)
 
     return outputs

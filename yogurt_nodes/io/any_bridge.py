@@ -1,53 +1,40 @@
-class AlwaysEqualProxy(str):
-    def __eq__(self, _):
-        return True
+from ..utils import ANY_TYPE
 
-    def __ne__(self, _):
-        return False
+
+BLACKHOLE_NUM = 8
 
 
 class AnyBridge:
-    def __init__(self):
-        pass
-
     @classmethod
-    def INPUT_TYPES(s):
+    def INPUT_TYPES(cls):
+        blackholes = {
+            f"blackhole{i}": (
+                ANY_TYPE,
+                {"tooltip": f"the data will not be returned. {i}"},
+            )
+            for i in range(1, BLACKHOLE_NUM + 1)
+        }
         return {
             "required": {
-                "data": ("*", {}),
+                "data": (ANY_TYPE, {"tooltip": "The data to be returned."}),
             },
             "optional": {
-                "blackhole1": (
-                    "*",
-                    {"help": "the data will not be returned."},
-                ),
-                "blackhole2": (
-                    "*",
-                    {"help": "the data will not be returned."},
-                ),
-                "blackhole3": (
-                    "*",
-                    {"help": "the data will not be returned."},
-                ),
-                "blackhole4": (
-                    "*",
-                    {"help": "the data will not be returned."},
-                ),
+                **blackholes,
             },
         }
 
     @classmethod
-    def VALIDATE_INPUTS(s, input_types):
+    def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = (AlwaysEqualProxy("*"),)
+    RETURN_TYPES = (ANY_TYPE,)
     RETURN_NAMES = ("data",)
     FUNCTION = "execute"
-    OUTPUT_NODE = True
+    OUTPUT_NODE = False
 
     _NODE_NAME = "Any Bridge"
     DESCRIPTION = "Any Bridge"
     CATEGORY = "YogurtNodes/IO"
 
-    def execute(self, data, *blackholes):
+    def execute(self, data, **blackholes):
         return (data,)

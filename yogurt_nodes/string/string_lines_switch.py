@@ -37,7 +37,7 @@ class StringLinesSwitch:
         "INT",
     )
     RETURN_NAMES = ("string", "int", "float", "count")
-    OUTPUT_NODE = True
+    OUTPUT_NODE = False
 
     FUNCTION = "get_line"
 

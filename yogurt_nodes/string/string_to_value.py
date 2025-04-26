@@ -17,7 +17,7 @@ class StringToValue:
         "FLOAT",
     )
     RETURN_NAMES = ("string", "int", "float")
-    OUTPUT_NODE = True
+    OUTPUT_NODE = False
 
     FUNCTION = "string_to_value"
 

@@ -17,23 +17,29 @@ class GeminiGenerateText:
                     {
                         "default": "",
                         "multiline": False,
-                        "tooltip": "用于访问Gemini API的密钥",
+                        "tooltip": "API key for accessing Gemini API",
                     },
                 ),
                 "model_name": (
                     "STRING",
                     {
                         "default": "gemini-2.0-flash-exp",
-                        "tooltip": "Gemini模型名称，默认使用gemini-2.0-flash-exp",
+                        "tooltip": "Gemini model name, default is gemini-2.0-flash-exp",
                     },
                 ),
                 "system_prompt": (
                     "STRING",
-                    {"multiline": True, "tooltip": "系统级提示词，影响整体对话风格"},
+                    {
+                        "multiline": True,
+                        "tooltip": "System-level prompt that affects the overall conversation style",
+                    },
                 ),
                 "prompt": (
                     "STRING",
-                    {"multiline": True, "tooltip": "用户输入的主要提示内容"},
+                    {
+                        "multiline": True,
+                        "tooltip": "Main prompt content input by the user",
+                    },
                 ),
                 "temperature": (
                     "FLOAT",
@@ -41,7 +47,7 @@ class GeminiGenerateText:
                         "default": 1,
                         "min": 0.0,
                         "step": 0.01,
-                        "tooltip": "采样温度，越高输出越随机",
+                        "tooltip": "Sampling temperature, higher values produce more random outputs",
                     },
                 ),
                 "top_p": (
@@ -51,7 +57,7 @@ class GeminiGenerateText:
                         "min": 0.0,
                         "max": 1.0,
                         "step": 0.01,
-                        "tooltip": "采样概率阈值，控制输出多样性",
+                        "tooltip": "Sampling probability threshold, controls output diversity",
                     },
                 ),
                 "top_k": (
@@ -60,7 +66,7 @@ class GeminiGenerateText:
                         "default": 64,
                         "min": 0,
                         "step": 1,
-                        "tooltip": "采样时考虑的最高概率词数量",
+                        "tooltip": "Number of highest probability tokens to consider during sampling",
                     },
                 ),
                 "max_output_tokens": (
@@ -70,7 +76,7 @@ class GeminiGenerateText:
                         "min": 1,
                         "max": 8192,
                         "step": 1,
-                        "tooltip": "生成文本的最大Token数",
+                        "tooltip": "Maximum number of tokens in the generated text",
                     },
                 ),
                 "retry_count": (
@@ -79,16 +85,22 @@ class GeminiGenerateText:
                         "default": 3,
                         "min": 1,
                         "step": 1,
-                        "tooltip": "请求失败时的重试次数",
+                        "tooltip": "Number of retries when request fails",
                     },
                 ),
                 "disable_safety_settings": (
                     "BOOLEAN",
-                    {"default": False, "tooltip": "是否关闭安全设置（不建议）"},
+                    {
+                        "default": False,
+                        "tooltip": "Whether to disable safety settings (not recommended)",
+                    },
                 ),
                 "disable_system_prompt": (
                     "BOOLEAN",
-                    {"default": False, "tooltip": "是否禁用系统提示词"},
+                    {
+                        "default": False,
+                        "tooltip": "Whether to disable the system prompt",
+                    },
                 ),
             }
         }

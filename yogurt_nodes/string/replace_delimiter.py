@@ -22,7 +22,7 @@ class ReplaceDelimiter:
     RETURN_NAMES = (
         "text",
     )
-    OUTPUT_NODE = True
+    OUTPUT_NODE = False
 
     FUNCTION = "replace_delimiter"
 
