@@ -1,0 +1,15 @@
+[project]
+name = "yogurtnodes"
+description = "ComfyUI-YogurtNodes is a collection of custom nodes for ComfyUI, providing a series of practical image processing and workflow enhancement functionalities."
+version = "1.0.0"
+license = {file = "LICENSE"}
+dependencies = ["numpy", "pillow", "google-genai"]
+
+[project.urls]
+Repository = "https://github.com/yogurt7771/ComfyUI-YogurtNodes"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "ComfyUI-YogurtNodes"
+Icon = ""
