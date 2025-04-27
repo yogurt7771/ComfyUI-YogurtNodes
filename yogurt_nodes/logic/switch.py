@@ -35,7 +35,6 @@ class Switch:
                 "condition": (
                     ANY_TYPE,
                     {
-                        "default": "",
                         "placeholder": "text",
                         "tooltip": "Input condition text.",
                     },
@@ -99,10 +98,10 @@ class Switch:
         str_condition = str(condition)
         for i, (case, _option) in enumerate(zip(cases, options)):
             if re.fullmatch(case, str_condition):
-                return f"option{i+1}"
+                return [f"option{i+1}"]
         if default is not None:
-            return "default"
-        return None
+            return ["default"]
+        return []
 
     def execute(
         self,
@@ -145,6 +144,7 @@ class Switch:
             option8,
             default,
         )
-        if option is None:
-            return (None,)
-        return (eval(option),)
+        if option:
+            return (eval(option[0]),)
+        else:
+            raise ValueError(f"No case matched for condition {condition}.")
