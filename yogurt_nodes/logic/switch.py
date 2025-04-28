@@ -124,16 +124,8 @@ class Switch:
         option8=None,
         default=None,
     ):
-        option = self.check_lazy_status(
-            condition,
-            case1,
-            case2,
-            case3,
-            case4,
-            case5,
-            case6,
-            case7,
-            case8,
+        cases = [case1, case2, case3, case4, case5, case6, case7, case8]
+        options = [
             option1,
             option2,
             option3,
@@ -142,9 +134,15 @@ class Switch:
             option6,
             option7,
             option8,
+        ]
+        option = self.check_lazy_status(
+            condition,
+            *cases,
+            *options,
             default,
         )
         if option:
-            return (eval(option[0]),)
+            index = int(option[0].removeprefix("option"))
+            return (options[index - 1],)
         else:
             raise ValueError(f"No case matched for condition {condition}.")

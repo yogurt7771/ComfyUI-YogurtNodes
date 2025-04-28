@@ -10,6 +10,6 @@ Repository = "https://github.com/yogurt7771/ComfyUI-YogurtNodes"
 #  Used by Comfy Registry https://comfyregistry.org
 
 [tool.comfy]
-PublisherId = ""
+PublisherId = "yogurt7771"
 DisplayName = "ComfyUI-YogurtNodes"
 Icon = ""
