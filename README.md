@@ -11,6 +11,8 @@ ComfyUI-YogurtNodes is a collection of custom nodes for ComfyUI, providing a ser
 - Advanced string processing utilities
 - Model management and selection tools
 - Comprehensive I/O operations support
+- Integrated Gemini API for language and image understanding
+- Logic control nodes for complex workflows
 
 ## 📦 Installation
 
@@ -21,6 +23,7 @@ ComfyUI-YogurtNodes is a collection of custom nodes for ComfyUI, providing a ser
 - Required Python packages:
   - numpy
   - pillow
+  - google-generativeai (for Gemini nodes)
 
 ### Installation Steps
 
@@ -48,7 +51,7 @@ pip install -r requirements.txt
 
 ## 🔧 Available Nodes
 
-All nodes are marked with "Yogurt Nodes" for easy identification in the ComfyUI interface.
+All nodes are marked with "YogurtNodes" prefix for easy identification in the ComfyUI interface.
 
 ### Image Processing Nodes
 
@@ -122,6 +125,38 @@ All nodes are marked with "Yogurt Nodes" for easy identification in the ComfyUI 
   - Returns parent directory
   - Filename and extension separation
   - Multiple format options for extensions
+
+### Logic Processing Nodes
+
+#### None Node
+- **Category:** YogurtNodes/Logic
+- **Description:** A utility node that returns None as its output
+- **Use Case:** Useful for conditional workflows where a null value is needed
+
+#### Pack Any
+- **Category:** YogurtNodes/Logic
+- **Description:** Packs multiple input items into a single output
+- **Features:**
+  - Support for up to 8 input items
+  - Handles any data type
+  - Simplifies complex workflows
+
+#### Unpack Any
+- **Category:** YogurtNodes/Logic
+- **Description:** Unpacks input items into multiple outputs
+- **Features:**
+  - Seamlessly works with Pack Any node
+  - Outputs up to 8 separate items
+  - Useful for data distribution
+
+#### Switch
+- **Category:** YogurtNodes/Logic
+- **Description:** Condition-based switch node
+- **Features:**
+  - Regular expression matching support
+  - Up to 8 condition branches
+  - Default value option
+  - Flexible condition control
 
 ### Model Selection Nodes
 
@@ -230,17 +265,40 @@ All nodes are marked with "Yogurt Nodes" for easy identification in the ComfyUI 
   - Path validation
   - Safe operation with existing directories
 
+### Language Model Nodes
+
+#### Gemini Generate Text
+- **Category:** YogurtNodes/LLM
+- **Description:** Generate text using Gemini API
+- **Features:**
+  - Support for various Gemini models
+  - System and user prompt control
+  - Customizable generation parameters (temperature, top_p, top_k, etc.)
+  - Safety settings control
+  - Maximum output token count
+  - Automatic retry mechanism
+
+#### Gemini Image Understand
+- **Category:** YogurtNodes/LLM
+- **Description:** Image understanding using Gemini API
+- **Features:**
+  - Image content analysis
+  - Combined with text prompts
+  - Customizable generation parameters
+  - Multi-language support
+  - Detailed image descriptions
+
 ## 🤝 Contributing
 
 Pull Requests are welcome to help improve the project!
 
 ## 📄 License
 
-[Add your license information]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 📞 Contact
 
-[Add your contact information]
+For questions, bug reports, or feature requests, please [open an issue](https://github.com/yogurt7771/ComfyUI-YogurtNodes/issues).
 
 ## 🙏 Acknowledgments
 
