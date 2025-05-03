@@ -1,7 +1,7 @@
 [project]
 name = "yogurtnodes"
 description = "ComfyUI-YogurtNodes is a collection of custom nodes for ComfyUI, providing a series of practical image processing and workflow enhancement functionalities."
-version = "1.0.0"
+version = "1.0.1"
 license = {file = "LICENSE"}
 dependencies = ["numpy", "pillow", "google-genai"]
 
