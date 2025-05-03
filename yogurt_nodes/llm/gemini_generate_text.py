@@ -72,9 +72,8 @@ class GeminiGenerateText:
                 "max_output_tokens": (
                     "INT",
                     {
-                        "default": 1024,
+                        "default": 8192,
                         "min": 1,
-                        "max": 8192,
                         "step": 1,
                         "tooltip": "Maximum number of tokens in the generated text",
                     },
