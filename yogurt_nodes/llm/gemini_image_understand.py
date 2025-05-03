@@ -1,21 +1,16 @@
-import io
-import os
 from PIL import Image
-from google import genai
-from google.genai import types
-import torch
+from .lib.gemini_client import GeminiClient
 
 
 class GeminiImageUnderstand:
     """
-    Gemini Image Understand
+    使用 Gemini API 理解图像内容
     """
 
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE", {"tooltip": "Input image"}),
                 "api_key": (
                     "STRING",
                     {
@@ -27,8 +22,8 @@ class GeminiImageUnderstand:
                 "model_name": (
                     "STRING",
                     {
-                        "default": "gemini-2.0-flash-exp",
-                        "tooltip": "Gemini model name, default is gemini-2.0-flash-exp",
+                        "default": "gemini-pro-vision",
+                        "tooltip": "Gemini model name, default is gemini-pro-vision",
                     },
                 ),
                 "system_prompt": (
@@ -76,9 +71,8 @@ class GeminiImageUnderstand:
                 "max_output_tokens": (
                     "INT",
                     {
-                        "default": 1024,
+                        "default": 8192,
                         "min": 1,
-                        "max": 8192,
                         "step": 1,
                         "tooltip": "Maximum number of tokens in the generated text",
                     },
@@ -106,7 +100,14 @@ class GeminiImageUnderstand:
                         "tooltip": "Whether to disable the system prompt",
                     },
                 ),
-            }
+            },
+            "optional": {
+                "image": ("IMAGE",),
+                "image1": ("IMAGE",),
+                "image2": ("IMAGE",),
+                "image3": ("IMAGE",),
+                "image4": ("IMAGE",),
+            },
         }
 
     RETURN_TYPES = ("STRING",)
@@ -115,12 +116,11 @@ class GeminiImageUnderstand:
     FUNCTION = "understand_image"
 
     _NODE_NAME = "Gemini Image Understand"
-    DESCRIPTION = "Image understanding using Gemini API"
+    DESCRIPTION = "Understand image content using Gemini API"
     CATEGORY = "YogurtNodes/LLM"
 
     def understand_image(
         self,
-        image: torch.Tensor,
         api_key: str,
         model_name: str,
         system_prompt: str,
@@ -132,87 +132,33 @@ class GeminiImageUnderstand:
         retry_count: int,
         disable_safety_settings: bool,
         disable_system_prompt: bool,
+        image: Image.Image = None,
+        image1: Image.Image = None,
+        image2: Image.Image = None,
+        image3: Image.Image = None,
+        image4: Image.Image = None,
     ):
-        if len(api_key) == 0:
-            api_key = os.getenv("GEMINI_API_KEY")
-            if len(api_key) == 0:
-                raise ValueError("API key is not set")
+        # 收集所有非空图像
+        images = []
+        for img in [image, image1, image2, image3, image4]:
+            if img is not None:
+                if isinstance(img, list) and len(img) > 0:
+                    images.append(Image.fromarray(img[0]))
+                elif isinstance(img, Image.Image):
+                    images.append(img)
 
-        client = genai.Client(api_key=api_key)
-
-        # 读取图片内容
-        img_bytes = None
-        image_mime_type = None
-        pil_image = Image.fromarray(image.cpu().numpy())
-        img_bytes_io = io.BytesIO()
-        pil_image.save(img_bytes_io, format="JPEG", quality=95)
-        img_bytes = img_bytes_io.getvalue()
-        image_mime_type = "image/jpeg"
-
-        # 构造parts
-        parts = []
-        # 如果不启用system instruction，则把system_prompt也放到parts最前面
-        if disable_system_prompt or not system_prompt:
-            if system_prompt:
-                parts.append(types.Part.from_text(text=system_prompt))
-        parts.append(types.Part.from_text(text=prompt))
-        parts.append(types.Part.from_bytes(data=img_bytes, mime_type=image_mime_type))
-
-        contents = [
-            types.Content(
-                role="user",
-                parts=parts,
-            )
-        ]
-
-        # 构造system_instruction
-        system_instruction = None
-        if not disable_system_prompt and system_prompt:
-            system_instruction = [types.Part.from_text(text=system_prompt)]
-        else:
-            system_instruction = None
-
-        config = types.GenerateContentConfig(
+        client = GeminiClient(api_key)
+        text = client.generate_text(
+            model_name=model_name,
+            system_prompt=system_prompt,
+            prompt=prompt,
+            images=images,
             temperature=temperature,
             top_p=top_p,
             top_k=top_k,
             max_output_tokens=max_output_tokens,
-            safety_settings=(
-                [
-                    types.SafetySetting(
-                        category="HARM_CATEGORY_HARASSMENT",
-                        threshold="BLOCK_NONE",
-                    ),
-                    types.SafetySetting(
-                        category="HARM_CATEGORY_HATE_SPEECH",
-                        threshold="BLOCK_NONE",
-                    ),
-                    types.SafetySetting(
-                        category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                        threshold="BLOCK_NONE",
-                    ),
-                    types.SafetySetting(
-                        category="HARM_CATEGORY_DANGEROUS_CONTENT",
-                        threshold="BLOCK_NONE",
-                    ),
-                ]
-                if not disable_safety_settings
-                else None
-            ),
-            response_mime_type="text/plain",
-            system_instruction=system_instruction,
+            retry_count=retry_count,
+            disable_safety_settings=disable_safety_settings,
+            disable_system_prompt=disable_system_prompt,
         )
-
-        for _ in range(retry_count):
-            try:
-                response = client.models.generate_content(
-                    model=model_name,
-                    contents=contents,
-                    config=config,
-                )
-                text = response.text
-                if len(text) > 0:
-                    return (text,)
-            except Exception as e:
-                print(f"Error {model_name} image understand: {e}")
-        return ("",)
+        return (text,)

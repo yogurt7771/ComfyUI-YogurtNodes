@@ -1,6 +1,5 @@
 import os
-from google import genai
-from google.genai import types
+from .lib.gemini_client import GeminiClient
 
 
 class GeminiGenerateText:
@@ -132,71 +131,17 @@ class GeminiGenerateText:
             if len(api_key) == 0:
                 raise ValueError("API key is not set")
 
-        client = genai.Client(api_key=api_key)
-
-        # 构造parts
-        parts = []
-        # 如果不启用system instruction，则把system_prompt也放到parts最前面
-        if disable_system_prompt or not system_prompt:
-            if system_prompt:
-                parts.append(types.Part.from_text(text=system_prompt))
-        parts.append(types.Part.from_text(text=prompt))
-
-        contents = [
-            types.Content(
-                role="user",
-                parts=parts,
-            )
-        ]
-
-        # 构造system_instruction
-        system_instruction = None
-        if not disable_system_prompt and system_prompt:
-            system_instruction = [types.Part.from_text(text=system_prompt)]
-        else:
-            system_instruction = None
-
-        config = types.GenerateContentConfig(
+        client = GeminiClient(api_key)
+        text = client.generate_text(
+            model_name=model_name,
+            system_prompt=system_prompt,
+            prompt=prompt,
             temperature=temperature,
             top_p=top_p,
             top_k=top_k,
             max_output_tokens=max_output_tokens,
-            safety_settings=(
-                [
-                    types.SafetySetting(
-                        category="HARM_CATEGORY_HARASSMENT",
-                        threshold="BLOCK_NONE",
-                    ),
-                    types.SafetySetting(
-                        category="HARM_CATEGORY_HATE_SPEECH",
-                        threshold="BLOCK_NONE",
-                    ),
-                    types.SafetySetting(
-                        category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                        threshold="BLOCK_NONE",
-                    ),
-                    types.SafetySetting(
-                        category="HARM_CATEGORY_DANGEROUS_CONTENT",
-                        threshold="BLOCK_NONE",
-                    ),
-                ]
-                if not disable_safety_settings
-                else None
-            ),
-            response_mime_type="text/plain",
-            system_instruction=system_instruction,
+            retry_count=retry_count,
+            disable_safety_settings=disable_safety_settings,
+            disable_system_prompt=disable_system_prompt,
         )
-
-        for _ in range(retry_count):
-            try:
-                response = client.models.generate_content(
-                    model=model_name,
-                    contents=contents,
-                    config=config,
-                )
-                text = response.text
-                if len(text) > 0:
-                    return (text,)
-            except Exception as e:
-                print(f"Error {model_name} generating text: {e}")
-        return ("",)
+        return (text,)
