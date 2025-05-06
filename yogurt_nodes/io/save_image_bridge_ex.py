@@ -194,7 +194,7 @@ class SaveImageBridgeEx:
 
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("images",)
-    FUNCTION = "save_images"
+    FUNCTION = "execute"
 
     OUTPUT_NODE = True
 
@@ -202,7 +202,7 @@ class SaveImageBridgeEx:
     CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Saves the input images to your ComfyUI output directory."
 
-    def save_images(
+    def execute(
         self,
         images,
         output_dir="",
@@ -293,104 +293,3 @@ class SaveImageBridgeEx:
             counter += 1
 
         return {"ui": {"images": results}, "result": (images,)}
-
-
-class SaveImageBridge(SaveImageBridgeEx):
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "images": ("IMAGE", {"tooltip": "The images to save."}),
-                "output_dir": (
-                    "STRING",
-                    {
-                        "default": "",
-                        "tooltip": "The directory to save the images to, leave blank to save to the ComfyUI output directory.",
-                    },
-                ),
-                "filename_prefix": (
-                    "STRING",
-                    {
-                        "default": "ComfyUI",
-                        "tooltip": "The prefix for the file to save. This may include formatting information such as %date:yyyy-MM-dd% or %Empty Latent Image.width% to include values from nodes.",
-                    },
-                ),
-                "disable_metadata": (
-                    ["true", "false"],
-                    {
-                        "default": "false",
-                        "tooltip": "Disable saving metadata to the PNG file.",
-                    },
-                ),
-                "overwrite": (
-                    ["true", "false"],
-                    {"default": "false", "tooltip": "Overwrite existing files."},
-                ),
-                "suffix": (
-                    [".png", ".jpg"],
-                    {
-                        "default": ".png",
-                        "tooltip": "The file extension to save the images as.",
-                    },
-                ),
-                "png_compression": (
-                    "INT",
-                    {
-                        "default": 4,
-                        "min": 0,
-                        "max": 9,
-                        "tooltip": "The level of compression to use for PNG images.",
-                    },
-                ),
-                "jpeg_quality": (
-                    "INT",
-                    {
-                        "default": 100,
-                        "min": 0,
-                        "max": 100,
-                        "tooltip": "The quality of the JPEG image.",
-                    },
-                ),
-            },
-            "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
-        }
-
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("images",)
-    FUNCTION = "save_images"
-
-    OUTPUT_NODE = True
-
-    _NODE_NAME = "Save Image Bridge"
-    CATEGORY = "YogurtNodes/IO"
-    DESCRIPTION = "Saves the input images to your ComfyUI output directory."
-
-
-class PreviewImageBridge(SaveImageBridge):
-    def __init__(self):
-        self.output_dir = folder_paths.get_temp_directory()
-        self.type = "temp"
-        self.prefix_append = "_temp_" + "".join(
-            random.choice("abcdefghijklmnopqrstupvxyz") for x in range(5)
-        )
-
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "images": ("IMAGE",),
-            },
-            "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
-        }
-
-    FUNCTION = "preview_images"
-    _NODE_NAME = "Preview Image Bridge"
-
-    def preview_images(self, images, prompt=None, extra_pnginfo=None):
-        return self.save_images(
-            images,
-            suffix=".png",
-            png_compression=9,
-            prompt=prompt,
-            extra_pnginfo=extra_pnginfo,
-        )
