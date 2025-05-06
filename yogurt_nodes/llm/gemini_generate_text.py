@@ -1,5 +1,5 @@
 import os
-from .lib.gemini_client import GeminiClient
+from .gemini_client import GeminiClient
 
 
 class GeminiGenerateText:

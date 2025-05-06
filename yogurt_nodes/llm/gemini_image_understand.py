@@ -1,5 +1,5 @@
 from PIL import Image
-from .lib.gemini_client import GeminiClient
+from .gemini_client import GeminiClient
 
 
 class GeminiImageUnderstand:
