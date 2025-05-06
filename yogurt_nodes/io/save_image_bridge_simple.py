@@ -1,4 +1,4 @@
-from yogurt_nodes.io.save_image_bridge_ex import SaveImageBridgeEx
+from .save_image_bridge_ex import SaveImageBridgeEx
 
 
 class SaveImageBridgeSimple(SaveImageBridgeEx):

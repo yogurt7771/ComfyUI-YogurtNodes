@@ -1,4 +1,4 @@
-from yogurt_nodes.io.save_mask_bridge_ex import SaveMaskBridgeEx
+from .save_mask_bridge_ex import SaveMaskBridgeEx
 
 
 class SaveMaskBridgeSimple(SaveMaskBridgeEx):
