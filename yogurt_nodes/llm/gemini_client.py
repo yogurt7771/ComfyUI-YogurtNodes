@@ -5,6 +5,7 @@ from typing import List
 from PIL import Image
 from google import genai
 from google.genai import types
+import mimetypes
 
 
 class GeminiClient:
@@ -172,3 +173,70 @@ class GeminiClient:
             except Exception as e:
                 print(f"Error {model_name} generating text: {e}")
         return ""
+
+    def generate_image(
+        self,
+        model_name: str,
+        prompt: str = None,
+        system_prompt: str = None,
+        temperature: float = 1,
+        top_p: float = 0.95,
+        top_k: int = 64,
+        max_output_tokens: int = 8192,
+        retry_count: int = 3,
+        disable_safety_settings: bool = False,
+        disable_system_prompt: bool = False,
+    ) -> tuple:
+        """
+        生成图片
+        返回 (PIL.Image, text)
+        """
+        config = types.GenerateContentConfig(
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            max_output_tokens=max_output_tokens,
+            safety_settings=self._get_safety_settings(disable_safety_settings),
+            response_modalities=["image", "text"],
+            response_mime_type="text/plain",
+            system_instruction=self._get_system_instruction(
+                system_prompt, disable_system_prompt
+            ),
+        )
+        contents = self._get_contents(
+            system_prompt,
+            prompt,
+            images=None,
+            disable_system_prompt=disable_system_prompt,
+        )
+        images = []
+        last_text = ""
+        e = None
+        for _ in range(retry_count):
+            try:
+                for chunk in self.client.models.generate_content_stream(
+                    model=model_name,
+                    contents=contents,
+                    config=config,
+                ):
+                    if (
+                        chunk.candidates is None
+                        or chunk.candidates[0].content is None
+                        or chunk.candidates[0].content.parts is None
+                    ):
+                        continue
+                    if chunk.candidates[0].content.parts[0].inline_data:
+                        from io import BytesIO
+
+                        inline_data = chunk.candidates[0].content.parts[0].inline_data
+                        data_buffer = inline_data.data
+                        image = Image.open(BytesIO(data_buffer)).convert("RGB")
+                        images.append(image)
+                    else:
+                        if hasattr(chunk, "text") and chunk.text:
+                            last_text += chunk.text
+                return images, last_text
+            except Exception as e_inner:
+                print(f"Error {model_name} generating image: {e_inner}")
+                e = e_inner
+        raise e

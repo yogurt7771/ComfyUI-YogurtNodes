@@ -1,12 +1,12 @@
-from PIL import Image
-import torchvision
-
+import os
 from .gemini_client import GeminiClient
+import torchvision
+import torch
 
 
-class GeminiImageUnderstand:
+class GeminiGenerateImage:
     """
-    使用 Gemini API 理解图像内容
+    Gemini Generate Image
     """
 
     @classmethod
@@ -24,8 +24,8 @@ class GeminiImageUnderstand:
                 "model_name": (
                     "STRING",
                     {
-                        "default": "gemini-pro-vision",
-                        "tooltip": "Gemini model name, default is gemini-pro-vision",
+                        "default": "gemini-2.0-flash-exp-image-generation",
+                        "tooltip": "Gemini model name, default is gemini-2.0-flash-exp-image-generation",
                     },
                 ),
                 "system_prompt": (
@@ -102,26 +102,21 @@ class GeminiImageUnderstand:
                         "tooltip": "Whether to disable the system prompt",
                     },
                 ),
-            },
-            "optional": {
-                "image": ("IMAGE",),
-                "image1": ("IMAGE",),
-                "image2": ("IMAGE",),
-                "image3": ("IMAGE",),
-                "image4": ("IMAGE",),
-            },
+            }
         }
 
-    RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("text",)
+    RETURN_TYPES = ("IMAGE", "STRING", "INT")
+    RETURN_NAMES = ("image", "text", "num_images")
 
-    FUNCTION = "understand_image"
+    FUNCTION = "generate_image"
 
-    _NODE_NAME = "Gemini Image Understand"
-    DESCRIPTION = "Understand image content using Gemini API"
+    _NODE_NAME = "Gemini Generate Image"
+    DESCRIPTION = (
+        "Generate image using Gemini API and return as torch.Tensor (h,w,c) and text"
+    )
     CATEGORY = "YogurtNodes/LLM"
 
-    def understand_image(
+    def generate_image(
         self,
         api_key: str,
         model_name: str,
@@ -134,27 +129,17 @@ class GeminiImageUnderstand:
         retry_count: int,
         disable_safety_settings: bool,
         disable_system_prompt: bool,
-        image: Image.Image = None,
-        image1: Image.Image = None,
-        image2: Image.Image = None,
-        image3: Image.Image = None,
-        image4: Image.Image = None,
     ):
-        # 收集所有非空图像
-        images = []
-        for img in [image, image1, image2, image3, image4]:
-            if img is not None:
-                if len(img.shape) == 4:
-                    img = img[0]
-                img = img.permute(2, 0, 1)
-                images.append(torchvision.transforms.ToPILImage()(img))
+        if len(api_key) == 0:
+            api_key = os.getenv("GEMINI_API_KEY")
+            if len(api_key) == 0:
+                raise ValueError("API key is not set")
 
         client = GeminiClient(api_key)
-        text = client.generate_text(
+        images, text = client.generate_image(
             model_name=model_name,
-            system_prompt=system_prompt,
             prompt=prompt,
-            images=images,
+            system_prompt=system_prompt,
             temperature=temperature,
             top_p=top_p,
             top_k=top_k,
@@ -163,4 +148,18 @@ class GeminiImageUnderstand:
             disable_safety_settings=disable_safety_settings,
             disable_system_prompt=disable_system_prompt,
         )
-        return (text,)
+        tensor_imgs = []
+        for image in images:
+            tensor_img = torchvision.transforms.ToTensor()(image)
+            tensor_img = tensor_img.permute(1, 2, 0).unsqueeze(0)
+            tensor_imgs.append(tensor_img)
+        if len(tensor_imgs) == 1:
+            return (tensor_imgs[0], text, 1)
+        elif len(tensor_imgs) > 1:
+            return (torch.cat(tensor_imgs, dim=0), text, len(tensor_imgs))
+        else:
+            return (
+                torch.zeros(1, 3, 1, 1, dtype=torch.float32),
+                text,
+                0,
+            )
