@@ -288,6 +288,43 @@ All nodes are marked with "YogurtNodes" prefix for easy identification in the Co
   - Multi-language support
   - Detailed image descriptions
 
+#### Gemini Generate Image
+- **Category:** YogurtNodes/LLM
+- **Description:** Generate images using Gemini API
+- **Features:**
+  - Support for various Gemini image generation models
+  - System and user prompt control
+  - Customizable generation parameters (temperature, top_p, top_k, etc.)
+  - Safety settings control
+  - Maximum output token count
+  - Automatic retry mechanism
+  - Outputs image (torch.Tensor), text description, and image count
+
+## 🔑 Gemini API Key Setup
+
+Before using Gemini-related nodes, you must obtain and configure your Gemini API Key. There are three supported methods, in the following order of priority:
+
+1. **Code Argument**
+   - Pass the `api_key` argument directly when initializing `GeminiClient` (highest priority).
+
+2. **api_key.json File**
+   - Create an `api_key.json` file in `custom_nodes/ComfyUI-YogurtNodes/yogurt_nodes/llm/` with the following content:
+     ```json
+     {
+       "gemini": "YOUR_API_KEY"
+     }
+     ```
+   - This will be used only if the code argument is not provided.
+
+3. **Environment Variable**
+   - Set the environment variable `GEMINI_API_KEY` (used only if the above two are not set).
+   - Example (Windows command line):
+     ```cmd
+     set GEMINI_API_KEY=YOUR_API_KEY
+     ```
+
+If the API Key is not configured correctly, Gemini nodes will not work. You can obtain your API Key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+
 ## 🤝 Contributing
 
 Pull Requests are welcome to help improve the project!

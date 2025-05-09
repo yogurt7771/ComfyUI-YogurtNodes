@@ -1,11 +1,11 @@
 import io
+import json
 import os
 from pathlib import Path
 from typing import List
 from PIL import Image
 from google import genai
 from google.genai import types
-import mimetypes
 
 
 class GeminiClient:
@@ -18,17 +18,30 @@ class GeminiClient:
         初始化 Gemini 客户端
 
         Args:
-            api_key (str): Gemini API 密钥
+            api_key (str): Gemini API 密钥（可选，优先级最高）
+
+        API Key 支持三种获取方式，优先级如下：
+        1. 直接通过参数 api_key 传入（推荐用于编程调用）
+        2. 环境变量 GEMINI_API_KEY（推荐用于部署/自动化）
+        3. 当前目录下 api_key.json 文件，格式为 {"gemini": "你的API密钥"}
+
+        如三者均未设置，将抛出异常。
         """
-        if len(api_key) == 0:
+        if len(api_key) == 0:  # 如果 api_key 为空，则尝试从 api_key.json 文件中读取
+            # 读取 api_key.json 文件
+            if os.path.exists("api_key.json"):
+                api_keys = json.load(open("api_key.json", "r", encoding="utf-8"))
+                if "gemini" in api_keys:
+                    api_key = api_keys["gemini"]
+        if len(api_key) == 0:  # 如果 api_key 为空，则尝试从环境变量中读取
             api_key = os.getenv("GEMINI_API_KEY")
-            if len(api_key) == 0:
-                raise ValueError("API key is not set")
+        if len(api_key) == 0:
+            raise ValueError("API key is not set")
         self.client = genai.Client(api_key=api_key)
 
     def _get_jailbreak_prompt(self) -> str:
         """获取 jailbreak 提示词"""
-        path = Path(__file__).parent / "lib" / "jailbreak.txt"
+        path = Path(__file__).parent / "jailbreak.txt"
         if path.exists():
             with open(path, "r", encoding="utf-8") as f:
                 return f.read().strip()

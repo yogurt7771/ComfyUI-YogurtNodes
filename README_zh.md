@@ -316,6 +316,44 @@ pip install -r requirements.txt
   - 多语言支持
   - 详细的图像描述生成
 
+#### Gemini Generate Image
+
+- **类别：** YogurtNodes/LLM
+- **描述：** 使用Gemini API生成图片
+- **特点：**
+  - 支持多种Gemini图像生成模型
+  - 系统提示和用户提示控制
+  - 可自定义的生成参数（温度、top_p、top_k等）
+  - 安全设置控制
+  - 最大输出令牌数设置
+  - 自动重试机制
+  - 输出图片（torch.Tensor）、文本描述和图片数量
+
+## 🔑 Gemini API Key 配置说明
+
+使用 Gemini 相关节点前，您需要获取并配置 Gemini API Key。支持以下三种方式，优先级如下：
+
+1. **代码参数传递**
+   - 直接在代码中初始化 GeminiClient 时传入 `api_key` 参数（优先级最高）。
+
+2. **api_key.json 文件**
+   - 在 `custom_nodes/ComfyUI-YogurtNodes/yogurt_nodes/llm/` 目录下创建 `api_key.json` 文件，内容如下：
+     ```json
+     {
+       "gemini": "你的API密钥"
+     }
+     ```
+   - 仅当未通过代码参数传递时才会读取。
+
+3. **环境变量**
+   - 设置环境变量 `GEMINI_API_KEY`，仅当前两者都未设置时才会读取。
+   - 示例（Windows 命令行）：
+     ```cmd
+     set GEMINI_API_KEY=你的API密钥
+     ```
+
+如未正确配置 API Key，相关节点将无法正常使用。API Key 可在 [Google AI Studio](https://aistudio.google.com/app/apikey) 获取。
+
 ## 🤝 贡献
 
 欢迎提交PR来帮助改进项目！
