@@ -18,12 +18,12 @@ class GeminiClient:
         初始化 Gemini 客户端
 
         Args:
-            api_key (str): Gemini API 密钥（可选，优先级最高）
+            api_key (str): Gemini API 密钥（可选，优先级最高，如果未设置，则尝试从 api_key.json 文件中读取，如果未设置，则尝试从环境变量中读取）
 
         API Key 支持三种获取方式，优先级如下：
         1. 直接通过参数 api_key 传入（推荐用于编程调用）
-        2. 环境变量 GEMINI_API_KEY（推荐用于部署/自动化）
-        3. 当前目录下 api_key.json 文件，格式为 {"gemini": "你的API密钥"}
+        2. 当前目录下 api_key.json 文件，格式为 {"gemini": "你的API密钥"}
+        3. 环境变量 GEMINI_API_KEY
 
         如三者均未设置，将抛出异常。
         """
