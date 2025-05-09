@@ -87,6 +87,22 @@ pip install -r requirements.txt
 - **描述：** 一个返回None作为图像输出的实用节点
 - **用例：** 适用于需要空图像输出的条件工作流
 
+### 数字处理节点
+
+#### Range
+- **类别：** YogurtNodes/Number
+- **描述：** 生成指定区间的数字序列
+- **特点：**
+  - 支持自定义起始、结束、步长或数量
+  - 输出torch张量、步数和步长
+
+#### RangeItem
+- **类别：** YogurtNodes/Number
+- **描述：** 从区间序列中提取指定索引的数值
+- **特点：**
+  - 支持负索引
+  - 输出字符串、整数和浮点数
+
 ### 字符串处理节点
 
 #### String Lines Count
@@ -136,6 +152,15 @@ pip install -r requirements.txt
   - 返回父目录
   - 文件名和扩展名分离
   - 扩展名的多种格式选项
+
+#### Regex Node
+- **类别：** YogurtNodes/String
+- **描述：** 基于正则表达式的多行文本提取与替换
+- **特点：**
+  - 支持extract和replace两种模式
+  - 支持分组引用与格式化
+  - 可按数量、顺序提取或替换
+  - 适用于复杂文本处理
 
 ### 逻辑处理节点
 
@@ -290,6 +315,34 @@ pip install -r requirements.txt
   - 递归创建支持
   - 路径验证
   - 已存在目录的安全操作
+
+#### Save Mask Bridge Ex
+- **类别：** YogurtNodes/IO
+- **描述：** 增强的掩码保存节点，支持多种格式和自定义后缀
+- **特点：**
+  - 支持PNG/JPEG/自定义格式
+  - 可自定义输出目录、文件前缀、后缀
+  - 支持元数据、压缩、覆盖保护
+
+#### Save Mask Bridge
+- **类别：** YogurtNodes/IO
+- **描述：** 基本掩码保存节点
+- **特点：**
+  - 支持PNG/JPEG格式
+  - 可自定义输出目录、文件前缀
+  - 支持元数据、压缩、覆盖保护
+
+#### Save Mask Bridge Simple
+- **类别：** YogurtNodes/IO
+- **描述：** 简化版掩码保存节点
+- **特点：**
+  - 仅需最基本参数，快速保存掩码
+
+#### Preview Mask Bridge
+- **类别：** YogurtNodes/IO
+- **描述：** 掩码预览节点
+- **特点：**
+  - 将掩码保存为临时文件，便于快速预览
 
 ### 语言模型节点
 

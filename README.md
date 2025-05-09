@@ -81,6 +81,20 @@ All nodes are marked with "YogurtNodes" prefix for easy identification in the Co
 - **Description:** A utility node that returns None as an image output
 - **Use Case:** Helpful for conditional workflows where a null image output is needed
 
+#### Range
+- **Category:** YogurtNodes/Number
+- **Description:** Generate a sequence of numbers within a specified range
+- **Features:**
+  - Customizable start, end, step, or count
+  - Outputs torch tensor, count, and step
+
+#### RangeItem
+- **Category:** YogurtNodes/Number
+- **Description:** Extract a value from a range sequence by index
+- **Features:**
+  - Supports negative index
+  - Outputs string, int, and float
+
 ### String Processing Nodes
 
 #### String Lines Count
@@ -125,6 +139,15 @@ All nodes are marked with "YogurtNodes" prefix for easy identification in the Co
   - Returns parent directory
   - Filename and extension separation
   - Multiple format options for extensions
+
+#### Regex Node
+- **Category:** YogurtNodes/String
+- **Description:** Regex-based extraction and replacement for multiline text
+- **Features:**
+  - Supports 'extract' and 'replace' modes
+  - Group reference and formatting
+  - Extract or replace by count/order
+  - Suitable for complex text processing
 
 ### Logic Processing Nodes
 
@@ -264,6 +287,34 @@ All nodes are marked with "YogurtNodes" prefix for easy identification in the Co
   - Recursive creation support
   - Path validation
   - Safe operation with existing directories
+
+#### Save Mask Bridge Ex
+- **Category:** YogurtNodes/IO
+- **Description:** Enhanced mask saving node, supports multiple formats and custom suffix
+- **Features:**
+  - Supports PNG/JPEG/custom formats
+  - Custom output directory, filename prefix, suffix
+  - Metadata, compression, overwrite protection
+
+#### Save Mask Bridge
+- **Category:** YogurtNodes/IO
+- **Description:** Basic mask saving node
+- **Features:**
+  - Supports PNG/JPEG formats
+  - Custom output directory, filename prefix
+  - Metadata, compression, overwrite protection
+
+#### Save Mask Bridge Simple
+- **Category:** YogurtNodes/IO
+- **Description:** Simplified mask saving node
+- **Features:**
+  - Minimal parameters, quick mask saving
+
+#### Preview Mask Bridge
+- **Category:** YogurtNodes/IO
+- **Description:** Mask preview node
+- **Features:**
+  - Saves mask as temporary file for quick preview
 
 ### Language Model Nodes
 
