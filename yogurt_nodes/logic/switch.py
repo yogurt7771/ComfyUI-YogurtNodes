@@ -66,83 +66,25 @@ class Switch:
     def check_lazy_status(
         self,
         condition,
-        case1,
-        case2,
-        case3,
-        case4,
-        case5,
-        case6,
-        case7,
-        case8,
-        option1=None,
-        option2=None,
-        option3=None,
-        option4=None,
-        option5=None,
-        option6=None,
-        option7=None,
-        option8=None,
-        default=None,
+        **kwargs,
     ):
-        cases = [case1, case2, case3, case4, case5, case6, case7, case8]
-        options = [
-            option1,
-            option2,
-            option3,
-            option4,
-            option5,
-            option6,
-            option7,
-            option8,
-        ]
+        cases = [item[1] for item in kwargs.items() if item[0].startswith("case")]
         str_condition = str(condition)
-        for i, (case, _option) in enumerate(zip(cases, options)):
+        for i, case in enumerate(cases):
             if re.fullmatch(case, str_condition):
                 return [f"option{i+1}"]
-        if default is not None:
-            return ["default"]
-        return []
+        return ["default"]
 
     def execute(
         self,
         condition,
-        case1,
-        case2,
-        case3,
-        case4,
-        case5,
-        case6,
-        case7,
-        case8,
-        option1=None,
-        option2=None,
-        option3=None,
-        option4=None,
-        option5=None,
-        option6=None,
-        option7=None,
-        option8=None,
-        default=None,
+        **kwargs,
     ):
-        cases = [case1, case2, case3, case4, case5, case6, case7, case8]
-        options = [
-            option1,
-            option2,
-            option3,
-            option4,
-            option5,
-            option6,
-            option7,
-            option8,
-        ]
+        options = [item[1] for item in kwargs.items() if item[0].startswith("option")]
         option = self.check_lazy_status(
             condition,
-            *cases,
-            *options,
-            default,
-        )
-        if option:
-            index = int(option[0].removeprefix("option"))
-            return (options[index - 1],)
-        else:
-            raise ValueError(f"No case matched for condition {condition}.")
+            **kwargs,
+        )[0]
+        if option == "default":
+            return (kwargs["default"],)
+        return (options[int(option.removeprefix("option")) - 1],)
