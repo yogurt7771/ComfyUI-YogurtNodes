@@ -37,4 +37,5 @@ class AnyBridge:
     CATEGORY = "YogurtNodes/IO"
 
     def execute(self, data, **blackholes):
-        return (data,)
+        show_data = str(data)
+        return {"ui": {"text": show_data}, "result": (data,)}

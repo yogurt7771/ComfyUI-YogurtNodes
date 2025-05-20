@@ -7,6 +7,7 @@ from .yogurt_nodes import *
 
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
+WEB_DIRECTORY = "./web"
 
 for name, obj in list(globals().items()):
     if inspect.isclass(obj) and hasattr(obj, "_NODE_NAME"):
@@ -15,3 +16,5 @@ for name, obj in list(globals().items()):
         NODE_DISPLAY_NAME_MAPPINGS[node_name] = f"{obj._NODE_NAME} (Yogurt Nodes)"
 
 print(f"Yogurt Nodes loaded: {NODE_DISPLAY_NAME_MAPPINGS.values()}")
+
+__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]

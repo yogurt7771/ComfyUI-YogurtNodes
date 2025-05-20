@@ -1,0 +1,48 @@
+# from itertools import chain, product
+from math import prod
+
+from ..utils import ANY_TYPE
+
+
+INPUT_COUNT = 10
+
+
+class StringFormat:
+    """
+    Format strings
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        texts = {f"input{i}": (ANY_TYPE, {"tooltip": f"The input to be formatted. {i}"}) for i in range(INPUT_COUNT)}
+        return {
+            "required": {
+                "format": ("STRING", {"multiline": True}),
+            },
+            "optional": {
+                **texts,
+            },
+        }
+
+    RETURN_TYPES = (
+        "STRING",
+    )
+    RETURN_NAMES = (
+        "formatted",
+    )
+    OUTPUT_NODE = True
+
+    FUNCTION = "main"
+
+    _NODE_NAME = "String Format"
+    DESCRIPTION = "Format strings"
+    CATEGORY = "YogurtNodes/String"
+
+    def main(
+        self,
+        **kwargs,
+    ):
+        format_str = kwargs["format"]
+        inputs = {k: v for k, v in kwargs.items() if k.startswith("input")}
+        formated_str = format_str.format(**inputs)
+        return (formated_str,)
