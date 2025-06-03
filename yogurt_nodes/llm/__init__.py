@@ -1,3 +1,7 @@
 from .gemini_generate_text import GeminiGenerateText  # noqa
 from .gemini_image_understand import GeminiImageUnderstand  # noqa
 from .gemini_generate_image import GeminiGenerateImage  # noqa
+from .openrouter_generate_text import OpenRouterGenerateText  # noqa
+from .openrouter_image_understand import OpenRouterImageUnderstand  # noqa
+from .openai_generate_text import OpenAIGenerateText  # noqa
+from .openai_image_understand import OpenAIImageUnderstand  # noqa

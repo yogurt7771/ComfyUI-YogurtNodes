@@ -12,6 +12,7 @@ ComfyUI-YogurtNodes是ComfyUI的自定义节点集合，提供一系列实用的
 - 模型管理和选择工具
 - 全面的输入/输出操作支持
 - 集成Gemini API的语言和图像理解功能
+- 集成OpenAI API的文本生成和图像理解功能
 - 逻辑控制节点支持复杂工作流
 
 ## 📦 安装
@@ -24,6 +25,7 @@ ComfyUI-YogurtNodes是ComfyUI的自定义节点集合，提供一系列实用的
   - numpy
   - pillow
   - google-generativeai (对于Gemini节点)
+  - openai (对于OpenAI节点)
 
 ### 安装步骤
 

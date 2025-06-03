@@ -1,18 +1,34 @@
 from typing import Optional
-from PIL import Image
+
 import torch
 import torchvision
 
-from .gemini_client import GeminiClient
+from .openrouter_client import OpenRouterClient
 
 
-class GeminiImageUnderstand:
+class OpenRouterImageUnderstand:
     """
-    使用 Gemini API 理解图像内容
+    使用 OpenRouter API 理解图像内容
     """
 
     @classmethod
     def INPUT_TYPES(cls):
+        # 尝试获取动态模型列表，如果失败则使用缓存列表
+        try:
+            # 创建临时客户端获取列表（使用环境变量或缓存）
+            temp_client = OpenRouterClient()
+            models = temp_client.get_all_models()
+        except Exception:
+            # 如果API调用失败，使用缓存列表
+            models = OpenRouterClient.get_cached_models()
+
+        # 确保列表不为空
+        if not models:
+            models = OpenRouterClient.get_cached_models()
+
+        # 获取基础设施提供商列表
+        infrastructure_providers = OpenRouterClient.get_infrastructure_providers()
+
         return {
             "required": {
                 "api_key": (
@@ -20,14 +36,21 @@ class GeminiImageUnderstand:
                     {
                         "default": "",
                         "multiline": False,
-                        "tooltip": "API key for accessing Gemini API",
+                        "tooltip": "API key for accessing OpenRouter API",
                     },
                 ),
                 "model_name": (
-                    "STRING",
+                    models,
                     {
-                        "default": "gemini-pro-vision",
-                        "tooltip": "Gemini model name, default is gemini-pro-vision",
+                        "default": "anthropic/claude-3.5-sonnet",
+                        "tooltip": "OpenRouter vision model name",
+                    },
+                ),
+                "infrastructure_provider": (
+                    infrastructure_providers,
+                    {
+                        "default": "auto",
+                        "tooltip": "Infrastructure provider (auto, azure, aws, etc.) - Optional",
                     },
                 ),
                 "system_prompt": (
@@ -47,8 +70,9 @@ class GeminiImageUnderstand:
                 "temperature": (
                     "FLOAT",
                     {
-                        "default": 1,
+                        "default": 1.0,
                         "min": 0.0,
+                        "max": 2.0,
                         "step": 0.01,
                         "tooltip": "Sampling temperature, higher values produce more random outputs",
                     },
@@ -63,22 +87,24 @@ class GeminiImageUnderstand:
                         "tooltip": "Sampling probability threshold, controls output diversity",
                     },
                 ),
-                "top_k": (
-                    "INT",
-                    {
-                        "default": 64,
-                        "min": 0,
-                        "step": 1,
-                        "tooltip": "Number of highest probability tokens to consider during sampling",
-                    },
-                ),
-                "max_output_tokens": (
+                "max_tokens": (
                     "INT",
                     {
                         "default": 8192,
                         "min": 1,
+                        "max": 32768,
                         "step": 1,
                         "tooltip": "Maximum number of tokens in the generated text",
+                    },
+                ),
+                "max_context_length": (
+                    "INT",
+                    {
+                        "default": 32000,
+                        "min": 1000,
+                        "max": 128000,
+                        "step": 1000,
+                        "tooltip": "Maximum context length to prevent token overflow",
                     },
                 ),
                 "retry_count": (
@@ -86,22 +112,9 @@ class GeminiImageUnderstand:
                     {
                         "default": 3,
                         "min": 1,
+                        "max": 10,
                         "step": 1,
                         "tooltip": "Number of retries when request fails",
-                    },
-                ),
-                "disable_safety_settings": (
-                    "BOOLEAN",
-                    {
-                        "default": False,
-                        "tooltip": "Whether to disable safety settings (not recommended)",
-                    },
-                ),
-                "disable_system_prompt": (
-                    "BOOLEAN",
-                    {
-                        "default": False,
-                        "tooltip": "Whether to disable the system prompt",
                     },
                 ),
             },
@@ -123,23 +136,22 @@ class GeminiImageUnderstand:
 
     FUNCTION = "understand_image"
 
-    _NODE_NAME = "Gemini Image Understand"
-    DESCRIPTION = "Understand image content using Gemini API"
+    _NODE_NAME = "OpenRouter Image Understand"
+    DESCRIPTION = "Understand image content using OpenRouter API"
     CATEGORY = "YogurtNodes/LLM"
 
     def understand_image(
         self,
         api_key: str,
         model_name: str,
+        infrastructure_provider: str,
         system_prompt: str,
         prompt: str,
         temperature: float,
         top_p: float,
-        top_k: int,
-        max_output_tokens: int,
+        max_tokens: int,
+        max_context_length: int,
         retry_count: int,
-        disable_safety_settings: bool,
-        disable_system_prompt: bool,
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -155,18 +167,22 @@ class GeminiImageUnderstand:
                 img = img.permute(2, 0, 1)
                 images.append(torchvision.transforms.ToPILImage()(img))
 
-        client = GeminiClient(api_key)
-        text = client.generate_text(
+        if not images:
+            raise ValueError("At least one image must be provided")
+
+        client = OpenRouterClient(api_key)
+        text = client.understand_image(
             model_name=model_name,
-            system_prompt=system_prompt,
             prompt=prompt,
             images=images,
+            system_prompt=system_prompt,
             temperature=temperature,
             top_p=top_p,
-            top_k=top_k,
-            max_output_tokens=max_output_tokens,
+            max_tokens=max_tokens,
+            max_context_length=max_context_length,
             retry_count=retry_count,
-            disable_safety_settings=disable_safety_settings,
-            disable_system_prompt=disable_system_prompt,
+            provider=(
+                infrastructure_provider if infrastructure_provider != "auto" else None
+            ),
         )
         return (text,)

@@ -1,4 +1,3 @@
-import os
 from .gemini_client import GeminiClient
 
 
@@ -73,6 +72,7 @@ class GeminiGenerateText:
                     {
                         "default": 8192,
                         "min": 1,
+                        "max": 2147483647,
                         "step": 1,
                         "tooltip": "Maximum number of tokens in the generated text",
                     },
@@ -90,18 +90,45 @@ class GeminiGenerateText:
                     "BOOLEAN",
                     {
                         "default": False,
-                        "tooltip": "Whether to disable safety settings (not recommended)",
+                        "tooltip": "Whether to disable safety settings, if true, the safety settings will not be set",
                     },
                 ),
                 "disable_system_prompt": (
                     "BOOLEAN",
                     {
                         "default": False,
-                        "tooltip": "Whether to disable the system prompt",
+                        "tooltip": "Whether to disable the system prompt, if true, the system prompt will sent as a user prompt",
+                    },
+                ),
+                "safety_level": (
+                    "STRING",
+                    {
+                        "default": "BLOCK_NONE",
+                        "values": [
+                            "OFF",
+                            "BLOCK_NONE",
+                            "BLOCK_ONLY_HIGH",
+                            "BLOCK_MEDIUM_AND_ABOVE",
+                            "BLOCK_LOW_AND_ABOVE",
+                        ],
+                        "tooltip": "Safety level for the generated text",
+                    },
+                ),
+                "thinking_budget": (
+                    "INT",
+                    {
+                        "default": 0,
+                        "min": -1,
+                        "step": 1,
+                        "tooltip": "Thinking budget for the model, if set to -1, the model will not limit thinking budget, if set to 0, the model will disable thinking",
                     },
                 ),
             }
         }
+
+    @classmethod
+    def VALIDATE_INPUTS(cls, input_types):
+        return True
 
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("text",)
@@ -125,12 +152,9 @@ class GeminiGenerateText:
         retry_count: int,
         disable_safety_settings: bool,
         disable_system_prompt: bool,
+        safety_level: str = "BLOCK_NONE",
+        thinking_budget: int = 0,
     ):
-        if len(api_key) == 0:
-            api_key = os.getenv("GEMINI_API_KEY")
-            if len(api_key) == 0:
-                raise ValueError("API key is not set")
-
         client = GeminiClient(api_key)
         text = client.generate_text(
             model_name=model_name,
@@ -143,5 +167,7 @@ class GeminiGenerateText:
             retry_count=retry_count,
             disable_safety_settings=disable_safety_settings,
             disable_system_prompt=disable_system_prompt,
+            safety_level=safety_level,
+            thinking_budget=thinking_budget,
         )
         return (text,)

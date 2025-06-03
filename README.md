@@ -24,6 +24,8 @@ ComfyUI-YogurtNodes is a collection of custom nodes for ComfyUI, providing a ser
   - numpy
   - pillow
   - google-generativeai (for Gemini nodes)
+  - openai (for OpenAI nodes)
+  - requests (for API calls)
 
 ### Installation Steps
 
@@ -351,6 +353,31 @@ All nodes are marked with "YogurtNodes" prefix for easy identification in the Co
   - Automatic retry mechanism
   - Outputs image (torch.Tensor), text description, and image count
 
+#### OpenAI Generate Text
+- **Category:** YogurtNodes/LLM
+- **Description:** Generate text using OpenAI API
+- **Features:**
+  - Support for various OpenAI models (GPT-4, GPT-3.5, etc.)
+  - Custom base URL support for compatible APIs
+  - System and user prompt control
+  - Customizable generation parameters (temperature, top_p, max_tokens, etc.)
+  - Frequency and presence penalty controls
+  - Seed support for reproducible outputs
+  - Automatic retry mechanism
+  - Dynamic model list fetching
+
+#### OpenAI Image Understand
+- **Category:** YogurtNodes/LLM
+- **Description:** Image understanding using OpenAI vision models
+- **Features:**
+  - Support for OpenAI vision models (GPT-4V, GPT-4o, etc.)
+  - Multi-image analysis support
+  - Combined image and text prompt processing
+  - Custom base URL support for compatible APIs
+  - Customizable generation parameters
+  - High-quality image detail processing
+  - Automatic retry mechanism
+
 ## 🔑 Gemini API Key Setup
 
 Before using Gemini-related nodes, you must obtain and configure your Gemini API Key. There are three supported methods, in the following order of priority:
@@ -375,6 +402,44 @@ Before using Gemini-related nodes, you must obtain and configure your Gemini API
      ```
 
 If the API Key is not configured correctly, Gemini nodes will not work. You can obtain your API Key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+
+## 🔑 OpenAI API Key Setup
+
+Before using OpenAI-related nodes, you must obtain and configure your OpenAI API Key. There are three supported methods, in the following order of priority:
+
+1. **Code Argument**
+   - Pass the `api_key` argument directly when initializing `OpenAIClient` (highest priority).
+
+2. **api_key.json File**
+   - Create an `api_key.json` file in `custom_nodes/ComfyUI-YogurtNodes/yogurt_nodes/llm/` with the following content:
+     ```json
+     {
+       "openai": "YOUR_API_KEY",
+       "openai_base_url": "https://api.openai.com/v1"
+     }
+     ```
+   - The `openai_base_url` is optional and defaults to the official OpenAI API.
+   - This will be used only if the code argument is not provided.
+
+3. **Environment Variable**
+   - Set the environment variables `OPENAI_API_KEY` and optionally `OPENAI_BASE_URL` (used only if the above two are not set).
+   - Example (Windows command line):
+     ```cmd
+     set OPENAI_API_KEY=YOUR_API_KEY
+     set OPENAI_BASE_URL=https://api.openai.com/v1
+     ```
+
+### Custom Base URL Support
+
+The OpenAI nodes support custom base URLs, making them compatible with:
+- Official OpenAI API
+- Azure OpenAI Service
+- OpenAI-compatible APIs (like LocalAI, Ollama, etc.)
+- Self-hosted OpenAI-compatible servers
+
+Simply set the `base_url` parameter to your preferred endpoint.
+
+If the API Key is not configured correctly, OpenAI nodes will not work. You can obtain your API Key from [OpenAI Platform](https://platform.openai.com/api-keys).
 
 ## 🤝 Contributing
 
