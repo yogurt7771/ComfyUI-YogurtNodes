@@ -90,16 +90,6 @@ class OpenAIGenerateText:
                         "tooltip": "Maximum number of tokens in the generated text",
                     },
                 ),
-                "max_context_length": (
-                    "INT",
-                    {
-                        "default": 128000,
-                        "min": 1000,
-                        "max": 2147483647,
-                        "step": 1000,
-                        "tooltip": "Maximum context length for the model",
-                    },
-                ),
                 "frequency_penalty": (
                     "FLOAT",
                     {
@@ -159,7 +149,6 @@ class OpenAIGenerateText:
         temperature: float,
         top_p: float,
         max_tokens: int,
-        max_context_length: int,
         frequency_penalty: float,
         presence_penalty: float,
         retry_count: int,
@@ -178,7 +167,6 @@ class OpenAIGenerateText:
             top_p=top_p,
             max_tokens=max_tokens,
             retry_count=retry_count,
-            max_context_length=max_context_length,
             frequency_penalty=frequency_penalty,
             presence_penalty=presence_penalty,
             seed=seed_value,

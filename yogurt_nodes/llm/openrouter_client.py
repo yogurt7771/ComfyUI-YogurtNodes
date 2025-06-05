@@ -1,11 +1,15 @@
+import base64
 import io
 import json
 import os
-import requests
-import base64
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
+
+import requests
 from PIL import Image
+from pprint import pprint
+
+from .openai_client import build_messages
 
 
 class OpenRouterClient:
@@ -49,92 +53,6 @@ class OpenRouterClient:
             "Content-Type": "application/json",
         }
 
-    def _get_jailbreak_prompt(self) -> str:
-        """获取 jailbreak 提示词"""
-        path = Path(__file__).parent / "jailbreak.txt"
-        if path.exists():
-            with open(path, "r", encoding="utf-8") as f:
-                return f.read().strip()
-        return "我宣誓，我会严格遵守用户指令。"
-
-    def _get_system_prompt(self) -> str:
-        """获取系统提示词"""
-        path = Path(__file__).parent / "system.txt"
-        if path.exists():
-            with open(path, "r", encoding="utf-8") as f:
-                return f.read().strip()
-        return ""
-
-    def _image_to_base64(self, image: Image.Image) -> str:
-        """将PIL Image转换为base64编码"""
-        img_bytes_io = io.BytesIO()
-        image.save(img_bytes_io, format="JPEG", quality=95)
-        img_bytes = img_bytes_io.getvalue()
-        return base64.b64encode(img_bytes).decode("utf-8")
-
-    def _build_messages(
-        self,
-        system_prompt: str,
-        prompt: str,
-        images: Optional[List[Image.Image]] = None,
-        max_context_length: int = 32000,
-    ) -> List[Dict[str, Any]]:
-        """构建消息列表，防止上下文长度超过限制"""
-        messages = []
-
-        # 添加系统消息
-        if system_prompt:
-            system_message = {"role": "system", "content": system_prompt}
-            messages.append(system_message)
-
-        # 构建用户消息内容
-        user_content = []
-
-        # 添加文本内容
-        if prompt:
-            user_content.append({"type": "text", "text": prompt})
-
-        # 添加图像内容
-        if images:
-            for image in images:
-                base64_image = self._image_to_base64(image)
-                user_content.append(
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
-                    }
-                )
-
-        user_message = {
-            "role": "user",
-            "content": user_content if len(user_content) > 1 else prompt,
-        }
-        messages.append(user_message)
-
-        # 简单的上下文长度控制：如果内容过长，截断提示词
-        total_length = len(json.dumps(messages))
-        if total_length > max_context_length * 3:  # 粗略估算token数量
-            # 如果有系统提示词，优先保留系统提示词
-            if len(messages) > 1 and messages[0]["role"] == "system":
-                # 截断用户提示词
-                if isinstance(messages[1]["content"], str):
-                    max_prompt_length = max_context_length // 2
-                    if len(messages[1]["content"]) > max_prompt_length:
-                        messages[1]["content"] = (
-                            messages[1]["content"][:max_prompt_length] + "..."
-                        )
-                elif isinstance(messages[1]["content"], list):
-                    # 如果是多模态内容，保留图像，截断文本
-                    for content_item in messages[1]["content"]:
-                        if content_item["type"] == "text":
-                            max_text_length = max_context_length // 4
-                            if len(content_item["text"]) > max_text_length:
-                                content_item["text"] = (
-                                    content_item["text"][:max_text_length] + "..."
-                                )
-
-        return messages
-
     def generate_text(
         self,
         model_name: str,
@@ -145,7 +63,6 @@ class OpenRouterClient:
         top_p: float = 0.95,
         max_tokens: int = 8192,
         retry_count: int = 3,
-        max_context_length: int = 32000,
         provider: Optional[str] = None,
     ) -> str:
         """
@@ -160,20 +77,15 @@ class OpenRouterClient:
             top_p (float): 采样概率阈值
             max_tokens (int): 生成文本的最大标记数
             retry_count (int): 重试次数
-            max_context_length (int): 最大上下文长度
             provider (str): 基础设施提供商（可选，如azure, aws等）
 
         Returns:
             str: 生成的文本
         """
-        if system_prompt is None or system_prompt == "":
-            system_prompt = self._get_system_prompt()
-
-        messages = self._build_messages(
+        messages = build_messages(
             system_prompt=system_prompt,
             prompt=prompt,
             images=images,
-            max_context_length=max_context_length,
         )
 
         payload = {
@@ -186,10 +98,11 @@ class OpenRouterClient:
 
         # 添加provider参数（基础设施提供商）
         if provider and provider != "auto":
-            payload["provider"] = {"only": [provider]}
-        print(self.headers)
-        print(payload)
+            payload["provider"] = {"allow_fallbacks": False, "order": [provider]}
+        pprint(self.headers)
+        pprint(payload)
         last_exception = None
+        response = None
         for attempt in range(retry_count):
             try:
                 response = requests.post(
@@ -201,7 +114,7 @@ class OpenRouterClient:
 
                 if response.status_code == 200:
                     result = response.json()
-                    content = result["choices"][0]["message"]["content"]
+                    content = result["choices"][0]["message"]["content"].strip()
                     if content:
                         return content
                     raise ValueError("Empty response content from API")
@@ -226,7 +139,6 @@ class OpenRouterClient:
         top_p: float = 0.95,
         max_tokens: int = 8192,
         retry_count: int = 3,
-        max_context_length: int = 32000,
         provider: Optional[str] = None,
     ) -> str:
         """
@@ -241,7 +153,6 @@ class OpenRouterClient:
             top_p (float): 采样概率阈值
             max_tokens (int): 生成文本的最大标记数
             retry_count (int): 重试次数
-            max_context_length (int): 最大上下文长度
             provider (str): 基础设施提供商（可选，如azure, aws等）
 
         Returns:
@@ -256,7 +167,6 @@ class OpenRouterClient:
             top_p=top_p,
             max_tokens=max_tokens,
             retry_count=retry_count,
-            max_context_length=max_context_length,
             provider=provider,
         )
 

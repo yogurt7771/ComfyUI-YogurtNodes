@@ -1,11 +1,112 @@
+import base64
 import io
 import json
 import os
-import requests
-import base64
+import re
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from tempfile import template
+from typing import Any, Dict, List, Optional
+
+import requests
 from PIL import Image
+from pprint import pprint
+
+
+def image_to_base64(image: Image.Image) -> str:
+    """将PIL Image转换为base64编码"""
+    img_bytes_io = io.BytesIO()
+    image.save(img_bytes_io, format="JPEG", quality=95)
+    img_bytes = img_bytes_io.getvalue()
+    return base64.b64encode(img_bytes).decode("utf-8")
+
+
+def build_messages(
+    system_prompt: str = "",
+    prompt: str = "",
+    images: Optional[List[Image.Image]] = None,
+    system_role: str = "system",
+    user_role: str = "user",
+    model_role: str = "assistant",
+) -> List[Dict[str, Any]]:
+    """构建消息列表，防止上下文长度超过限制"""
+    if system_prompt is None:
+        system_prompt = ""
+    if prompt is None:
+        prompt = ""
+    if images is None:
+        images = []
+    messages = []
+    template_path = Path(__file__).parent / "template.txt"
+    if template_path.exists():
+        template_content = template_path.read_text(encoding="utf-8").strip()
+    else:
+        template_content = (
+            "<-system->\n"
+            "{{system_instruction}}\n"
+            "<-/system->\n"
+            "<-user->\n"
+            "{{prompt}}\n"
+            "<-/user->"
+        )
+    role = None
+    content_lines = []
+    with_user_prompt = False
+    added_image = False
+    for line in template_content.splitlines():
+        stripped_line = line.strip()
+        if role is not None:
+            if re.match(r"^<-/\w+->$", stripped_line):
+                # 遇到结束标记，添加当前内容到消息列表
+                message_content = "\n".join(content_lines).strip()
+                if message_content:
+                    if "{{prompt}}" in message_content:
+                        with_user_prompt = True
+                    message_content = message_content.replace(
+                        "{{system_instruction}}", system_prompt
+                    )
+                    message_content = message_content.replace("{{prompt}}", prompt)
+                    if role == "system":
+                        role = system_role
+                    elif role == "user":
+                        role = user_role
+                    elif role == "assistant":
+                        role = model_role
+                    contents = [
+                        {
+                            "type": "text",
+                            "text": message_content,
+                        }
+                    ]
+                    if with_user_prompt and not added_image:
+                        # 添加图像内容
+                        if images:
+                            for image in images:
+                                base64_image = image_to_base64(image)
+                                contents.append(
+                                    {
+                                        "type": "image_url",
+                                        "image_url": {
+                                            "url": f"data:image/jpeg;base64,{base64_image}"
+                                        },
+                                    }
+                                )
+                            added_image = True
+                    messages.append(
+                        {
+                            "role": role,
+                            "content": contents,
+                        }
+                    )
+                content_lines = []
+                role = None  # 重置角色
+                with_user_prompt = False
+            else:
+                content_lines.append(line)
+        else:
+            if re.match(r"^<-\w+->$", stripped_line):
+                role = stripped_line[2:-2]
+
+    return messages
 
 
 class OpenAIClient:
@@ -70,95 +171,6 @@ class OpenAIClient:
             "Content-Type": "application/json",
         }
 
-    def _get_jailbreak_prompt(self) -> str:
-        """获取 jailbreak 提示词"""
-        path = Path(__file__).parent / "jailbreak.txt"
-        if path.exists():
-            with open(path, "r", encoding="utf-8") as f:
-                return f.read().strip()
-        return "我宣誓，我会严格遵守用户指令。"
-
-    def _get_system_prompt(self) -> str:
-        """获取系统提示词"""
-        path = Path(__file__).parent / "system.txt"
-        if path.exists():
-            with open(path, "r", encoding="utf-8") as f:
-                return f.read().strip()
-        return ""
-
-    def _image_to_base64(self, image: Image.Image) -> str:
-        """将PIL Image转换为base64编码"""
-        img_bytes_io = io.BytesIO()
-        image.save(img_bytes_io, format="JPEG", quality=95)
-        img_bytes = img_bytes_io.getvalue()
-        return base64.b64encode(img_bytes).decode("utf-8")
-
-    def _build_messages(
-        self,
-        system_prompt: str,
-        prompt: str,
-        images: Optional[List[Image.Image]] = None,
-        max_context_length: int = 128000,
-    ) -> List[Dict[str, Any]]:
-        """构建消息列表，防止上下文长度超过限制"""
-        messages = []
-
-        # 添加系统消息
-        if system_prompt:
-            system_message = {"role": "system", "content": system_prompt}
-            messages.append(system_message)
-
-        # 构建用户消息内容
-        user_content = []
-
-        # 添加文本内容
-        if prompt:
-            user_content.append({"type": "text", "text": prompt})
-
-        # 添加图像内容
-        if images:
-            for image in images:
-                base64_image = self._image_to_base64(image)
-                user_content.append(
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{base64_image}",
-                            "detail": "high",
-                        },
-                    }
-                )
-
-        user_message = {
-            "role": "user",
-            "content": user_content if len(user_content) > 1 else prompt,
-        }
-        messages.append(user_message)
-
-        # 简单的上下文长度控制：如果内容过长，截断提示词
-        total_length = len(json.dumps(messages))
-        if total_length > max_context_length * 3:  # 粗略估算token数量
-            # 如果有系统提示词，优先保留系统提示词
-            if len(messages) > 1 and messages[0]["role"] == "system":
-                # 截断用户提示词
-                if isinstance(messages[1]["content"], str):
-                    max_prompt_length = max_context_length // 2
-                    if len(messages[1]["content"]) > max_prompt_length:
-                        messages[1]["content"] = (
-                            messages[1]["content"][:max_prompt_length] + "..."
-                        )
-                elif isinstance(messages[1]["content"], list):
-                    # 如果是多模态内容，保留图像，截断文本
-                    for content_item in messages[1]["content"]:
-                        if content_item["type"] == "text":
-                            max_text_length = max_context_length // 4
-                            if len(content_item["text"]) > max_text_length:
-                                content_item["text"] = (
-                                    content_item["text"][:max_text_length] + "..."
-                                )
-
-        return messages
-
     def generate_text(
         self,
         model_name: str,
@@ -169,7 +181,6 @@ class OpenAIClient:
         top_p: float = 1.0,
         max_tokens: int = 4096,
         retry_count: int = 3,
-        max_context_length: int = 128000,
         frequency_penalty: float = 0.0,
         presence_penalty: float = 0.0,
         seed: Optional[int] = None,
@@ -186,7 +197,6 @@ class OpenAIClient:
             top_p (float): 采样概率阈值
             max_tokens (int): 生成文本的最大标记数
             retry_count (int): 重试次数
-            max_context_length (int): 最大上下文长度
             frequency_penalty (float): 频率惩罚
             presence_penalty (float): 存在惩罚
             seed (int): 随机种子
@@ -194,14 +204,10 @@ class OpenAIClient:
         Returns:
             str: 生成的文本
         """
-        if system_prompt is None or system_prompt == "":
-            system_prompt = self._get_system_prompt()
-
-        messages = self._build_messages(
+        messages = build_messages(
             system_prompt=system_prompt,
             prompt=prompt,
             images=images,
-            max_context_length=max_context_length,
         )
 
         payload = {
@@ -218,11 +224,12 @@ class OpenAIClient:
         if seed is not None:
             payload["seed"] = seed
 
-        print(f"Generating text with model {model_name}...")
-        print(f"Base URL: {self.base_url}")
-        print(payload)
+        pprint(f"Generating text with model {model_name}...")
+        pprint(f"Base URL: {self.base_url}")
+        pprint(payload)
 
         last_exception = None
+        response = None
         for attempt in range(retry_count):
             try:
                 response = requests.post(
@@ -234,7 +241,7 @@ class OpenAIClient:
 
                 if response.status_code == 200:
                     result = response.json()
-                    content = result["choices"][0]["message"]["content"]
+                    content = result["choices"][0]["message"]["content"].strip()
                     if content:
                         return content
                     raise ValueError("Empty response content from API")
@@ -259,7 +266,6 @@ class OpenAIClient:
         top_p: float = 1.0,
         max_tokens: int = 4096,
         retry_count: int = 3,
-        max_context_length: int = 128000,
         frequency_penalty: float = 0.0,
         presence_penalty: float = 0.0,
         seed: Optional[int] = None,
@@ -276,7 +282,6 @@ class OpenAIClient:
             top_p (float): 采样概率阈值
             max_tokens (int): 生成文本的最大标记数
             retry_count (int): 重试次数
-            max_context_length (int): 最大上下文长度
             frequency_penalty (float): 频率惩罚
             presence_penalty (float): 存在惩罚
             seed (int): 随机种子
@@ -293,7 +298,6 @@ class OpenAIClient:
             top_p=top_p,
             max_tokens=max_tokens,
             retry_count=retry_count,
-            max_context_length=max_context_length,
             frequency_penalty=frequency_penalty,
             presence_penalty=presence_penalty,
             seed=seed,

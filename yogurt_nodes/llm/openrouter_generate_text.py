@@ -92,16 +92,6 @@ class OpenRouterGenerateText:
                         "tooltip": "Maximum number of tokens in the generated text",
                     },
                 ),
-                "max_context_length": (
-                    "INT",
-                    {
-                        "default": 32000,
-                        "min": 1000,
-                        "max": 128000,
-                        "step": 1000,
-                        "tooltip": "Maximum context length to prevent token overflow",
-                    },
-                ),
                 "retry_count": (
                     "INT",
                     {
@@ -138,7 +128,6 @@ class OpenRouterGenerateText:
         temperature: float,
         top_p: float,
         max_tokens: int,
-        max_context_length: int,
         retry_count: int,
     ):
         client = OpenRouterClient(api_key)
@@ -149,7 +138,6 @@ class OpenRouterGenerateText:
             temperature=temperature,
             top_p=top_p,
             max_tokens=max_tokens,
-            max_context_length=max_context_length,
             retry_count=retry_count,
             provider=(
                 infrastructure_provider if infrastructure_provider != "auto" else None

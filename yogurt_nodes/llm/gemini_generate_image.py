@@ -1,3 +1,5 @@
+from typing import Optional
+
 import torch
 import torchvision
 
@@ -126,7 +128,14 @@ class GeminiGenerateImage:
                         "tooltip": "Thinking budget for the model, if set to -1, the model will not limit thinking budget, if set to 0, the model will disable thinking",
                     },
                 ),
-            }
+            },
+            "optional": {
+                "image": ("IMAGE",),
+                "image1": ("IMAGE",),
+                "image2": ("IMAGE",),
+                "image3": ("IMAGE",),
+                "image4": ("IMAGE",),
+            },
         }
 
     @classmethod
@@ -159,12 +168,26 @@ class GeminiGenerateImage:
         disable_system_prompt: bool,
         safety_level: str = "BLOCK_NONE",
         thinking_budget: int = 0,
+        image: Optional[torch.Tensor] = None,
+        image1: Optional[torch.Tensor] = None,
+        image2: Optional[torch.Tensor] = None,
+        image3: Optional[torch.Tensor] = None,
+        image4: Optional[torch.Tensor] = None,
     ):
+        # 收集所有非空图像
+        images = []
+        for img in [image, image1, image2, image3, image4]:
+            if img is not None:
+                if len(img.shape) == 4:
+                    img = img[0]
+                img = img.permute(2, 0, 1)
+                images.append(torchvision.transforms.ToPILImage()(img))
         client = GeminiClient(api_key)
         images, text = client.generate_image(
             model_name=model_name,
             prompt=prompt,
             system_prompt=system_prompt,
+            images=images,
             temperature=temperature,
             top_p=top_p,
             top_k=top_k,
