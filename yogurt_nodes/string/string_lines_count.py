@@ -1,5 +1,6 @@
-# from itertools import chain, product
 from math import prod
+
+TEXT_COUNT = 8
 
 
 class StringLinesCount:
@@ -9,45 +10,25 @@ class StringLinesCount:
 
     @classmethod
     def INPUT_TYPES(cls):
+        texts = {f"text{i+1}": ("STRING", {"default": "", "multiline": True}) for i in range(TEXT_COUNT)}
         return {
             "required": {
-                "text": ("STRING", {"multiline": True}),
                 "no_strip": ("BOOLEAN", {"default": False}),
                 "keep_empty_lines": ("BOOLEAN", {"default": False}),
                 "concat_method": (["concat", "product"], {"default": "concat"}),
             },
             "optional": {
-                "text1": ("STRING", {"default": "", "multiline": True}),
-                "text2": ("STRING", {"default": "", "multiline": True}),
-                "text3": ("STRING", {"default": "", "multiline": True}),
-                "text4": ("STRING", {"default": "", "multiline": True}),
-                "text5": ("STRING", {"default": "", "multiline": True}),
-                "text6": ("STRING", {"default": "", "multiline": True}),
-                "text7": ("STRING", {"default": "", "multiline": True}),
+                **texts,
             },
         }
 
     RETURN_TYPES = (
         "INT",
-        "STRING",
-        "STRING",
-        "STRING",
-        "STRING",
-        "STRING",
-        "STRING",
-        "STRING",
-        "STRING",
+        *["STRING" for _ in range(TEXT_COUNT)],
     )
     RETURN_NAMES = (
         "count",
-        "text",
-        "text1",
-        "text2",
-        "text3",
-        "text4",
-        "text5",
-        "text6",
-        "text7",
+        *[f"text{i+1}" for i in range(TEXT_COUNT)],
     )
     OUTPUT_NODE = True
 
@@ -59,20 +40,13 @@ class StringLinesCount:
 
     def get_count(
         self,
-        text: str = "",
         no_strip: bool = False,
         keep_empty_lines: bool = False,
         concat_method: str = "concat",
-        text1: str = None,
-        text2: str = None,
-        text3: str = None,
-        text4: str = None,
-        text5: str = None,
-        text6: str = None,
-        text7: str = None,
+        **kwargs
     ):
-        texts = [text, text1, text2, text3, text4, text5, text6, text7]
-        texts = [t for t in texts if t is not None and len(t) > 0]
+        all_texts = [kwargs[f"text{i+1}"] for i in range(TEXT_COUNT)]
+        texts = [t for t in all_texts if t is not None and len(t) > 0]
         lines_list = []
         for t in texts:
             text_lines = str(t).split("\n")
@@ -90,4 +64,4 @@ class StringLinesCount:
             count = prod(len(lines) for lines in lines_list)
         else:
             raise ValueError(f"Invalid concat_method value: {concat_method}")
-        return (count, text, text1, text2, text3, text4, text5, text6, text7)
+        return (count, *all_texts)

@@ -1,5 +1,6 @@
-# from itertools import product, chain
 from math import prod
+
+TEXT_COUNT = 8
 
 
 class StringLinesSwitch:
@@ -9,24 +10,18 @@ class StringLinesSwitch:
 
     @classmethod
     def INPUT_TYPES(cls):
+        texts = {f"text{i+1}": ("STRING", {"default": "", "multiline": True}) for i in range(TEXT_COUNT)}
         return {
             "required": {
-                "text": ("STRING", {"multiline": True}),
                 "no_strip": ("BOOLEAN", {"default": False}),
                 "keep_empty_lines": ("BOOLEAN", {"default": False}),
                 "index": ("INT", {"default": 0, "step": 1}),
                 "concat_method": (["concat", "product"], {"default": "concat"}),
                 "product_concat_delimiter": ("STRING", {"default": ""}),
-                "product_order": ("STRING", {"default": "0,1,2,3,4,5,6,7"}),
+                "product_order": ("STRING", {"default": ",".join(str(i) for i in range(TEXT_COUNT))}),
             },
             "optional": {
-                "text1": ("STRING", {"default": "", "multiline": True}),
-                "text2": ("STRING", {"default": "", "multiline": True}),
-                "text3": ("STRING", {"default": "", "multiline": True}),
-                "text4": ("STRING", {"default": "", "multiline": True}),
-                "text5": ("STRING", {"default": "", "multiline": True}),
-                "text6": ("STRING", {"default": "", "multiline": True}),
-                "text7": ("STRING", {"default": "", "multiline": True}),
+                **texts,
             },
         }
 
@@ -47,22 +42,15 @@ class StringLinesSwitch:
 
     def get_line(
         self,
-        text: str = "",
         no_strip: bool = False,
         keep_empty_lines: bool = False,
         index: int = 0,
         concat_method: str = "concat",
         product_concat_delimiter: str = "",
-        product_order: str = "0,1,2,3,4,5,6,7",
-        text1: str = None,
-        text2: str = None,
-        text3: str = None,
-        text4: str = None,
-        text5: str = None,
-        text6: str = None,
-        text7: str = None,
+        product_order: str = ",".join(str(i) for i in range(TEXT_COUNT)),
+        **kwargs
     ):
-        texts = [text, text1, text2, text3, text4, text5, text6, text7]
+        texts = [kwargs[f"text{i+1}"] for i in range(TEXT_COUNT)]
         texts = [text for text in texts if text is not None and len(text) > 0]
         lines_list = []
         for text in texts:
