@@ -144,7 +144,7 @@ class GeminiClient:
                 added_images = True
             results.append(
                 types.Content(
-                    role="user",
+                    role=message["role"],
                     parts=parts,
                 )
             )

@@ -29,10 +29,6 @@ def build_messages(
     model_role: str = "assistant",
 ) -> List[Dict[str, Any]]:
     """构建消息列表，防止上下文长度超过限制"""
-    if system_prompt is None:
-        system_prompt = ""
-    if prompt is None:
-        prompt = ""
     if images is None:
         images = []
     messages = []
