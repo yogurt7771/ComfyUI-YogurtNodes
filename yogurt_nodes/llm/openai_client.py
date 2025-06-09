@@ -82,14 +82,12 @@ def build_messages(
                         if images:
                             for image in images:
                                 base64_image = image_to_base64(image)
-                                contents.append(
-                                    {
-                                        "type": "image_url",
-                                        "image_url": {
-                                            "url": f"data:image/jpeg;base64,{base64_image}"
-                                        },
-                                    }
-                                )
+                                contents.append({
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"data:image/jpeg;base64,{base64_image}"
+                                    },
+                                })
                             added_image = True
                     messages.append(
                         {
@@ -238,6 +236,7 @@ class OpenAIClient:
                     json=payload,
                     timeout=120,
                 )
+                print(response)
 
                 if response.status_code == 200:
                     result = response.json()

@@ -8,7 +8,11 @@ class StringConcat:
 
     @classmethod
     def INPUT_TYPES(cls):
-        texts = {f"text{i+1}": ("STRING", {"default": "", "multiline": True, "tooltip": f"第{i+1}个文本输入"}) for i in range(TEXT_COUNT)}
+        texts = {}
+        for i in range(TEXT_COUNT):
+            texts[f"enable{i+1}"] = ("BOOLEAN", {"default": True, "tooltip": f"第{i+1}个文本输入是否启用"})
+            texts[f"text{i+1}"] = ("STRING", {"default": "", "multiline": True, "tooltip": f"第{i+1}个文本输入"})
+
         return {
             "required": {
                 "separator": ("STRING", {"default": "", "multiline": True, "tooltip": "连接符号"}),
@@ -38,7 +42,9 @@ class StringConcat:
         **kwargs
     ):
         # 收集指定数量的文本输入
+        enables = [kwargs[f"enable{i+1}"] for i in range(TEXT_COUNT)]
         texts = [kwargs[f"text{i+1}"] for i in range(TEXT_COUNT)]
+        texts = [t for t, e in zip(texts, enables) if e]
         texts = [t for t in texts if t is not None and len(t) > 0]
         # 使用分隔符连接所有文本
         result = separator.join(texts)

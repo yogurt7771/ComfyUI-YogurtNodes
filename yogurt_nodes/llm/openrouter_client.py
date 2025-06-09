@@ -57,7 +57,7 @@ class OpenRouterClient:
         self,
         model_name: str,
         prompt: str = "",
-        system_prompt: Optional[str] = None,
+        system_prompt: str = "",
         images: Optional[List[Image.Image]] = None,
         temperature: float = 1.0,
         top_p: float = 0.95,
@@ -111,6 +111,7 @@ class OpenRouterClient:
                     json=payload,
                     timeout=120,
                 )
+                print(response)
 
                 if response.status_code == 200:
                     result = response.json()
@@ -134,7 +135,7 @@ class OpenRouterClient:
         model_name: str,
         prompt: str = "",
         images: Optional[List[Image.Image]] = None,
-        system_prompt: Optional[str] = None,
+        system_prompt: str = "",
         temperature: float = 1.0,
         top_p: float = 0.95,
         max_tokens: int = 8192,

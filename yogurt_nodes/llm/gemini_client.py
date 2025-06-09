@@ -101,7 +101,7 @@ class GeminiClient:
         prompt: str,
         images: Optional[List[Image.Image]],
         disable_system_prompt: bool,
-    ) -> list:
+    ):
         """获取对话内容"""
         messages = build_messages(
             system_prompt=system_prompt,
@@ -272,6 +272,7 @@ class GeminiClient:
                     contents=contents,
                     config=config,
                 )
+                print(response)
                 text = response.text
                 text = text.strip() if text else None
                 if text is not None and len(text) > 0:
@@ -326,6 +327,7 @@ class GeminiClient:
         pprint(contents)
         pprint(config)
         response = None
+        response_logged = False
         for _ in range(retry_count):
             try:
                 response = self.client.models.generate_content_stream(
@@ -333,6 +335,9 @@ class GeminiClient:
                     contents=contents,
                     config=config,
                 )
+                if not response_logged:
+                    print(response)
+                    response_logged = True
                 for chunk in response:
                     if (
                         chunk.candidates is None
