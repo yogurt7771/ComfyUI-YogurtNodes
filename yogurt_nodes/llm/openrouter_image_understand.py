@@ -80,7 +80,7 @@ class OpenRouterImageUnderstand:
                 "top_p": (
                     "FLOAT",
                     {
-                        "default": 0.95,
+                        "default": 0,
                         "min": 0.0,
                         "max": 1.0,
                         "step": 0.01,
@@ -91,7 +91,7 @@ class OpenRouterImageUnderstand:
                     "INT",
                     {
                         "default": 8192,
-                        "min": 1,
+                        "min": 0,
                         "max": 32768,
                         "step": 1,
                         "tooltip": "Maximum number of tokens in the generated text",
@@ -105,6 +105,21 @@ class OpenRouterImageUnderstand:
                         "max": 10,
                         "step": 1,
                         "tooltip": "Number of retries when request fails",
+                    },
+                ),
+                "chat_template": (
+                    "STRING",
+                    {
+                        "multiline": True,
+                        "default": (
+                            "<-system->\n"
+                            "{{system_instruction}}\n"
+                            "<-/system->\n"
+                            "<-user->\n"
+                            "{{prompt}}\n"
+                            "<-/user->"
+                        ),
+                        "tooltip": "Content template for the generated text",
                     },
                 ),
             },
@@ -132,15 +147,16 @@ class OpenRouterImageUnderstand:
 
     def understand_image(
         self,
-        api_key: str,
-        model_name: str,
-        infrastructure_provider: str,
-        system_prompt: str,
-        prompt: str,
-        temperature: float,
-        top_p: float,
-        max_tokens: int,
-        retry_count: int,
+        api_key: str = "",
+        model_name: str = "",
+        infrastructure_provider: str = "auto",
+        system_prompt: str = "",
+        prompt: str = "",
+        temperature: float = 1.0,
+        top_p: float = 0,
+        max_tokens: int = 8192,
+        retry_count: int = 3,
+        chat_template: str = "",
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -172,5 +188,6 @@ class OpenRouterImageUnderstand:
             provider=(
                 infrastructure_provider if infrastructure_provider != "auto" else None
             ),
+            chat_template=chat_template,
         )
         return (text,)

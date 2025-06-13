@@ -4,7 +4,7 @@ import json
 import os
 import re
 from pathlib import Path
-from tempfile import template
+import time
 from typing import Any, Dict, List, Optional
 
 import requests
@@ -24,6 +24,7 @@ def build_messages(
     system_prompt: str = "",
     prompt: str = "",
     images: Optional[List[Image.Image]] = None,
+    chat_template: str = "",
     system_role: str = "system",
     user_role: str = "user",
     model_role: str = "assistant",
@@ -32,18 +33,21 @@ def build_messages(
     if images is None:
         images = []
     messages = []
-    template_path = Path(__file__).parent / "template.txt"
-    if template_path.exists():
-        template_content = template_path.read_text(encoding="utf-8").strip()
+    if len(chat_template) == 0:
+        template_path = Path(__file__).parent / "template.txt"
+        if template_path.exists():
+            template_content = template_path.read_text(encoding="utf-8").strip()
+        else:
+            template_content = (
+                "<-system->\n"
+                "{{system_instruction}}\n"
+                "<-/system->\n"
+                "<-user->\n"
+                "{{prompt}}\n"
+                "<-/user->"
+            )
     else:
-        template_content = (
-            "<-system->\n"
-            "{{system_instruction}}\n"
-            "<-/system->\n"
-            "<-user->\n"
-            "{{prompt}}\n"
-            "<-/user->"
-        )
+        template_content = chat_template
     role = None
     content_lines = []
     with_user_prompt = False
@@ -67,12 +71,12 @@ def build_messages(
                         role = user_role
                     elif role == "assistant":
                         role = model_role
-                    contents = [
-                        {
+                    contents = []
+                    if len(message_content) > 0:
+                        contents.append({
                             "type": "text",
                             "text": message_content,
-                        }
-                    ]
+                        })
                     if with_user_prompt and not added_image:
                         # 添加图像内容
                         if images:
@@ -85,12 +89,8 @@ def build_messages(
                                     },
                                 })
                             added_image = True
-                    messages.append(
-                        {
-                            "role": role,
-                            "content": contents,
-                        }
-                    )
+                    if len(contents) > 0:
+                        messages.append({"role": role, "content": contents})
                 content_lines = []
                 role = None  # 重置角色
                 with_user_prompt = False
@@ -169,7 +169,7 @@ class OpenAIClient:
         self,
         model_name: str,
         prompt: str = "",
-        system_prompt: Optional[str] = None,
+        system_prompt: str = "",
         images: Optional[List[Image.Image]] = None,
         temperature: float = 1.0,
         top_p: float = 1.0,
@@ -177,6 +177,7 @@ class OpenAIClient:
         retry_count: int = 3,
         frequency_penalty: float = 0.0,
         presence_penalty: float = 0.0,
+        chat_template: str = "",
         seed: Optional[int] = None,
     ) -> str:
         """
@@ -193,6 +194,7 @@ class OpenAIClient:
             retry_count (int): 重试次数
             frequency_penalty (float): 频率惩罚
             presence_penalty (float): 存在惩罚
+            chat_template (str): 聊天模板
             seed (int): 随机种子
 
         Returns:
@@ -202,17 +204,22 @@ class OpenAIClient:
             system_prompt=system_prompt,
             prompt=prompt,
             images=images,
+            chat_template=chat_template,
         )
 
         payload = {
             "model": model_name,
             "messages": messages,
             "temperature": temperature,
-            "top_p": top_p,
-            "max_tokens": max_tokens,
-            "frequency_penalty": frequency_penalty,
-            "presence_penalty": presence_penalty,
         }
+        if top_p > 0:
+            payload["top_p"] = top_p
+        if max_tokens > 0:
+            payload["max_tokens"] = max_tokens
+        if frequency_penalty > 0:
+            payload["frequency_penalty"] = frequency_penalty
+        if presence_penalty > 0:
+            payload["presence_penalty"] = presence_penalty
 
         # 添加可选参数
         if seed is not None:
@@ -232,7 +239,7 @@ class OpenAIClient:
                     json=payload,
                     timeout=120,
                 )
-                print(response)
+                pprint(response.text)
 
                 if response.status_code == 200:
                     result = response.json()
@@ -242,12 +249,13 @@ class OpenAIClient:
                     raise ValueError("Empty response content from API")
                 else:
                     error_msg = f"API request failed with status {response.status_code}: {response.text}"
-                    print(f"Attempt {attempt + 1} failed: {error_msg}")
+                    pprint(f"Attempt {attempt + 1} failed: {error_msg}")
                     last_exception = Exception(error_msg)
 
             except Exception as e:
-                print(f"Attempt {attempt + 1} failed: {str(e)}")
+                pprint(f"Attempt {attempt + 1} failed: {str(e)} {response.text}")
                 last_exception = e
+                time.sleep(3)
 
         raise last_exception or Exception("All retry attempts failed")
 
@@ -256,13 +264,14 @@ class OpenAIClient:
         model_name: str,
         prompt: str = "",
         images: Optional[List[Image.Image]] = None,
-        system_prompt: Optional[str] = None,
+        system_prompt: str = "",
         temperature: float = 1.0,
         top_p: float = 1.0,
         max_tokens: int = 4096,
         retry_count: int = 3,
         frequency_penalty: float = 0.0,
         presence_penalty: float = 0.0,
+        chat_template: str = "",
         seed: Optional[int] = None,
     ) -> str:
         """
@@ -279,6 +288,7 @@ class OpenAIClient:
             retry_count (int): 重试次数
             frequency_penalty (float): 频率惩罚
             presence_penalty (float): 存在惩罚
+            chat_template (str): 聊天模板
             seed (int): 随机种子
 
         Returns:
@@ -295,6 +305,7 @@ class OpenAIClient:
             retry_count=retry_count,
             frequency_penalty=frequency_penalty,
             presence_penalty=presence_penalty,
+            chat_template=chat_template,
             seed=seed,
         )
 
@@ -308,7 +319,7 @@ class OpenAIClient:
             if response.status_code == 200:
                 return response.json()["data"]
             else:
-                print(
+                pprint(
                     f"Error getting models: HTTP {response.status_code}: {response.text}"
                 )
                 return []

@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from typing import Any, Dict, List, Optional
 
 import requests
@@ -57,10 +58,11 @@ class OpenRouterClient:
         system_prompt: str = "",
         images: Optional[List[Image.Image]] = None,
         temperature: float = 1.0,
-        top_p: float = 0.95,
+        top_p: float = 0,
         max_tokens: int = 8192,
         retry_count: int = 3,
         provider: Optional[str] = None,
+        chat_template: str = "",
     ) -> str:
         """
         生成文本
@@ -75,6 +77,7 @@ class OpenRouterClient:
             max_tokens (int): 生成文本的最大标记数
             retry_count (int): 重试次数
             provider (str): 基础设施提供商（可选，如azure, aws等）
+            chat_template (str): 聊天模板
 
         Returns:
             str: 生成的文本
@@ -83,15 +86,18 @@ class OpenRouterClient:
             system_prompt=system_prompt,
             prompt=prompt,
             images=images,
+            chat_template=chat_template,
         )
 
         payload = {
             "model": model_name,
             "messages": messages,
             "temperature": temperature,
-            "top_p": top_p,
-            "max_tokens": max_tokens,
         }
+        if top_p > 0:
+            payload["top_p"] = top_p
+        if max_tokens > 0:
+            payload["max_tokens"] = max_tokens
 
         # 添加provider参数（基础设施提供商）
         if provider and provider != "auto":
@@ -124,7 +130,7 @@ class OpenRouterClient:
             except Exception as e:
                 print(f"Attempt {attempt + 1} failed: {str(e)}")
                 last_exception = e
-
+                time.sleep(3)
         raise last_exception or Exception("All retry attempts failed")
 
     def understand_image(
@@ -134,10 +140,11 @@ class OpenRouterClient:
         images: Optional[List[Image.Image]] = None,
         system_prompt: str = "",
         temperature: float = 1.0,
-        top_p: float = 0.95,
+        top_p: float = 0,
         max_tokens: int = 8192,
         retry_count: int = 3,
         provider: Optional[str] = None,
+        chat_template: str = "",
     ) -> str:
         """
         理解图像内容
@@ -152,6 +159,7 @@ class OpenRouterClient:
             max_tokens (int): 生成文本的最大标记数
             retry_count (int): 重试次数
             provider (str): 基础设施提供商（可选，如azure, aws等）
+            chat_template (str): 聊天模板
 
         Returns:
             str: 图像理解结果
@@ -166,6 +174,7 @@ class OpenRouterClient:
             max_tokens=max_tokens,
             retry_count=retry_count,
             provider=provider,
+            chat_template=chat_template,
         )
 
     def get_models(self) -> List[Dict[str, Any]]:

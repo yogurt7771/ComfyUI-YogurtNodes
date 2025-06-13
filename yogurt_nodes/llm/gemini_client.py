@@ -1,8 +1,8 @@
 import io
 import json
 import os
+import time
 from io import BytesIO
-from pathlib import Path
 from typing import List, Optional
 
 from google import genai
@@ -13,9 +13,9 @@ from pprint import pprint
 from .openai_client import build_messages
 
 thinking_models = [
-    "gemini-2.5-flash-preview-04-17",
-    "gemini-2.5-flash-preview-04-20",
+    "gemini-2.5-flash-preview-05-20",
     "gemini-2.5-pro-preview-05-06",
+    "gemini-2.5-pro-preview-06-05",
 ]
 
 
@@ -101,6 +101,7 @@ class GeminiClient:
         prompt: str,
         images: Optional[List[Image.Image]],
         disable_system_prompt: bool,
+        chat_template: str = "",
     ):
         """获取对话内容"""
         messages = build_messages(
@@ -108,6 +109,7 @@ class GeminiClient:
             prompt=prompt,
             system_role="system" if not disable_system_prompt else "user",
             model_role="model",
+            chat_template=chat_template,
         )
 
         results = []
@@ -160,12 +162,11 @@ class GeminiClient:
             if thinking_budget != 0:
                 thinking_config = types.ThinkingConfig(
                     include_thoughts=True,
+                    thinking_budget=thinking_budget if thinking_budget > 0 else None,
                 )
-                if thinking_budget >= 0:
-                    thinking_budget = thinking_budget
             else:
                 thinking_config = types.ThinkingConfig(
-                    include_thoughts=False, thinking_budget=thinking_budget  # type: ignore
+                    include_thoughts=False  # type: ignore
                 )
         return thinking_config
 
@@ -183,12 +184,13 @@ class GeminiClient:
         disable_system_prompt: bool = False,
         safety_level: str = "BLOCK_NONE",
         thinking_budget: int = 0,
+        chat_template: str = "",
     ):
         config = types.GenerateContentConfig(
             temperature=temperature,
-            top_p=top_p,
-            top_k=top_k,
-            max_output_tokens=max_output_tokens,
+            top_p=top_p if top_p > 0 else None,
+            top_k=top_k if top_k > 0 else None,
+            max_output_tokens=max_output_tokens if max_output_tokens > 0 else None,
             response_mime_type="text/plain",
         )
 
@@ -203,10 +205,11 @@ class GeminiClient:
             config.safety_settings = safety_settings
 
         system_instruction, contents = self._get_contents(
-            system_prompt,
-            prompt,
-            images,
+            system_prompt=system_prompt,
+            prompt=prompt,
+            images=images,
             disable_system_prompt=disable_system_prompt,
+            chat_template=chat_template,
         )
         if system_instruction is not None:
             config.system_instruction = system_instruction
@@ -214,19 +217,20 @@ class GeminiClient:
 
     def generate_text(
         self,
-        model_name: str,
+        model_name: str = "",
         prompt: str = "",
         system_prompt: str = "",
         images: Optional[List[Image.Image]] = None,
         temperature: float = 1,
-        top_p: float = 0.95,
-        top_k: int = 64,
+        top_p: float = 0,
+        top_k: int = 0,
         max_output_tokens: int = 8192,
         retry_count: int = 3,
         disable_safety_settings: bool = False,
         disable_system_prompt: bool = False,
         safety_level: str = "BLOCK_NONE",
         thinking_budget: int = 0,
+        chat_template: str = "",
     ) -> str:
         """
         生成文本
@@ -242,6 +246,9 @@ class GeminiClient:
             retry_count (int): 重试次数
             disable_safety_settings (bool): 是否禁用安全设置
             disable_system_prompt (bool): 是否禁用系统提示词
+            safety_level (str): 安全等级
+            thinking_budget (int): 思考预算
+            chat_template (str): 聊天模板
 
         Returns:
             str: 生成的文本
@@ -259,6 +266,7 @@ class GeminiClient:
             disable_system_prompt=disable_system_prompt,
             safety_level=safety_level,
             thinking_budget=thinking_budget,
+            chat_template=chat_template,
         )
         pprint(f"Generating image with model {model_name}...")
         pprint(contents)
@@ -281,6 +289,7 @@ class GeminiClient:
             except Exception as e_inter:
                 print(f"Error {model_name} generating text: {e_inter}")
                 e = e_inter
+                time.sleep(3)
         raise RuntimeError(
             f"Failed to generate text after {retry_count} retries.\n{e}\n{response}"
         )
@@ -292,14 +301,15 @@ class GeminiClient:
         system_prompt: str = "",
         images: Optional[List[Image.Image]] = None,
         temperature: float = 1,
-        top_p: float = 0.95,
-        top_k: int = 64,
+        top_p: float = 0,
+        top_k: int = 0,
         max_output_tokens: int = 8192,
         retry_count: int = 3,
         disable_safety_settings: bool = False,
         disable_system_prompt: bool = False,
         safety_level: str = "BLOCK_NONE",
         thinking_budget: int = 0,
+        chat_template: str = "",
     ) -> tuple:
         """
         生成图片
@@ -318,6 +328,7 @@ class GeminiClient:
             disable_system_prompt=disable_system_prompt,
             safety_level=safety_level,
             thinking_budget=thinking_budget,
+            chat_template=chat_template,
         )
 
         images = []
@@ -362,6 +373,7 @@ class GeminiClient:
             except Exception as e_inner:
                 print(f"Error {model_name} generating image: {e_inner}")
                 e = e_inner
+                time.sleep(3)
         raise RuntimeError(
             f"Failed to generate text after {retry_count} retries.\n{e}\n{response}"
         )

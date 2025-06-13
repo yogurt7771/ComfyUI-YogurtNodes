@@ -73,7 +73,7 @@ class OpenAIGenerateText:
                 "top_p": (
                     "FLOAT",
                     {
-                        "default": 1.0,
+                        "default": 0,
                         "min": 0.0,
                         "max": 1.0,
                         "step": 0.01,
@@ -84,7 +84,7 @@ class OpenAIGenerateText:
                     "INT",
                     {
                         "default": 4096,
-                        "min": 1,
+                        "min": 0,
                         "max": 32768,
                         "step": 1,
                         "tooltip": "Maximum number of tokens in the generated text",
@@ -120,6 +120,21 @@ class OpenAIGenerateText:
                         "tooltip": "Number of retry attempts if the request fails",
                     },
                 ),
+                "chat_template": (
+                    "STRING",
+                    {
+                        "multiline": True,
+                        "default": (
+                            "<-system->\n"
+                            "{{system_instruction}}\n"
+                            "<-/system->\n"
+                            "<-user->\n"
+                            "{{prompt}}\n"
+                            "<-/user->"
+                        ),
+                        "tooltip": "Content template for the generated text",
+                    },
+                ),
             },
             "optional": {
                 "seed": ("SEED",),
@@ -152,6 +167,7 @@ class OpenAIGenerateText:
         frequency_penalty: float,
         presence_penalty: float,
         retry_count: int,
+        chat_template: str,
         seed: int = -1,
     ):
         client = OpenAIClient(api_key, base_url)
@@ -169,6 +185,7 @@ class OpenAIGenerateText:
             retry_count=retry_count,
             frequency_penalty=frequency_penalty,
             presence_penalty=presence_penalty,
+            chat_template=chat_template,
             seed=seed_value,
         )
         return (text,)
