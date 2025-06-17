@@ -7,7 +7,7 @@ PACK_NUM = 8
 class PackAny:
 
     @classmethod
-    def INPUT_TYPES(s):
+    def INPUT_TYPES(cls):
         items = {
             f"item{i}": (
                 ANY_TYPE,
@@ -20,7 +20,7 @@ class PackAny:
         }
 
     @classmethod
-    def VALIDATE_INPUTS(s, input_types):
+    def VALIDATE_INPUTS(cls, input_types):
         return True
 
     RETURN_TYPES = ("PACK_TUPLE",)
@@ -45,12 +45,16 @@ class PackAny:
 class UnpackAny:
 
     @classmethod
-    def INPUT_TYPES(s):
+    def INPUT_TYPES(cls):
         return {
             "required": {
                 "pack": ("PACK_TUPLE",),
             },
         }
+
+    @classmethod
+    def VALIDATE_INPUTS(cls, input_types):
+        return True
 
     RETURN_TYPES = (ANY_TYPE,) * PACK_NUM
     RETURN_NAMES = tuple(f"item{i}" for i in range(1, PACK_NUM + 1))

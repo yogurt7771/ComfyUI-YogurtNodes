@@ -174,7 +174,7 @@ class BatchImages:
         """
         Batch images.
         """
-        images = [kwargs[f"images{i}"] for i in range(1, IMAGE_COUNT + 1)]
+        images = [kwargs.get(f"images{i}", None) for i in range(1, IMAGE_COUNT + 1)]
         images = [image for image in images if image is not None]
         if len(images) == 0:
             return (None, 0, 0, 0, 0)
