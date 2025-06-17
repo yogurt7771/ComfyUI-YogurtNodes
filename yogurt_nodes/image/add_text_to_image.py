@@ -34,7 +34,7 @@ def wraptext(font: ImageFont.FreeTypeFont, text: str, width: int):
 
 class AddTextToImage:
     @classmethod
-    def INPUT_TYPES(s):
+    def INPUT_TYPES(cls):
         return {
             "required": {
                 "images": ("IMAGE", {"tooltip": "The images to draw."}),
@@ -81,7 +81,7 @@ class AddTextToImage:
         # create a text banner and concatenate it with the image
         lines, (text_width, text_height) = wraptext(font, text, image_w - font_size // 2)
         text_height = text_height + font_size // 4
-        text_image = Image.new("RGBA", (image_w, text_height), background_color)
+        text_image = Image.new("RGBA", (int(image_w), int(text_height)), background_color)
         draw = ImageDraw.Draw(text_image)
         current_height = 0
         for line in lines:

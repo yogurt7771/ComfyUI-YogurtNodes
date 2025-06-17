@@ -76,7 +76,7 @@ def save_image(
     path,
     jpeg_quality=95,
     png_compression_level=6,
-    metadata: PngInfo = None,
+    metadata: PngInfo | None = None,
 ):
     """
     Save an image to a file with optional metadata for JPEG and PNG formats.
@@ -216,6 +216,9 @@ class SaveImageBridgeEx:
         prompt=None,
         extra_pnginfo=None,
     ):
+        if images is None or len(images) == 0:
+            return (images,)
+
         filename_prefix += self.prefix_append
 
         if suffix == "Custom":

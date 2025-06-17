@@ -7,7 +7,7 @@ MAX_RESOLUTION = 16384
 IMAGE_COUNT = 16
 
 
-def resize_image(image, width, height, method="stretch", interpolation="nearest", condition="always", multiple_of=0, keep_proportion=False, pad_value=1):
+def resize_image(image, width, height, method="stretch", interpolation="nearest", condition="always", multiple_of=0, keep_proportion=False, pad_value=1.0):
     _, oh, ow, _ = image.shape
     x = y = x2 = y2 = 0
     pad_left = pad_right = pad_top = pad_bottom = 0
@@ -110,7 +110,8 @@ def resize_image(image, width, height, method="stretch", interpolation="nearest"
 
 class BatchImages:
     @classmethod
-    def INPUT_TYPES(s):
+    def INPUT_TYPES(cls):
+        images = {f"images{i}": ("IMAGE", {"tooltip": "The images to batch."}) for i in range(1, IMAGE_COUNT + 1)}
         return {
             "required": {
                 "interpolation": (
@@ -122,17 +123,31 @@ class BatchImages:
                         "nearest-exact",
                         "lanczos",
                     ],
-                    {"default": "nearest"},
+                    {"default": "lanczos"},
                 ),
                 "method": (["stretch", "fill / crop", "pad"], {"default": "pad"}),
                 "pad_value": ("FLOAT", {"default": 1.0}),
-                "start_index": ("INT", {"default": 0, "tooltip": "The start index. Same as Python slicing."}),
-                "end_index": ("INT", {"default": 0, "tooltip": "The end index. Same as Python slicing. 0 means the end. Negative values are also supported."}),
-                "step": ("INT", {"default": 1, "tooltip": "The step. Same as Python slicing."}),
+                "start_index": (
+                    "INT",
+                    {
+                        "default": 0,
+                        "tooltip": "The start index. Same as Python slicing.",
+                    },
+                ),
+                "end_index": (
+                    "INT",
+                    {
+                        "default": 0,
+                        "tooltip": "The end index. Same as Python slicing. 0 means the end. Negative values are also supported.",
+                    },
+                ),
+                "step": (
+                    "INT",
+                    {"default": 1, "tooltip": "The step. Same as Python slicing."},
+                ),
             },
             "optional": {
-                f"images{i}": ("IMAGE", {"tooltip": "The images to batch."})
-                for i in range(1, IMAGE_COUNT + 1)
+                **images
             },
         }
 
@@ -148,33 +163,18 @@ class BatchImages:
 
     def batch_image(
         self,
-        images1: torch.Tensor = None,
-        images2: torch.Tensor = None,
-        images3: torch.Tensor = None,
-        images4: torch.Tensor = None,
-        images5: torch.Tensor = None,
-        images6: torch.Tensor = None,
-        images7: torch.Tensor = None,
-        images8: torch.Tensor = None,
-        images9: torch.Tensor = None,
-        images10: torch.Tensor = None,
-        images11: torch.Tensor = None,
-        images12: torch.Tensor = None,
-        images13: torch.Tensor = None,
-        images14: torch.Tensor = None,
-        images15: torch.Tensor = None,
-        images16: torch.Tensor = None,
         interpolation="nearest",
         method="pad",
         pad_value=1.0,
         start_index=0,
         end_index=0,
         step=1,
+        **kwargs
     ):
         """
         Batch images.
         """
-        images = [images1, images2, images3, images4, images5, images6, images7, images8, images9, images10, images11, images12, images13, images14, images15, images16]
+        images = [kwargs[f"images{i}"] for i in range(1, IMAGE_COUNT + 1)]
         images = [image for image in images if image is not None]
         if len(images) == 0:
             return (None, 0, 0, 0, 0)
