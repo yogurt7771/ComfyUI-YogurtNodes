@@ -1,6 +1,8 @@
 # from itertools import chain, product
 from math import prod
 
+from typing import Any, Dict, Tuple
+
 from ..utils import ANY_TYPE
 
 
@@ -40,9 +42,9 @@ class StringFormat:
 
     def main(
         self,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> Tuple[str]:
         format_str = kwargs["format"]
         inputs = {k: v for k, v in kwargs.items() if k.startswith("input")}
-        formated_str = format_str.format(**inputs)
-        return (formated_str,)
+        formatted_str = format_str.format(**inputs)
+        return (formatted_str,)

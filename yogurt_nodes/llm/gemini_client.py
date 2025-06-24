@@ -46,10 +46,13 @@ class GeminiClient:
             print("Using Google Gemini API")
             if len(api_key) == 0:  # 如果 api_key 为空，则尝试从 api_key.json 文件中读取
                 # 读取 api_key.json 文件
-                if os.path.exists("api_key.json"):
-                    api_keys = json.load(open("api_key.json", "r", encoding="utf-8"))
-                    if "gemini" in api_keys:
-                        api_key = api_keys["gemini"]
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                api_key_path = os.path.join(current_dir, "api_key.json")
+                if os.path.exists(api_key_path):
+                    with open(api_key_path, "r", encoding="utf-8") as f:
+                        api_keys = json.load(f)
+                        if "gemini" in api_keys:
+                            api_key = api_keys["gemini"]
             if len(api_key) == 0:  # 如果 api_key 为空，则尝试从环境变量中读取
                 api_key = os.getenv("GEMINI_API_KEY", "")
             if len(api_key) == 0:
@@ -274,12 +277,12 @@ class GeminiClient:
             thinking_budget=thinking_budget,
             chat_template=chat_template,
         )
-        pprint(f"Generating image with model {model_name}...")
+        pprint(f"Generating text with model {model_name}...")
         pprint(contents)
         pprint(config)
-        e = None
+        last_exception = None
         response = None
-        for _ in range(retry_count):
+        for attempt in range(retry_count):
             try:
                 response = self.client.models.generate_content(
                     model=model_name,
@@ -293,12 +296,18 @@ class GeminiClient:
                     history.append(("assistant", text))
                     return text, history
                 raise ValueError(f"Model {model_name} returned empty text response.")
-            except Exception as e_inter:
-                print(f"Error {model_name} generating text: {e_inter}")
-                e = e_inter
+            except (ValueError, ConnectionError, TimeoutError) as exception:
+                print(f"Attempt {attempt + 1}/{retry_count} failed for model {model_name}: {exception}")
+                last_exception = exception
                 time.sleep(3)
+            except Exception as exception:
+                print(f"Unexpected error in attempt {attempt + 1}/{retry_count} for model {model_name}: {exception}")
+                last_exception = exception
+                time.sleep(3)
+        
         raise RuntimeError(
-            f"Failed to generate text after {retry_count} retries.\n{e}\n{response}"
+            f"Failed to generate text after {retry_count} retries. "
+            f"Last error: {last_exception}. Response: {response}"
         )
 
     def generate_image(
@@ -342,13 +351,13 @@ class GeminiClient:
 
         images = []
         last_text = ""
-        e = None
+        last_exception = None
         pprint(f"Generating image with model {model_name}...")
         pprint(contents)
         pprint(config)
         response = None
         response_logged = False
-        for _ in range(retry_count):
+        for attempt in range(retry_count):
             try:
                 response = self.client.models.generate_content_stream(
                     model=model_name,
@@ -380,10 +389,16 @@ class GeminiClient:
                             last_text += chunk.text
                 history.append(("assistant", last_text))
                 return images, last_text, history
-            except Exception as e_inner:
-                print(f"Error {model_name} generating image: {e_inner}")
-                e = e_inner
+            except (ValueError, ConnectionError, TimeoutError) as exception:
+                print(f"Attempt {attempt + 1}/{retry_count} failed for model {model_name}: {exception}")
+                last_exception = exception
                 time.sleep(3)
+            except Exception as exception:
+                print(f"Unexpected error in attempt {attempt + 1}/{retry_count} for model {model_name}: {exception}")
+                last_exception = exception
+                time.sleep(3)
+        
         raise RuntimeError(
-            f"Failed to generate text after {retry_count} retries.\n{e}\n{response}"
+            f"Failed to generate image after {retry_count} retries. "
+            f"Last error: {last_exception}. Response: {response}"
         )

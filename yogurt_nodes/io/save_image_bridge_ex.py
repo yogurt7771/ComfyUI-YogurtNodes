@@ -13,6 +13,19 @@ import folder_paths
 
 
 def map_filename(filename: str) -> tuple[int, str]:
+    """
+    Extract counter and prefix from filename.
+    
+    Args:
+        filename: The filename to parse
+        
+    Returns:
+        Tuple of (counter, prefix) where counter is the numeric suffix and prefix is the base name
+        
+    Example:
+        map_filename("image_001.png") -> (1, "image")
+        map_filename("test.jpg") -> (0, "test.jpg")
+    """
     try:
         prefix, digits = Path(filename).stem.rsplit("_", maxsplit=2)
         if digits.isdigit():
@@ -24,6 +37,20 @@ def map_filename(filename: str) -> tuple[int, str]:
 
 
 def compute_vars(input: str, image_width: int, image_height: int) -> str:
+    """
+    Replace variable placeholders in string with actual values.
+    
+    Args:
+        input: Input string containing variable placeholders
+        image_width: Width of the image
+        image_height: Height of the image
+        
+    Returns:
+        String with all placeholders replaced with actual values
+        
+    Supported placeholders:
+        %width%, %height%, %year%, %month%, %day%, %hour%, %minute%, %second%
+    """
     input = input.replace("%width%", str(image_width))
     input = input.replace("%height%", str(image_height))
     now = time.localtime()

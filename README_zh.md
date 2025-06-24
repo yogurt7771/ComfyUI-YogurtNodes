@@ -24,8 +24,10 @@ ComfyUI-YogurtNodes是ComfyUI的自定义节点集合，提供一系列实用的
 - 需要的Python包：
   - numpy
   - pillow
-  - google-generativeai (对于Gemini节点)
-  - openai (对于OpenAI节点)
+  - google-genai (对于Gemini节点)
+  - openai (对于OpenAI和OpenRouter节点)
+  - requests (对于API调用)
+  - opencv-python (对于泊松融合)
 
 ### 安装步骤
 
@@ -38,7 +40,7 @@ cd custom_nodes
 2. 克隆此仓库：
 
 ```bash
-git clone https://github.com/[your-username]/ComfyUI-YogurtNodes.git
+git clone https://github.com/yogurt7771/ComfyUI-YogurtNodes.git
 ```
 
 3. 安装依赖：
@@ -83,11 +85,15 @@ pip install -r requirements.txt
   - 文本和背景颜色配置
   - 支持多行文本，自动换行
 
-#### None Image
+#### Poisson Blend
 
 - **类别：** YogurtNodes/Image
-- **描述：** 一个返回None作为图像输出的实用节点
-- **用例：** 适用于需要空图像输出的条件工作流
+- **描述：** 使用OpenCV泊松融合(seamlessClone)将前景融合到背景
+- **特点：**
+  - 使用OpenCV泊松编辑的无缝融合
+  - 可自定义融合位置和大小
+  - 自动掩码处理和调整大小
+  - 支持多种图像格式
 
 ### 数字处理节点
 
@@ -308,15 +314,16 @@ pip install -r requirements.txt
   - 自动父目录创建
   - 路径验证
 
-#### Create Parent Directory
+#### Glob Files
 
 - **类别：** YogurtNodes/IO
-- **描述：** 父目录创建工具
+- **描述：** 使用glob模式遍历文件夹，返回匹配的文件路径列表
 - **特点：**
-  - 创建父目录
-  - 递归创建支持
-  - 路径验证
-  - 已存在目录的安全操作
+  - 支持glob和rglob模式
+  - 灵活的排序选项（字母序、反向）
+  - 仅文件过滤选项
+  - 路径格式选项（POSIX、绝对路径、解析路径）
+  - 可自定义搜索模式
 
 #### Save Mask Bridge Ex
 - **类别：** YogurtNodes/IO
@@ -384,6 +391,60 @@ pip install -r requirements.txt
   - 自动重试机制
   - 输出图片（torch.Tensor）、文本描述和图片数量
 
+#### OpenAI Generate Text
+
+- **类别：** YogurtNodes/LLM
+- **描述：** 使用OpenAI API生成文本
+- **特点：**
+  - 支持多种OpenAI模型（GPT-4、GPT-3.5等）
+  - 自定义基础URL支持兼容API
+  - 系统提示和用户提示控制
+  - 可自定义的生成参数（温度、top_p、max_tokens等）
+  - 频率和存在惩罚控制
+  - 种子支持可重现输出
+  - 自动重试机制
+  - 动态模型列表获取
+
+#### OpenAI Image Understand
+
+- **类别：** YogurtNodes/LLM
+- **描述：** 使用OpenAI视觉模型理解图像
+- **特点：**
+  - 支持OpenAI视觉模型（GPT-4V、GPT-4o等）
+  - 多图像分析支持
+  - 结合图像和文本提示处理
+  - 自定义基础URL支持兼容API
+  - 可自定义的生成参数
+  - 高质量图像细节处理
+  - 自动重试机制
+
+#### OpenRouter Generate Text
+
+- **类别：** YogurtNodes/LLM
+- **描述：** 使用OpenRouter API生成文本
+- **特点：**
+  - 支持多种OpenRouter模型
+  - 自定义基础设施提供商选择
+  - 系统提示和用户提示控制
+  - 可自定义的生成参数（温度、top_p、max_tokens）
+  - 聊天模板支持消息格式化
+  - 历史记录支持对话连续性
+  - 自动重试机制
+  - 动态模型列表获取
+
+#### OpenRouter Image Understand
+
+- **类别：** YogurtNodes/LLM
+- **描述：** 使用OpenRouter视觉模型理解图像
+- **特点：**
+  - 支持OpenRouter视觉模型
+  - 多图像分析支持
+  - 结合图像和文本提示处理
+  - 自定义基础设施提供商选择
+  - 可自定义的生成参数
+  - 历史记录支持对话连续性
+  - 自动重试机制
+
 ## 🔑 Gemini API Key 配置说明
 
 使用 Gemini 相关节点前，您需要获取并配置 Gemini API Key。支持以下三种方式，优先级如下：
@@ -408,6 +469,69 @@ pip install -r requirements.txt
      ```
 
 如未正确配置 API Key，相关节点将无法正常使用。API Key 可在 [Google AI Studio](https://aistudio.google.com/app/apikey) 获取。
+
+## 🔑 OpenAI API Key 配置说明
+
+使用 OpenAI 相关节点前，您需要获取并配置 OpenAI API Key。支持以下三种方式，优先级如下：
+
+1. **代码参数传递**
+   - 直接在代码中初始化 OpenAIClient 时传入 `api_key` 参数（优先级最高）。
+
+2. **api_key.json 文件**
+   - 在 `custom_nodes/ComfyUI-YogurtNodes/yogurt_nodes/llm/` 目录下创建 `api_key.json` 文件，内容如下：
+     ```json
+     {
+       "openai": "你的API密钥",
+       "openai_base_url": "https://api.openai.com/v1"
+     }
+     ```
+   - `openai_base_url` 是可选的，默认为官方OpenAI API。
+   - 仅当未通过代码参数传递时才会读取。
+
+3. **环境变量**
+   - 设置环境变量 `OPENAI_API_KEY` 和可选的 `OPENAI_BASE_URL`，仅当前两者都未设置时才会读取。
+   - 示例（Windows 命令行）：
+     ```cmd
+     set OPENAI_API_KEY=你的API密钥
+     set OPENAI_BASE_URL=https://api.openai.com/v1
+     ```
+
+### 自定义基础URL支持
+
+OpenAI节点支持自定义基础URL，使其兼容：
+- 官方OpenAI API
+- Azure OpenAI服务
+- OpenAI兼容API（如LocalAI、Ollama等）
+- 自托管OpenAI兼容服务器
+
+只需将 `base_url` 参数设置为您首选的端点。
+
+如未正确配置 API Key，OpenAI节点将无法正常使用。API Key 可在 [OpenAI Platform](https://platform.openai.com/api-keys) 获取。
+
+## 🔑 OpenRouter API Key 配置说明
+
+使用 OpenRouter 相关节点前，您需要获取并配置 OpenRouter API Key。支持以下三种方式，优先级如下：
+
+1. **代码参数传递**
+   - 直接在代码中初始化 OpenRouterClient 时传入 `api_key` 参数（优先级最高）。
+
+2. **api_key.json 文件**
+   - 在 `custom_nodes/ComfyUI-YogurtNodes/yogurt_nodes/llm/` 目录下创建 `api_key.json` 文件，内容如下：
+     ```json
+     {
+       "openrouter": "你的API密钥"
+     }
+     ```
+   - 仅当未通过代码参数传递时才会读取。
+
+3. **环境变量**
+   - 设置环境变量 `OPENROUTER_API_KEY`，仅当前两者都未设置时才会读取。
+   - 示例（Windows 命令行）：
+     ```cmd
+     set OPENROUTER_API_KEY=你的API密钥
+     ```
+
+如未正确配置 API Key，OpenRouter节点将无法正常使用。API Key 可在 [OpenRouter Platform](https://openrouter.ai/keys) 获取。
 
 ## 🤝 贡献
 

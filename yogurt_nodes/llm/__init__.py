@@ -5,3 +5,4 @@ from .openrouter_generate_text import OpenRouterGenerateText  # noqa
 from .openrouter_image_understand import OpenRouterImageUnderstand  # noqa
 from .openai_generate_text import OpenAIGenerateText  # noqa
 from .openai_image_understand import OpenAIImageUnderstand  # noqa
+from .history_builder import HistoryBuilder  # noqa

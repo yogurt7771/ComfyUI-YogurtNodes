@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Tuple
 
 from folder_paths import get_filename_list
 
@@ -45,7 +46,7 @@ class CheckpointSelector:
     DESCRIPTION = "Select Checkpoint"
     CATEGORY = "YogurtNodes/Models"
 
-    def checkpoint_selector(self, checkpoint: str, trigger_word: str):
+    def checkpoint_selector(self, checkpoint: str, trigger_word: str) -> Tuple[str, str, str, str]:
         checkpoint_path = Path(checkpoint)
         name = checkpoint_path.name
         stem = checkpoint_path.stem

@@ -23,9 +23,10 @@ ComfyUI-YogurtNodes is a collection of custom nodes for ComfyUI, providing a ser
 - Required Python packages:
   - numpy
   - pillow
-  - google-generativeai (for Gemini nodes)
-  - openai (for OpenAI nodes)
+  - google-genai (for Gemini nodes)
+  - openai (for OpenAI and OpenRouter nodes)
   - requests (for API calls)
+  - opencv-python (for Poisson Blend)
 
 ### Installation Steps
 
@@ -36,7 +37,7 @@ cd custom_nodes
 
 2. Clone this repository:
 ```bash
-git clone https://github.com/[your-username]/ComfyUI-YogurtNodes.git
+git clone https://github.com/yogurt7771/ComfyUI-YogurtNodes.git
 ```
 
 3. Install dependencies:
@@ -78,10 +79,14 @@ All nodes are marked with "YogurtNodes" prefix for easy identification in the Co
   - Text and background color configuration
   - Multi-line text support with automatic wrapping
 
-#### None Image
+#### Poisson Blend
 - **Category:** YogurtNodes/Image
-- **Description:** A utility node that returns None as an image output
-- **Use Case:** Helpful for conditional workflows where a null image output is needed
+- **Description:** Uses OpenCV Poisson blending (seamlessClone) to blend foreground into background
+- **Features:**
+  - Seamless blending using OpenCV's Poisson editing
+  - Customizable blend position and size
+  - Automatic mask processing and resizing
+  - Supports various image formats
 
 #### Range
 - **Category:** YogurtNodes/Number
@@ -281,14 +286,15 @@ All nodes are marked with "YogurtNodes" prefix for easy identification in the Co
   - Automatic parent directory creation
   - Path validation
 
-#### Create Parent Directory
+#### Glob Files
 - **Category:** YogurtNodes/IO
-- **Description:** Parent directory creation utility
+- **Description:** Traverse folders using glob patterns and return matching file path lists
 - **Features:**
-  - Creates parent directories
-  - Recursive creation support
-  - Path validation
-  - Safe operation with existing directories
+  - Support for glob and rglob patterns
+  - Flexible sorting options (alphabetical, reverse)
+  - File-only filtering option
+  - Path format options (POSIX, absolute, resolved)
+  - Customizable search modes
 
 #### Save Mask Bridge Ex
 - **Category:** YogurtNodes/IO
@@ -378,6 +384,31 @@ All nodes are marked with "YogurtNodes" prefix for easy identification in the Co
   - High-quality image detail processing
   - Automatic retry mechanism
 
+#### OpenRouter Generate Text
+- **Category:** YogurtNodes/LLM
+- **Description:** Generate text using OpenRouter API
+- **Features:**
+  - Support for various OpenRouter models
+  - Custom infrastructure provider selection
+  - System and user prompt control
+  - Customizable generation parameters (temperature, top_p, max_tokens)
+  - Chat template support for message formatting
+  - History support for conversation continuity
+  - Automatic retry mechanism
+  - Dynamic model list fetching
+
+#### OpenRouter Image Understand
+- **Category:** YogurtNodes/LLM
+- **Description:** Image understanding using OpenRouter vision models
+- **Features:**
+  - Support for OpenRouter vision models
+  - Multi-image analysis support
+  - Combined image and text prompt processing
+  - Custom infrastructure provider selection
+  - Customizable generation parameters
+  - History support for conversation continuity
+  - Automatic retry mechanism
+
 ## 🔑 Gemini API Key Setup
 
 Before using Gemini-related nodes, you must obtain and configure your Gemini API Key. There are three supported methods, in the following order of priority:
@@ -440,6 +471,31 @@ The OpenAI nodes support custom base URLs, making them compatible with:
 Simply set the `base_url` parameter to your preferred endpoint.
 
 If the API Key is not configured correctly, OpenAI nodes will not work. You can obtain your API Key from [OpenAI Platform](https://platform.openai.com/api-keys).
+
+## 🔑 OpenRouter API Key Setup
+
+Before using OpenRouter-related nodes, you must obtain and configure your OpenRouter API Key. There are three supported methods, in the following order of priority:
+
+1. **Code Argument**
+   - Pass the `api_key` argument directly when initializing `OpenRouterClient` (highest priority).
+
+2. **api_key.json File**
+   - Create an `api_key.json` file in `custom_nodes/ComfyUI-YogurtNodes/yogurt_nodes/llm/` with the following content:
+     ```json
+     {
+       "openrouter": "YOUR_API_KEY"
+     }
+     ```
+   - This will be used only if the code argument is not provided.
+
+3. **Environment Variable**
+   - Set the environment variable `OPENROUTER_API_KEY` (used only if the above two are not set).
+   - Example (Windows command line):
+     ```cmd
+     set OPENROUTER_API_KEY=YOUR_API_KEY
+     ```
+
+If the API Key is not configured correctly, OpenRouter nodes will not work. You can obtain your API Key from [OpenRouter Platform](https://openrouter.ai/keys).
 
 ## 🤝 Contributing
 

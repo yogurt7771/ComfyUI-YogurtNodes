@@ -281,9 +281,13 @@ class OpenAIClient:
                     pprint(f"Attempt {attempt + 1} failed: {error_msg}")
                     last_exception = Exception(error_msg)
 
-            except Exception as e:
-                pprint(f"Attempt {attempt + 1} failed: {str(e)} {response.text if response is not None else 'None'}")
-                last_exception = e
+            except (ConnectionError, TimeoutError, requests.RequestException) as exception:
+                pprint(f"Network error in attempt {attempt + 1}/{retry_count}: {exception}")
+                last_exception = exception
+                time.sleep(3)
+            except Exception as exception:
+                pprint(f"Unexpected error in attempt {attempt + 1}/{retry_count}: {exception} {response.text if response is not None else 'None'}")
+                last_exception = exception
                 time.sleep(3)
 
         raise last_exception or Exception("All retry attempts failed")
@@ -355,8 +359,11 @@ class OpenAIClient:
                 )
                 return []
 
-        except Exception as e:
-            print(f"Error getting models: {e}")
+        except (ConnectionError, TimeoutError, requests.RequestException) as exception:
+            print(f"Network error getting models: {exception}")
+            return []
+        except Exception as exception:
+            print(f"Unexpected error getting models: {exception}")
             return []
 
     def get_all_models(self) -> List[str]:
@@ -372,8 +379,11 @@ class OpenAIClient:
 
             return sorted(model_ids)
 
-        except Exception as e:
-            print(f"Error getting models: {e}")
+        except (ConnectionError, TimeoutError, requests.RequestException) as exception:
+            print(f"Network error getting models: {exception}")
+            return []
+        except Exception as exception:
+            print(f"Unexpected error getting models: {exception}")
             return []
 
     @staticmethod
@@ -420,6 +430,6 @@ class OpenAIClient:
                 }
             return {}
 
-        except Exception as e:
-            print(f"Error parsing usage info: {e}")
+        except Exception as exception:
+            print(f"Error parsing usage info: {exception}")
             return {}
