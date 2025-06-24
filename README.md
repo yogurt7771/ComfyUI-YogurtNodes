@@ -409,6 +409,16 @@ All nodes are marked with "YogurtNodes" prefix for easy identification in the Co
   - History support for conversation continuity
   - Automatic retry mechanism
 
+#### History Builder
+- **Category:** YogurtNodes/LLM
+- **Description:** Build and manage conversation history compatible with all LLM nodes
+- **Features:**
+  - Compatible HISTORY type output for seamless integration
+  - Incremental history building with user and assistant messages
+  - Automatic message filtering (empty messages ignored)
+  - Simple and focused functionality
+  - Essential for maintaining conversation context across LLM calls
+
 ## 🔑 Gemini API Key Setup
 
 Before using Gemini-related nodes, you must obtain and configure your Gemini API Key. There are three supported methods, in the following order of priority:

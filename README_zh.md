@@ -445,6 +445,17 @@ pip install -r requirements.txt
   - 历史记录支持对话连续性
   - 自动重试机制
 
+#### History Builder
+
+- **类别：** YogurtNodes/LLM
+- **描述：** 构建和管理与所有LLM节点兼容的会话历史
+- **特点：**
+  - 输出兼容的HISTORY类型，可无缝集成
+  - 支持用户和助手消息的增量历史构建
+  - 自动消息过滤（忽略空消息）
+  - 功能简单专注
+  - 是在LLM调用间维持对话上下文的必备工具
+
 ## 🔑 Gemini API Key 配置说明
 
 使用 Gemini 相关节点前，您需要获取并配置 Gemini API Key。支持以下三种方式，优先级如下：
