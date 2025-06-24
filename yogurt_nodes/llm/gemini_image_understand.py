@@ -1,5 +1,4 @@
-from typing import Optional
-from PIL import Image
+from typing import List
 import torch
 import torchvision
 
@@ -126,6 +125,7 @@ class GeminiImageUnderstand:
                 "image2": ("IMAGE",),
                 "image3": ("IMAGE",),
                 "image4": ("IMAGE",),
+                "history": ("HISTORY",),
             },
         }
 
@@ -133,8 +133,8 @@ class GeminiImageUnderstand:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("text",)
+    RETURN_TYPES = ("STRING", "HISTORY")
+    RETURN_NAMES = ("text", "history")
 
     FUNCTION = "understand_image"
 
@@ -156,11 +156,12 @@ class GeminiImageUnderstand:
         disable_safety_settings: bool = False,
         disable_system_prompt: bool = False,
         chat_template: str = "",
-        image: Optional[torch.Tensor] = None,
-        image1: Optional[torch.Tensor] = None,
-        image2: Optional[torch.Tensor] = None,
-        image3: Optional[torch.Tensor] = None,
-        image4: Optional[torch.Tensor] = None,
+        image: torch.Tensor | None = None,
+        image1: torch.Tensor | None = None,
+        image2: torch.Tensor | None = None,
+        image3: torch.Tensor | None = None,
+        image4: torch.Tensor | None = None,
+        history: List[tuple[str, str]] | None = None,
     ):
         # 收集所有非空图像
         images = []
@@ -172,7 +173,7 @@ class GeminiImageUnderstand:
                 images.append(torchvision.transforms.ToPILImage()(img))
 
         client = GeminiClient(api_key)
-        text = client.generate_text(
+        text, history = client.generate_text(
             model_name=model_name,
             system_prompt=system_prompt,
             prompt=prompt,
@@ -185,5 +186,6 @@ class GeminiImageUnderstand:
             disable_safety_settings=disable_safety_settings,
             disable_system_prompt=disable_system_prompt,
             chat_template=chat_template,
+            history=history,
         )
-        return (text,)
+        return (text, history)

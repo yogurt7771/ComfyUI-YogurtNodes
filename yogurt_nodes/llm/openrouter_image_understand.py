@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List
 
 import torch
 import torchvision
@@ -129,6 +129,7 @@ class OpenRouterImageUnderstand:
                 "image2": ("IMAGE",),
                 "image3": ("IMAGE",),
                 "image4": ("IMAGE",),
+                "history": ("HISTORY",),
             },
         }
 
@@ -136,8 +137,8 @@ class OpenRouterImageUnderstand:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("text",)
+    RETURN_TYPES = ("STRING", "HISTORY")
+    RETURN_NAMES = ("text", "history")
 
     FUNCTION = "understand_image"
 
@@ -157,11 +158,12 @@ class OpenRouterImageUnderstand:
         max_tokens: int = 8192,
         retry_count: int = 3,
         chat_template: str = "",
-        image: Optional[torch.Tensor] = None,
-        image1: Optional[torch.Tensor] = None,
-        image2: Optional[torch.Tensor] = None,
-        image3: Optional[torch.Tensor] = None,
-        image4: Optional[torch.Tensor] = None,
+        image: torch.Tensor | None = None,
+        image1: torch.Tensor | None = None,
+        image2: torch.Tensor | None = None,
+        image3: torch.Tensor | None = None,
+        image4: torch.Tensor | None = None,
+        history: List[tuple[str, str]] | None = None,
     ):
         # 收集所有非空图像
         images = []
@@ -176,7 +178,7 @@ class OpenRouterImageUnderstand:
             raise ValueError("At least one image must be provided")
 
         client = OpenRouterClient(api_key)
-        text = client.understand_image(
+        text, history = client.understand_image(
             model_name=model_name,
             prompt=prompt,
             images=images,
@@ -189,5 +191,6 @@ class OpenRouterImageUnderstand:
                 infrastructure_provider if infrastructure_provider != "auto" else None
             ),
             chat_template=chat_template,
+            history=history,
         )
-        return (text,)
+        return (text, history)

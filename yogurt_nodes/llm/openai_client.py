@@ -20,19 +20,32 @@ def image_to_base64(image: Image.Image) -> str:
     return base64.b64encode(img_bytes).decode("utf-8")
 
 
+def add_image_contents(images: List[Image.Image], contents: List[Dict[str, Any]]):
+    for image in images:
+        base64_image = image_to_base64(image)
+        contents.append(
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
+            }
+        )
+
+
 def build_messages(
     system_prompt: str = "",
     prompt: str = "",
     images: Optional[List[Image.Image]] = None,
+    history: List[tuple[str, str]] | None = None,
     chat_template: str = "",
     system_role: str = "system",
     user_role: str = "user",
     model_role: str = "assistant",
-) -> List[Dict[str, Any]]:
+) -> tuple[List[Dict[str, Any]], List[tuple[str, str]]]:
     """构建消息列表，防止上下文长度超过限制"""
     if images is None:
         images = []
-    messages = []
+    if history is None:
+        history = []
     if len(chat_template) == 0:
         template_path = Path(__file__).parent / "template.txt"
         if template_path.exists():
@@ -42,6 +55,9 @@ def build_messages(
                 "<-system->\n"
                 "{{system_instruction}}\n"
                 "<-/system->\n"
+                "<-history->\n"
+                "{{history}}\n"
+                "<-/history->\n"
                 "<-user->\n"
                 "{{prompt}}\n"
                 "<-/user->"
@@ -50,57 +66,67 @@ def build_messages(
         template_content = chat_template
     role = None
     content_lines = []
-    with_user_prompt = False
     added_image = False
+    messages = []
+    with_user_prompt = False
     for line in template_content.splitlines():
         stripped_line = line.strip()
         if role is not None:
-            if re.match(r"^<-/\w+->$", stripped_line):
+            if re.match(rf"^<-/{role}->$", stripped_line):
                 # 遇到结束标记，添加当前内容到消息列表
                 message_content = "\n".join(content_lines).strip()
                 if message_content:
-                    if "{{prompt}}" in message_content:
-                        with_user_prompt = True
                     message_content = message_content.replace(
                         "{{system_instruction}}", system_prompt
                     )
-                    message_content = message_content.replace("{{prompt}}", prompt)
-                    if role == "system":
-                        role = system_role
-                    elif role == "user":
-                        role = user_role
-                    elif role == "assistant":
-                        role = model_role
-                    contents = []
-                    if len(message_content) > 0:
-                        contents.append({
-                            "type": "text",
-                            "text": message_content,
-                        })
-                    if with_user_prompt and not added_image:
-                        # 添加图像内容
-                        if images:
-                            for image in images:
-                                base64_image = image_to_base64(image)
-                                contents.append({
-                                    "type": "image_url",
-                                    "image_url": {
-                                        "url": f"data:image/jpeg;base64,{base64_image}"
-                                    },
-                                })
+                    if "{{prompt}}" in message_content:
+                        message_content = message_content.replace("{{prompt}}", prompt)
+                        with_user_prompt = True
+                    if role == "history":
+                        for role, content in history:
+                            contents = [
+                                {
+                                    "type": "text",
+                                    "text": content,
+                                }
+                            ]
+                            if role == "user" and not added_image:
+                                add_image_contents(images, contents)
+                                added_image = True
+                            if role == "system":
+                                message_role = system_role
+                            elif role == "user":
+                                message_role = user_role
+                            elif role == "assistant":
+                                message_role = model_role
+                            messages.append({"role": message_role, "content": contents})
+                    else:
+                        if role == "system":
+                            message_role = system_role
+                        elif role == "user":
+                            message_role = user_role
+                        elif role == "assistant":
+                            message_role = model_role
+                        contents = []
+                        if len(message_content) > 0:
+                            contents.append({
+                                "type": "text",
+                                "text": message_content,
+                            })
+                        if role == "user" and with_user_prompt and not added_image:
+                            add_image_contents(images, contents)
                             added_image = True
-                    if len(contents) > 0:
-                        messages.append({"role": role, "content": contents})
+                        if len(contents) > 0:
+                            messages.append({"role": message_role, "content": contents})
                 content_lines = []
                 role = None  # 重置角色
-                with_user_prompt = False
             else:
                 content_lines.append(line)
         else:
             if re.match(r"^<-\w+->$", stripped_line):
                 role = stripped_line[2:-2]
-
-    return messages
+    history.append(("user", prompt))
+    return messages, history
 
 
 class OpenAIClient:
@@ -171,6 +197,7 @@ class OpenAIClient:
         prompt: str = "",
         system_prompt: str = "",
         images: Optional[List[Image.Image]] = None,
+        history: List[tuple[str, str]] | None = None,
         temperature: float = 1.0,
         top_p: float = 1.0,
         max_tokens: int = 4096,
@@ -179,7 +206,7 @@ class OpenAIClient:
         presence_penalty: float = 0.0,
         chat_template: str = "",
         seed: Optional[int] = None,
-    ) -> str:
+    ) -> tuple[str, List[tuple[str, str]]]:
         """
         生成文本
 
@@ -200,10 +227,11 @@ class OpenAIClient:
         Returns:
             str: 生成的文本
         """
-        messages = build_messages(
+        messages, history = build_messages(
             system_prompt=system_prompt,
             prompt=prompt,
             images=images,
+            history=history,
             chat_template=chat_template,
         )
 
@@ -245,15 +273,16 @@ class OpenAIClient:
                     result = response.json()
                     content = result["choices"][0]["message"]["content"].strip()
                     if content:
-                        return content
+                        history.append(("assistant", content))
+                        return content, history
                     raise ValueError("Empty response content from API")
                 else:
-                    error_msg = f"API request failed with status {response.status_code}: {response.text}"
+                    error_msg = f"API request failed with status {response.status_code if response is not None else 'None'}: {response.text if response is not None else 'None'}"
                     pprint(f"Attempt {attempt + 1} failed: {error_msg}")
                     last_exception = Exception(error_msg)
 
             except Exception as e:
-                pprint(f"Attempt {attempt + 1} failed: {str(e)} {response.text}")
+                pprint(f"Attempt {attempt + 1} failed: {str(e)} {response.text if response is not None else 'None'}")
                 last_exception = e
                 time.sleep(3)
 
@@ -265,6 +294,7 @@ class OpenAIClient:
         prompt: str = "",
         images: Optional[List[Image.Image]] = None,
         system_prompt: str = "",
+        history: List[tuple[str, str]] | None = None,
         temperature: float = 1.0,
         top_p: float = 1.0,
         max_tokens: int = 4096,
@@ -273,7 +303,7 @@ class OpenAIClient:
         presence_penalty: float = 0.0,
         chat_template: str = "",
         seed: Optional[int] = None,
-    ) -> str:
+    ) -> tuple[str, List[tuple[str, str]]]:
         """
         理解图像内容
 
@@ -299,6 +329,7 @@ class OpenAIClient:
             prompt=prompt,
             system_prompt=system_prompt,
             images=images,
+            history=history,
             temperature=temperature,
             top_p=top_p,
             max_tokens=max_tokens,

@@ -1,3 +1,4 @@
+from typing import List
 from .openai_client import OpenAIClient
 
 
@@ -138,6 +139,7 @@ class OpenAIGenerateText:
             },
             "optional": {
                 "seed": ("SEED",),
+                "history": ("HISTORY",),
             },
         }
 
@@ -145,8 +147,8 @@ class OpenAIGenerateText:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("text",)
+    RETURN_TYPES = ("STRING", "HISTORY")
+    RETURN_NAMES = ("text", "history")
 
     FUNCTION = "generate_text"
 
@@ -169,13 +171,14 @@ class OpenAIGenerateText:
         retry_count: int,
         chat_template: str,
         seed: int = -1,
+        history: List[tuple[str, str]] | None = None,
     ):
         client = OpenAIClient(api_key, base_url)
 
         # 处理 seed 参数
         seed_value = None if seed == -1 else seed
 
-        text = client.generate_text(
+        text, history = client.generate_text(
             model_name=model_name,
             system_prompt=system_prompt,
             prompt=prompt,
@@ -187,5 +190,6 @@ class OpenAIGenerateText:
             presence_penalty=presence_penalty,
             chat_template=chat_template,
             seed=seed_value,
+            history=history,
         )
-        return (text,)
+        return (text, history)

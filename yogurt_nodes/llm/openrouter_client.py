@@ -57,13 +57,14 @@ class OpenRouterClient:
         prompt: str = "",
         system_prompt: str = "",
         images: Optional[List[Image.Image]] = None,
+        history: List[tuple[str, str]] | None = None,
         temperature: float = 1.0,
         top_p: float = 0,
         max_tokens: int = 8192,
         retry_count: int = 3,
         provider: Optional[str] = None,
         chat_template: str = "",
-    ) -> str:
+    ) -> tuple[str, List[tuple[str, str]]]:
         """
         生成文本
 
@@ -82,10 +83,11 @@ class OpenRouterClient:
         Returns:
             str: 生成的文本
         """
-        messages = build_messages(
+        messages, history = build_messages(
             system_prompt=system_prompt,
             prompt=prompt,
             images=images,
+            history=history,
             chat_template=chat_template,
         )
 
@@ -120,7 +122,8 @@ class OpenRouterClient:
                     result = response.json()
                     content = result["choices"][0]["message"]["content"].strip()
                     if content:
-                        return content
+                        history.append(("assistant", content))
+                        return content, history
                     raise ValueError("Empty response content from API")
                 else:
                     error_msg = f"API request failed with status {response.status_code}: {response.text}"
@@ -139,13 +142,14 @@ class OpenRouterClient:
         prompt: str = "",
         images: Optional[List[Image.Image]] = None,
         system_prompt: str = "",
+        history: List[tuple[str, str]] | None = None,
         temperature: float = 1.0,
         top_p: float = 0,
         max_tokens: int = 8192,
         retry_count: int = 3,
         provider: Optional[str] = None,
         chat_template: str = "",
-    ) -> str:
+    ) -> tuple[str, List[tuple[str, str]]]:
         """
         理解图像内容
 
@@ -169,6 +173,7 @@ class OpenRouterClient:
             prompt=prompt,
             system_prompt=system_prompt,
             images=images,
+            history=history,
             temperature=temperature,
             top_p=top_p,
             max_tokens=max_tokens,

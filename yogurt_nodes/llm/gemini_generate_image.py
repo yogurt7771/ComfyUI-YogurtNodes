@@ -1,4 +1,5 @@
 from typing import Optional
+from typing_extensions import List
 
 import torch
 import torchvision
@@ -150,6 +151,7 @@ class GeminiGenerateImage:
                 "image2": ("IMAGE",),
                 "image3": ("IMAGE",),
                 "image4": ("IMAGE",),
+                "history": ("HISTORY",),
             },
         }
 
@@ -157,8 +159,8 @@ class GeminiGenerateImage:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("IMAGE", "STRING", "INT")
-    RETURN_NAMES = ("image", "text", "num_images")
+    RETURN_TYPES = ("IMAGE", "STRING", "INT", "HISTORY")
+    RETURN_NAMES = ("image", "text", "num_images", "history")
 
     FUNCTION = "generate_image"
 
@@ -189,6 +191,7 @@ class GeminiGenerateImage:
         image2: Optional[torch.Tensor] = None,
         image3: Optional[torch.Tensor] = None,
         image4: Optional[torch.Tensor] = None,
+        history: List[tuple[str, str]] | None = None,
     ):
         # 收集所有非空图像
         images = []
@@ -199,7 +202,7 @@ class GeminiGenerateImage:
                 img = img.permute(2, 0, 1)
                 images.append(torchvision.transforms.ToPILImage()(img))
         client = GeminiClient(api_key)
-        images, text = client.generate_image(
+        images, text, history = client.generate_image(
             model_name=model_name,
             prompt=prompt,
             system_prompt=system_prompt,
@@ -214,19 +217,16 @@ class GeminiGenerateImage:
             safety_level=safety_level,
             thinking_budget=thinking_budget,
             chat_template=chat_template,
+            history=history,
         )
         tensor_imgs = []
-        for image in images:
+        for image in images:  # type: ignore
             tensor_img = torchvision.transforms.ToTensor()(image)
             tensor_img = tensor_img.permute(1, 2, 0).unsqueeze(0)
             tensor_imgs.append(tensor_img)
         if len(tensor_imgs) == 1:
-            return (tensor_imgs[0], text, 1)
+            return (tensor_imgs[0], text, 1, history)
         elif len(tensor_imgs) > 1:
-            return (torch.cat(tensor_imgs, dim=0), text, len(tensor_imgs))
+            return (torch.cat(tensor_imgs, dim=0), text, len(tensor_imgs), history)
         else:
-            return (
-                torch.zeros(1, 3, 1, 1, dtype=torch.float32),
-                text,
-                0,
-            )
+            return (torch.zeros(1, 3, 1, 1, dtype=torch.float32), text, 0, history)

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List
 
 import torch
 import torchvision
@@ -143,6 +143,7 @@ class OpenAIImageUnderstand:
                         "tooltip": "Random seed for reproducible outputs (-1 for random)",
                     },
                 ),
+                "history": ("HISTORY",),
             },
         }
 
@@ -150,8 +151,8 @@ class OpenAIImageUnderstand:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("text",)
+    RETURN_TYPES = ("STRING", "HISTORY")
+    RETURN_NAMES = ("text", "history")
 
     FUNCTION = "understand_image"
 
@@ -174,11 +175,12 @@ class OpenAIImageUnderstand:
         retry_count: int,
         chat_template: str,
         seed: int = -1,
-        image: Optional[torch.Tensor] = None,
-        image1: Optional[torch.Tensor] = None,
-        image2: Optional[torch.Tensor] = None,
-        image3: Optional[torch.Tensor] = None,
-        image4: Optional[torch.Tensor] = None,
+        image: torch.Tensor | None = None,
+        image1: torch.Tensor | None = None,
+        image2: torch.Tensor | None = None,
+        image3: torch.Tensor | None = None,
+        image4: torch.Tensor | None = None,
+        history: List[tuple[str, str]] | None = None,
     ):
         client = OpenAIClient(api_key, base_url)
 
@@ -194,7 +196,7 @@ class OpenAIImageUnderstand:
         # 处理 seed 参数
         seed_value = None if seed == -1 else seed
 
-        text = client.understand_image(
+        text, history = client.understand_image(
             model_name=model_name,
             prompt=prompt,
             images=images,
@@ -207,5 +209,6 @@ class OpenAIImageUnderstand:
             presence_penalty=presence_penalty,
             chat_template=chat_template,
             seed=seed_value,
+            history=history,
         )
-        return (text,)
+        return (text, history)

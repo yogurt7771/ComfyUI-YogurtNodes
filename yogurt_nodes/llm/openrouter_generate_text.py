@@ -1,3 +1,4 @@
+from typing import List
 from .openrouter_client import OpenRouterClient
 
 
@@ -117,15 +118,18 @@ class OpenRouterGenerateText:
                         "tooltip": "Content template for the generated text",
                     },
                 ),
-            }
+            },
+            "optional": {
+                "history": ("HISTORY",),
+            },
         }
 
     @classmethod
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("text",)
+    RETURN_TYPES = ("STRING", "HISTORY")
+    RETURN_NAMES = ("text", "history")
 
     FUNCTION = "generate_text"
 
@@ -145,9 +149,10 @@ class OpenRouterGenerateText:
         max_tokens: int = 8192,
         retry_count: int = 1,
         chat_template: str = "",
+        history: List[tuple[str, str]] | None = None,
     ):
         client = OpenRouterClient(api_key)
-        text = client.generate_text(
+        text, history = client.generate_text(
             model_name=model_name,
             system_prompt=system_prompt,
             prompt=prompt,
@@ -159,5 +164,6 @@ class OpenRouterGenerateText:
                 infrastructure_provider if infrastructure_provider != "auto" else None
             ),
             chat_template=chat_template,
+            history=history,
         )
-        return (text,)
+        return (text, history)

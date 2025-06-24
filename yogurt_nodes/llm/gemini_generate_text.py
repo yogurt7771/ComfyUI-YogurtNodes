@@ -1,3 +1,4 @@
+from typing import List
 from .gemini_client import GeminiClient
 
 
@@ -138,15 +139,18 @@ class GeminiGenerateText:
                         "tooltip": "Content template for the generated text",
                     },
                 ),
-            }
+            },
+            "optional": {
+                "history": ("HISTORY",),
+            },
         }
 
     @classmethod
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("text",)
+    RETURN_TYPES = ("STRING", "HISTORY")
+    RETURN_NAMES = ("text", "history")
 
     FUNCTION = "generate_text"
 
@@ -170,9 +174,10 @@ class GeminiGenerateText:
         safety_level: str = "BLOCK_NONE",
         thinking_budget: int = 0,
         chat_template: str = "",
+        history: List[tuple[str, str]] | None = None,
     ):
         client = GeminiClient(api_key)
-        text = client.generate_text(
+        text, history = client.generate_text(
             model_name=model_name,
             system_prompt=system_prompt,
             prompt=prompt,
@@ -186,5 +191,6 @@ class GeminiGenerateText:
             safety_level=safety_level,
             thinking_budget=thinking_budget,
             chat_template=chat_template,
+            history=history,
         )
-        return (text,)
+        return (text, history)

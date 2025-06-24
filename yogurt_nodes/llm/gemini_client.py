@@ -100,13 +100,15 @@ class GeminiClient:
         system_prompt: str,
         prompt: str,
         images: Optional[List[Image.Image]],
-        disable_system_prompt: bool,
+        history: List[tuple[str, str]],
+        disable_system_prompt: bool = False,
         chat_template: str = "",
     ):
         """获取对话内容"""
-        messages = build_messages(
+        messages, history = build_messages(
             system_prompt=system_prompt,
             prompt=prompt,
+            history=history,
             system_role="system" if not disable_system_prompt else "user",
             model_role="model",
             chat_template=chat_template,
@@ -151,7 +153,7 @@ class GeminiClient:
                 )
             )
 
-        return system_instruction, results
+        return system_instruction, results, history
 
     def _get_thinking_config(
         self, model_name, thinking_budget: int
@@ -175,7 +177,8 @@ class GeminiClient:
         model_name: str,
         prompt: str = "",
         system_prompt: str = "",
-        images: Optional[List[Image.Image]] = None,
+        images: List[Image.Image] | None = None,
+        history: List[tuple[str, str]] | None = None,
         temperature: float = 1,
         top_p: float = 0.95,
         top_k: int = 64,
@@ -204,16 +207,17 @@ class GeminiClient:
         if safety_settings is not None:
             config.safety_settings = safety_settings
 
-        system_instruction, contents = self._get_contents(
+        system_instruction, contents, history = self._get_contents(
             system_prompt=system_prompt,
             prompt=prompt,
             images=images,
-            disable_system_prompt=disable_system_prompt,
+            history=history if history is not None else [],
             chat_template=chat_template,
+            disable_system_prompt=disable_system_prompt,
         )
         if system_instruction is not None:
-            config.system_instruction = system_instruction
-        return config, contents
+            config.system_instruction = system_instruction  # type: ignore
+        return config, contents, history
 
     def generate_text(
         self,
@@ -221,6 +225,7 @@ class GeminiClient:
         prompt: str = "",
         system_prompt: str = "",
         images: Optional[List[Image.Image]] = None,
+        history: List[tuple[str, str]] | None = None,
         temperature: float = 1,
         top_p: float = 0,
         top_k: int = 0,
@@ -231,7 +236,7 @@ class GeminiClient:
         safety_level: str = "BLOCK_NONE",
         thinking_budget: int = 0,
         chat_template: str = "",
-    ) -> str:
+    ) -> tuple[str, List[tuple[str, str]]]:
         """
         生成文本
 
@@ -253,11 +258,12 @@ class GeminiClient:
         Returns:
             str: 生成的文本
         """
-        config, contents = self._build_params(
+        config, contents, history = self._build_params(
             model_name=model_name,
             prompt=prompt,
             system_prompt=system_prompt,
             images=images,
+            history=history,
             temperature=temperature,
             top_p=top_p,
             top_k=top_k,
@@ -284,7 +290,8 @@ class GeminiClient:
                 text = response.text
                 text = text.strip() if text else None
                 if text is not None and len(text) > 0:
-                    return text
+                    history.append(("assistant", text))
+                    return text, history
                 raise ValueError(f"Model {model_name} returned empty text response.")
             except Exception as e_inter:
                 print(f"Error {model_name} generating text: {e_inter}")
@@ -300,6 +307,7 @@ class GeminiClient:
         prompt: str = "",
         system_prompt: str = "",
         images: Optional[List[Image.Image]] = None,
+        history: List[tuple[str, str]] | None = None,
         temperature: float = 1,
         top_p: float = 0,
         top_k: int = 0,
@@ -310,16 +318,17 @@ class GeminiClient:
         safety_level: str = "BLOCK_NONE",
         thinking_budget: int = 0,
         chat_template: str = "",
-    ) -> tuple:
+    ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """
         生成图片
         返回 (PIL.Image, text)
         """
-        config, contents = self._build_params(
+        config, contents, history = self._build_params(
             model_name=model_name,
             prompt=prompt,
             system_prompt=system_prompt,
             images=images,
+            history=history,
             temperature=temperature,
             top_p=top_p,
             top_k=top_k,
@@ -369,7 +378,8 @@ class GeminiClient:
                     else:
                         if hasattr(chunk, "text") and chunk.text:
                             last_text += chunk.text
-                return images, last_text
+                history.append(("assistant", last_text))
+                return images, last_text, history
             except Exception as e_inner:
                 print(f"Error {model_name} generating image: {e_inner}")
                 e = e_inner

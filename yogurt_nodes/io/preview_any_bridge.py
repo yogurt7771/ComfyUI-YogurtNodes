@@ -37,7 +37,7 @@ class PreviewAnyBridge:
             value = f"Tensor: {data.shape}\n{data}"
         elif data is not None:
             try:
-                value = json.dumps(data)
+                value = json.dumps(data, ensure_ascii=False, indent=4)
             except Exception:
                 try:
                     value = str(data)
