@@ -75,7 +75,7 @@ class GlobFiles:
         }
 
     RETURN_TYPES = ("STRING",)
-    OUTPUT_IS_LIST = True
+    OUTPUT_IS_LIST = (True, )
     RETURN_NAMES = ("file_paths",)
     FUNCTION = "execute"
     OUTPUT_NODE = False
