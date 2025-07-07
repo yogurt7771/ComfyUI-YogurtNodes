@@ -21,7 +21,7 @@ class PreviewAnyBridge:
     RETURN_TYPES = (ANY_TYPE,)
     RETURN_NAMES = ("data",)
     FUNCTION = "execute"
-    OUTPUT_NODE = True
+    OUTPUT_NODE = False
 
     _NODE_NAME = "Preview Any Bridge"
     DESCRIPTION = "Preview Any Bridge"
@@ -45,3 +45,9 @@ class PreviewAnyBridge:
                     value = 'source exists, but could not be serialized.'
 
         return {"ui": {"text": (value,)}, "result": (data,)}
+
+
+class PreviewAnyBridgeOutput(PreviewAnyBridge):
+    OUTPUT_NODE = True
+    _NODE_NAME = "Preview Any Bridge Output"
+    DESCRIPTION = "Preview Any Bridge Output"

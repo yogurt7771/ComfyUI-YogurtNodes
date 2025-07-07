@@ -9,7 +9,7 @@ from .save_mask_bridge_simple import SaveMaskBridgeSimple  # noqa
 from .preview_mask_bridge import PreviewMaskBridge  # noqa
 
 from .any_bridge import AnyBridge  # noqa
-from .preview_any_bridge import PreviewAnyBridge  # noqa
+from .preview_any_bridge import PreviewAnyBridge, PreviewAnyBridgeOutput  # noqa
 from .create_directory import CreateDirectory, CreateParentDirectory  # noqa
 from .save_text import SaveTextBridge  # noqa
 from .glob_files import GlobFiles  # noqa

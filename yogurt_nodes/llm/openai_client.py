@@ -253,9 +253,9 @@ class OpenAIClient:
         if seed is not None:
             payload["seed"] = seed
 
-        pprint(f"Generating text with model {model_name}...")
-        pprint(f"Base URL: {self.base_url}")
-        pprint(payload)
+        # pprint(f"Generating text with model {model_name}...")
+        # pprint(f"Base URL: {self.base_url}")
+        # pprint(payload)
 
         last_exception = None
         response = None
@@ -267,7 +267,7 @@ class OpenAIClient:
                     json=payload,
                     timeout=120,
                 )
-                pprint(response.text)
+                # pprint(response.text)
 
                 if response.status_code == 200:
                     result = response.json()
@@ -278,15 +278,15 @@ class OpenAIClient:
                     raise ValueError("Empty response content from API")
                 else:
                     error_msg = f"API request failed with status {response.status_code if response is not None else 'None'}: {response.text if response is not None else 'None'}"
-                    pprint(f"Attempt {attempt + 1} failed: {error_msg}")
+                    # pprint(f"Attempt {attempt + 1} failed: {error_msg}")
                     last_exception = Exception(error_msg)
 
             except (ConnectionError, TimeoutError, requests.RequestException) as exception:
-                pprint(f"Network error in attempt {attempt + 1}/{retry_count}: {exception}")
+                # pprint(f"Network error in attempt {attempt + 1}/{retry_count}: {exception}")
                 last_exception = exception
                 time.sleep(3)
             except Exception as exception:
-                pprint(f"Unexpected error in attempt {attempt + 1}/{retry_count}: {exception} {response.text if response is not None else 'None'}")
+                # pprint(f"Unexpected error in attempt {attempt + 1}/{retry_count}: {exception} {response.text if response is not None else 'None'}")
                 last_exception = exception
                 time.sleep(3)
 
@@ -354,16 +354,16 @@ class OpenAIClient:
             if response.status_code == 200:
                 return response.json()["data"]
             else:
-                pprint(
-                    f"Error getting models: HTTP {response.status_code}: {response.text}"
-                )
+                # pprint(
+                #     f"Error getting models: HTTP {response.status_code}: {response.text}"
+                # )
                 return []
 
         except (ConnectionError, TimeoutError, requests.RequestException) as exception:
-            print(f"Network error getting models: {exception}")
+            # print(f"Network error getting models: {exception}")
             return []
         except Exception as exception:
-            print(f"Unexpected error getting models: {exception}")
+            # print(f"Unexpected error getting models: {exception}")
             return []
 
     def get_all_models(self) -> List[str]:
@@ -380,10 +380,10 @@ class OpenAIClient:
             return sorted(model_ids)
 
         except (ConnectionError, TimeoutError, requests.RequestException) as exception:
-            print(f"Network error getting models: {exception}")
+            # print(f"Network error getting models: {exception}")
             return []
         except Exception as exception:
-            print(f"Unexpected error getting models: {exception}")
+            # print(f"Unexpected error getting models: {exception}")
             return []
 
     @staticmethod
@@ -431,5 +431,5 @@ class OpenAIClient:
             return {}
 
         except Exception as exception:
-            print(f"Error parsing usage info: {exception}")
+            # print(f"Error parsing usage info: {exception}")
             return {}

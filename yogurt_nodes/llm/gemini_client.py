@@ -277,9 +277,9 @@ class GeminiClient:
             thinking_budget=thinking_budget,
             chat_template=chat_template,
         )
-        pprint(f"Generating text with model {model_name}...")
-        pprint(contents)
-        pprint(config)
+        # pprint(f"Generating text with model {model_name}...")
+        # pprint(contents)
+        # pprint(config)
         last_exception = None
         response = None
         for attempt in range(retry_count):
@@ -289,7 +289,7 @@ class GeminiClient:
                     contents=contents,
                     config=config,
                 )
-                print(response)
+                # print(response)
                 text = response.text
                 text = text.strip() if text else None
                 if text is not None and len(text) > 0:
@@ -297,11 +297,11 @@ class GeminiClient:
                     return text, history
                 raise ValueError(f"Model {model_name} returned empty text response.")
             except (ValueError, ConnectionError, TimeoutError) as exception:
-                print(f"Attempt {attempt + 1}/{retry_count} failed for model {model_name}: {exception}")
+                # print(f"Attempt {attempt + 1}/{retry_count} failed for model {model_name}: {exception}")
                 last_exception = exception
                 time.sleep(3)
             except Exception as exception:
-                print(f"Unexpected error in attempt {attempt + 1}/{retry_count} for model {model_name}: {exception}")
+                # print(f"Unexpected error in attempt {attempt + 1}/{retry_count} for model {model_name}: {exception}")
                 last_exception = exception
                 time.sleep(3)
         
@@ -352,9 +352,9 @@ class GeminiClient:
         images = []
         last_text = ""
         last_exception = None
-        pprint(f"Generating image with model {model_name}...")
-        pprint(contents)
-        pprint(config)
+        # pprint(f"Generating image with model {model_name}...")
+        # pprint(contents)
+        # pprint(config)
         response = None
         response_logged = False
         for attempt in range(retry_count):
@@ -365,7 +365,7 @@ class GeminiClient:
                     config=config,
                 )
                 if not response_logged:
-                    print(response)
+                    # print(response)
                     response_logged = True
                 for chunk in response:
                     if (
@@ -390,11 +390,11 @@ class GeminiClient:
                 history.append(("assistant", last_text))
                 return images, last_text, history
             except (ValueError, ConnectionError, TimeoutError) as exception:
-                print(f"Attempt {attempt + 1}/{retry_count} failed for model {model_name}: {exception}")
+                # print(f"Attempt {attempt + 1}/{retry_count} failed for model {model_name}: {exception}")
                 last_exception = exception
                 time.sleep(3)
             except Exception as exception:
-                print(f"Unexpected error in attempt {attempt + 1}/{retry_count} for model {model_name}: {exception}")
+                # print(f"Unexpected error in attempt {attempt + 1}/{retry_count} for model {model_name}: {exception}")
                 last_exception = exception
                 time.sleep(3)
         

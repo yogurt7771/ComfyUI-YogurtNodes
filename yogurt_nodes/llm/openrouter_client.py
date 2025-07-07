@@ -104,8 +104,8 @@ class OpenRouterClient:
         # 添加provider参数（基础设施提供商）
         if provider and provider != "auto":
             payload["provider"] = {"allow_fallbacks": False, "order": [provider]}
-        pprint(self.headers)
-        pprint(payload)
+        # pprint(self.headers)
+        # pprint(payload)
         last_exception = None
         response = None
         for attempt in range(retry_count):
@@ -116,7 +116,7 @@ class OpenRouterClient:
                     json=payload,
                     timeout=120,
                 )
-                print(response)
+                # print(response)
 
                 if response.status_code == 200:
                     result = response.json()
@@ -127,11 +127,11 @@ class OpenRouterClient:
                     raise ValueError("Empty response content from API")
                 else:
                     error_msg = f"API request failed with status {response.status_code}: {response.text}"
-                    print(f"Attempt {attempt + 1} failed: {error_msg}")
+                    # print(f"Attempt {attempt + 1} failed: {error_msg}")
                     last_exception = Exception(error_msg)
 
             except Exception as e:
-                print(f"Attempt {attempt + 1} failed: {str(e)}")
+                # print(f"Attempt {attempt + 1} failed: {str(e)}")
                 last_exception = e
                 time.sleep(3)
         raise last_exception or Exception("All retry attempts failed")
@@ -192,13 +192,13 @@ class OpenRouterClient:
             if response.status_code == 200:
                 return response.json()["data"]
             else:
-                print(
-                    f"Error getting models: HTTP {response.status_code}: {response.text}"
-                )
+                # print(
+                #     f"Error getting models: HTTP {response.status_code}: {response.text}"
+                # )
                 return []
 
         except Exception as e:
-            print(f"Error getting models: {e}")
+            # print(f"Error getting models: {e}")
             return []
 
     def get_all_models(self) -> List[str]:
@@ -215,7 +215,7 @@ class OpenRouterClient:
             return sorted(model_ids)
 
         except Exception as e:
-            print(f"Error getting models: {e}")
+            # print(f"Error getting models: {e}")
             return []
 
     @staticmethod
@@ -263,11 +263,11 @@ class OpenRouterClient:
             if response.status_code == 200:
                 return response.json()
             else:
-                print(
-                    f"Error getting generation info: HTTP {response.status_code}: {response.text}"
-                )
+                # print(
+                #     f"Error getting generation info: HTTP {response.status_code}: {response.text}"
+                # )
                 return {}
 
         except Exception as e:
-            print(f"Error getting generation info: {e}")
+            # print(f"Error getting generation info: {e}")
             return {}
