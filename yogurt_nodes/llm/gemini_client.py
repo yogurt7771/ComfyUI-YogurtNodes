@@ -1,6 +1,7 @@
 import io
 import json
 import os
+import random
 import time
 from io import BytesIO
 from typing import List, Optional
@@ -282,8 +283,9 @@ class GeminiClient:
         # pprint(config)
         last_exception = None
         response = None
-        for attempt in range(retry_count):
+        for _attempt in range(retry_count):
             try:
+                config.seed = random.randint(0, 2**31 - 1)
                 response = self.client.models.generate_content(
                     model=model_name,
                     contents=contents,
@@ -357,8 +359,9 @@ class GeminiClient:
         # pprint(config)
         response = None
         response_logged = False
-        for attempt in range(retry_count):
+        for _attempt in range(retry_count):
             try:
+                config.seed = random.randint(0, 2**31 - 1)
                 response = self.client.models.generate_content_stream(
                     model=model_name,
                     contents=contents,

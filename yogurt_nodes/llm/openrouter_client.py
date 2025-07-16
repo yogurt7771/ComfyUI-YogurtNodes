@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import time
 from typing import Any, Dict, List, Optional
 
@@ -108,8 +109,9 @@ class OpenRouterClient:
         # pprint(payload)
         last_exception = None
         response = None
-        for attempt in range(retry_count):
+        for _attempt in range(retry_count):
             try:
+                payload["seed"] = random.randint(0, 2**31 - 1)
                 response = requests.post(
                     f"{self.base_url}/chat/completions",
                     headers=self.headers,

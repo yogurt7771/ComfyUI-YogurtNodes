@@ -2,6 +2,7 @@ import base64
 import io
 import json
 import os
+import random
 import re
 from pathlib import Path
 import time
@@ -259,8 +260,9 @@ class OpenAIClient:
 
         last_exception = None
         response = None
-        for attempt in range(retry_count):
+        for _attempt in range(retry_count):
             try:
+                payload["seed"] = random.randint(0, 2**31 - 1)
                 response = requests.post(
                     f"{self.base_url}/chat/completions",
                     headers=self.headers,
