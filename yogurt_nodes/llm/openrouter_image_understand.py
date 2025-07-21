@@ -137,8 +137,8 @@ class OpenRouterImageUnderstand:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("STRING", "HISTORY")
-    RETURN_NAMES = ("text", "history")
+    RETURN_TYPES = ("STRING", "HISTORY", "ANY")
+    RETURN_NAMES = ("text", "history", "payload")
 
     FUNCTION = "understand_image"
 
@@ -178,7 +178,7 @@ class OpenRouterImageUnderstand:
             raise ValueError("At least one image must be provided")
 
         client = OpenRouterClient(api_key)
-        text, history = client.understand_image(
+        text, history, payload = client.understand_image(
             model_name=model_name,
             prompt=prompt,
             images=images,
@@ -193,4 +193,4 @@ class OpenRouterImageUnderstand:
             chat_template=chat_template,
             history=history,
         )
-        return (text, history)
+        return (text, history, payload)

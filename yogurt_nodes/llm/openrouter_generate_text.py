@@ -128,8 +128,8 @@ class OpenRouterGenerateText:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("STRING", "HISTORY")
-    RETURN_NAMES = ("text", "history")
+    RETURN_TYPES = ("STRING", "HISTORY", "ANY")
+    RETURN_NAMES = ("text", "history", "payload")
 
     FUNCTION = "generate_text"
 
@@ -152,7 +152,7 @@ class OpenRouterGenerateText:
         history: List[tuple[str, str]] | None = None,
     ):
         client = OpenRouterClient(api_key)
-        text, history = client.generate_text(
+        text, history, payload = client.generate_text(
             model_name=model_name,
             system_prompt=system_prompt,
             prompt=prompt,
@@ -166,4 +166,4 @@ class OpenRouterGenerateText:
             chat_template=chat_template,
             history=history,
         )
-        return (text, history)
+        return (text, history, payload)

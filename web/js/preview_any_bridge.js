@@ -4,7 +4,7 @@ import { ComfyWidgets } from "../../../scripts/widgets.js";
 app.registerExtension({
     name: "YogurtNodes.PreviewAnyBridge",
     async beforeRegisterNodeDef(nodeType, nodeData, app) {
-        if (nodeData.name === "YogurtPreviewAnyBridge") {
+        if (nodeData.name === "YogurtPreviewAnyBridge" || nodeData.name === "YogurtPreviewAnyBridgeOutput") {
             const onNodeCreated = nodeType.prototype.onNodeCreated;
             nodeType.prototype.onNodeCreated = function () {
                 onNodeCreated ? onNodeCreated.apply(this, []) : undefined;

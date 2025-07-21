@@ -206,8 +206,7 @@ class OpenAIClient:
         frequency_penalty: float = 0.0,
         presence_penalty: float = 0.0,
         chat_template: str = "",
-        seed: Optional[int] = None,
-    ) -> tuple[str, List[tuple[str, str]]]:
+    ) -> tuple[str, List[tuple[str, str]], Any]:
         """
         生成文本
 
@@ -223,7 +222,6 @@ class OpenAIClient:
             frequency_penalty (float): 频率惩罚
             presence_penalty (float): 存在惩罚
             chat_template (str): 聊天模板
-            seed (int): 随机种子
 
         Returns:
             str: 生成的文本
@@ -250,10 +248,6 @@ class OpenAIClient:
         if presence_penalty > 0:
             payload["presence_penalty"] = presence_penalty
 
-        # 添加可选参数
-        if seed is not None:
-            payload["seed"] = seed
-
         # pprint(f"Generating text with model {model_name}...")
         # pprint(f"Base URL: {self.base_url}")
         # pprint(payload)
@@ -276,7 +270,7 @@ class OpenAIClient:
                     content = result["choices"][0]["message"]["content"].strip()
                     if content:
                         history.append(("assistant", content))
-                        return content, history
+                        return content, history, payload
                     raise ValueError("Empty response content from API")
                 else:
                     error_msg = f"API request failed with status {response.status_code if response is not None else 'None'}: {response.text if response is not None else 'None'}"
@@ -308,8 +302,7 @@ class OpenAIClient:
         frequency_penalty: float = 0.0,
         presence_penalty: float = 0.0,
         chat_template: str = "",
-        seed: Optional[int] = None,
-    ) -> tuple[str, List[tuple[str, str]]]:
+    ) -> tuple[str, List[tuple[str, str]], Any]:
         """
         理解图像内容
 
@@ -325,7 +318,6 @@ class OpenAIClient:
             frequency_penalty (float): 频率惩罚
             presence_penalty (float): 存在惩罚
             chat_template (str): 聊天模板
-            seed (int): 随机种子
 
         Returns:
             str: 图像理解结果
@@ -343,7 +335,6 @@ class OpenAIClient:
             frequency_penalty=frequency_penalty,
             presence_penalty=presence_penalty,
             chat_template=chat_template,
-            seed=seed,
         )
 
     def get_models(self) -> List[Dict[str, Any]]:

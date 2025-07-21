@@ -65,7 +65,7 @@ class OpenRouterClient:
         retry_count: int = 3,
         provider: Optional[str] = None,
         chat_template: str = "",
-    ) -> tuple[str, List[tuple[str, str]]]:
+    ) -> tuple[str, List[tuple[str, str]], Any]:
         """
         生成文本
 
@@ -125,7 +125,7 @@ class OpenRouterClient:
                     content = result["choices"][0]["message"]["content"].strip()
                     if content:
                         history.append(("assistant", content))
-                        return content, history
+                        return content, history, payload
                     raise ValueError("Empty response content from API")
                 else:
                     error_msg = f"API request failed with status {response.status_code}: {response.text}"
@@ -151,7 +151,7 @@ class OpenRouterClient:
         retry_count: int = 3,
         provider: Optional[str] = None,
         chat_template: str = "",
-    ) -> tuple[str, List[tuple[str, str]]]:
+    ) -> tuple[str, List[tuple[str, str]], Any]:
         """
         理解图像内容
 

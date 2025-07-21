@@ -133,16 +133,11 @@ class OpenAIImageUnderstand:
                 ),
             },
             "optional": {
-                "seed": (
-                    "INT",
-                    {
-                        "default": -1,
-                        "min": -1,
-                        "max": 2147483647,
-                        "step": 1,
-                        "tooltip": "Random seed for reproducible outputs (-1 for random)",
-                    },
-                ),
+                "image": ("IMAGE",),
+                "image1": ("IMAGE",),
+                "image2": ("IMAGE",),
+                "image3": ("IMAGE",),
+                "image4": ("IMAGE",),
                 "history": ("HISTORY",),
             },
         }
@@ -151,8 +146,8 @@ class OpenAIImageUnderstand:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("STRING", "HISTORY")
-    RETURN_NAMES = ("text", "history")
+    RETURN_TYPES = ("STRING", "HISTORY", "ANY")
+    RETURN_NAMES = ("text", "history", "payload")
 
     FUNCTION = "understand_image"
 
@@ -174,7 +169,6 @@ class OpenAIImageUnderstand:
         presence_penalty: float,
         retry_count: int,
         chat_template: str,
-        seed: int = -1,
         image: torch.Tensor | None = None,
         image1: torch.Tensor | None = None,
         image2: torch.Tensor | None = None,
@@ -193,10 +187,7 @@ class OpenAIImageUnderstand:
                 img = img.permute(2, 0, 1)
                 images.append(torchvision.transforms.ToPILImage()(img))
 
-        # 处理 seed 参数
-        seed_value = None if seed == -1 else seed
-
-        text, history = client.understand_image(
+        text, history, payload = client.understand_image(
             model_name=model_name,
             prompt=prompt,
             images=images,
@@ -208,7 +199,6 @@ class OpenAIImageUnderstand:
             frequency_penalty=frequency_penalty,
             presence_penalty=presence_penalty,
             chat_template=chat_template,
-            seed=seed_value,
             history=history,
         )
-        return (text, history)
+        return (text, history, payload)

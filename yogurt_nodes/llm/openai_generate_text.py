@@ -138,7 +138,6 @@ class OpenAIGenerateText:
                 ),
             },
             "optional": {
-                "seed": ("SEED",),
                 "history": ("HISTORY",),
             },
         }
@@ -147,8 +146,8 @@ class OpenAIGenerateText:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("STRING", "HISTORY")
-    RETURN_NAMES = ("text", "history")
+    RETURN_TYPES = ("STRING", "HISTORY", "*")
+    RETURN_NAMES = ("text", "history", "payload")
 
     FUNCTION = "generate_text"
 
@@ -170,15 +169,11 @@ class OpenAIGenerateText:
         presence_penalty: float,
         retry_count: int,
         chat_template: str,
-        seed: int = -1,
         history: List[tuple[str, str]] | None = None,
     ):
         client = OpenAIClient(api_key, base_url)
 
-        # 处理 seed 参数
-        seed_value = None if seed == -1 else seed
-
-        text, history = client.generate_text(
+        text, history, payload = client.generate_text(
             model_name=model_name,
             system_prompt=system_prompt,
             prompt=prompt,
@@ -189,7 +184,6 @@ class OpenAIGenerateText:
             frequency_penalty=frequency_penalty,
             presence_penalty=presence_penalty,
             chat_template=chat_template,
-            seed=seed_value,
             history=history,
         )
-        return (text, history)
+        return (text, history, payload)
