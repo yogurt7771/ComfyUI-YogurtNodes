@@ -18,7 +18,6 @@ class OpenAIImageUnderstand:
 
         return {
             "required": {
-                "images": ("IMAGE", {"tooltip": "Input images to understand"}),
                 "api_key": (
                     "STRING",
                     {
