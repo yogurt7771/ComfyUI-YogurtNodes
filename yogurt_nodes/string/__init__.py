@@ -6,3 +6,4 @@ from .string_to_value import StringToValue  # noqa
 from .regex_node import RegexNode  # noqa
 from .string_format import StringFormat  # noqa
 from .string_concat import StringConcat  # noqa
+from .string_join import StringJoin  # noqa

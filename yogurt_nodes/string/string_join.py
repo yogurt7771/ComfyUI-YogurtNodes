@@ -89,9 +89,10 @@ class StringJoin:
         """
         # 收集所有非空字符串
         strings: List[str] = []
-        for k, v in kwargs.items():
-            if k.startswith("item"):
-                append_any_as_str_(strings, v)
+        for i in range(1, INPUT_COUNT + 1):
+            item_key = f"item{i}"
+            if item_key in kwargs:
+                append_any_as_str_(strings, kwargs[item_key])
         result = separator.join(strings)
 
         return (result,)
