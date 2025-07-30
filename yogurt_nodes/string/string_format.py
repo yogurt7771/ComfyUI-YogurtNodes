@@ -1,7 +1,4 @@
-# from itertools import chain, product
-from math import prod
-
-from typing import Any, Dict, Tuple
+from typing import Any, Tuple
 
 from ..utils import ANY_TYPE
 
@@ -26,13 +23,17 @@ class StringFormat:
             },
         }
 
+    @classmethod
+    def VALIDATE_INPUTS(s, input_types):
+        return True
+
     RETURN_TYPES = (
         "STRING",
     )
     RETURN_NAMES = (
         "formatted",
     )
-    OUTPUT_NODE = True
+    OUTPUT_NODE = False
 
     FUNCTION = "main"
 

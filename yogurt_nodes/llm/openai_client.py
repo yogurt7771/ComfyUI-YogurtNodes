@@ -4,13 +4,15 @@ import json
 import os
 import random
 import re
-from pathlib import Path
 import time
+from pathlib import Path
+from pprint import pprint
 from typing import Any, Dict, List, Optional
 
 import requests
 from PIL import Image
-from pprint import pprint
+
+import comfy.model_management as model_management
 
 
 def image_to_base64(image: Image.Image) -> str:
@@ -255,6 +257,7 @@ class OpenAIClient:
         last_exception = None
         response = None
         for _attempt in range(retry_count):
+            model_management.throw_exception_if_processing_interrupted()
             try:
                 payload["seed"] = random.randint(0, 2**31 - 1)
                 response = requests.post(

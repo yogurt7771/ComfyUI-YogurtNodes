@@ -9,8 +9,8 @@ from typing import List, Optional
 from google import genai
 from google.genai import types
 from PIL import Image
-from pprint import pprint
 
+import comfy.model_management as model_management
 from .openai_client import build_messages
 
 thinking_models = [
@@ -284,6 +284,7 @@ class GeminiClient:
         last_exception = None
         response = None
         for _attempt in range(retry_count):
+            model_management.throw_exception_if_processing_interrupted()
             try:
                 config.seed = random.randint(0, 2**31 - 1)
                 response = self.client.models.generate_content(
@@ -360,6 +361,7 @@ class GeminiClient:
         response = None
         response_logged = False
         for _attempt in range(retry_count):
+            model_management.throw_exception_if_processing_interrupted()
             try:
                 config.seed = random.randint(0, 2**31 - 1)
                 response = self.client.models.generate_content_stream(
