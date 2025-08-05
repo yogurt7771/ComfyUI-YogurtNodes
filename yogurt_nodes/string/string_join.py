@@ -10,7 +10,8 @@ def append_any_as_str_(lists: List[str], data: Any):
     if data is None:
         return
     elif isinstance(data, str):
-        lists.append(data)
+        if data.strip():
+            lists.append(data)
     elif isinstance(data, (list, tuple, set)):
         for item in data:
             append_any_as_str_(lists, item)

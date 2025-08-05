@@ -71,6 +71,20 @@ class GlobFiles:
                         "tooltip": "Make the path absolute, resolving all symlinks on the way and also normalizing it.",
                     },
                 ),
+                "prefix_list": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "tooltip": "Prefix list, multiple prefixes separated by commas, e.g. 'pre-1,pre-2,pre-3' etc. Case insensitive. If empty, all files will be returned.",
+                    },
+                ),
+                "suffix_list": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "tooltip": "Suffix list, multiple suffixes separated by commas, e.g. 'txt,py,json' etc. Case insensitive. If empty, all files will be returned.",
+                    },
+                ),
             }
         }
 
@@ -81,7 +95,7 @@ class GlobFiles:
     OUTPUT_NODE = False
 
     _NODE_NAME = "Glob Files"
-    DESCRIPTION = "使用 glob 模式遍历文件夹，返回匹配的文件路径列表"
+    DESCRIPTION = "Use glob pattern to traverse the folder, return the matching file path list"
     CATEGORY = "YogurtNodes/IO"
 
     def execute(
@@ -95,6 +109,8 @@ class GlobFiles:
         as_posix: bool = False,
         full_path: bool = False,
         resolve_path: bool = False,
+        prefix_list: str = "",
+        suffix_list: str = "",
     ) -> Tuple[List[str]]:
         # 输入验证
         if not root_directory or not root_directory.strip():
@@ -128,6 +144,16 @@ class GlobFiles:
         # 过滤只要文件（如果需要）
         if files_only:
             paths_iterator = (p for p in paths_iterator if p.is_file())
+
+        # 过滤前缀
+        if prefix_list:
+            prefix_list = prefix_list.split(",")
+            paths_iterator = (p for p in paths_iterator if any(p.name.lower().startswith(prefix.lower()) for prefix in prefix_list))
+
+        # 过滤后缀
+        if suffix_list:
+            suffix_list = suffix_list.split(",")
+            paths_iterator = (p for p in paths_iterator if any(p.name.lower().endswith(suffix.lower()) for suffix in suffix_list))
 
         # 路径转换
         if resolve_path:
