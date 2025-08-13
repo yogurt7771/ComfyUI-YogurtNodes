@@ -18,8 +18,8 @@ class PreviewAnyBridge:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = (ANY_TYPE,)
-    RETURN_NAMES = ("data",)
+    RETURN_TYPES = (ANY_TYPE, "STRING")
+    RETURN_NAMES = ("data", "text")
     FUNCTION = "execute"
     OUTPUT_NODE = False
 
@@ -44,7 +44,7 @@ class PreviewAnyBridge:
                 except Exception:
                     value = 'source exists, but could not be serialized.'
 
-        return {"ui": {"text": (value,)}, "result": (data,)}
+        return {"ui": {"text": (value,)}, "result": (data, value)}
 
 
 class PreviewAnyBridgeOutput(PreviewAnyBridge):

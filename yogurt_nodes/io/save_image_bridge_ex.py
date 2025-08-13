@@ -219,8 +219,8 @@ class SaveImageBridgeEx:
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
         }
 
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("images",)
+    RETURN_TYPES = ("IMAGE", "INT", "INT", "INT")
+    RETURN_NAMES = ("images", "width", "height", "batch")
     FUNCTION = "execute"
 
     OUTPUT_NODE = True
@@ -244,7 +244,11 @@ class SaveImageBridgeEx:
         extra_pnginfo=None,
     ):
         if images is None or len(images) == 0:
-            return (images,)
+            return (images, 0, 0, 0)
+
+        width = int(images[0].shape[1])
+        height = int(images[0].shape[0])
+        batch = len(images)
 
         filename_prefix += self.prefix_append
 
@@ -322,4 +326,4 @@ class SaveImageBridgeEx:
                 )
             counter += 1
 
-        return {"ui": {"images": results}, "result": (images,)}
+        return {"ui": {"images": results}, "result": (images, width, height, batch)}
