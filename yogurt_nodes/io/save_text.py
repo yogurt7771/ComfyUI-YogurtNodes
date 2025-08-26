@@ -114,8 +114,8 @@ class SaveTextBridge:
             },
         }
 
-    RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("text",)
+    RETURN_TYPES = ("STRING", "STRING")
+    RETURN_NAMES = ("text", "path")
     FUNCTION = "save_text_file"
 
     OUTPUT_NODE = True
@@ -157,6 +157,4 @@ class SaveTextBridge:
 
         save_text(text, file_path)
 
-        result = {"filename": file, "subfolder": subfolder, "type": self.type}
-
-        return {"ui": {"text": [result]}, "result": (text,)}
+        return {"ui": {"text": (text,)}, "result": (text, str(Path(file_path)))}

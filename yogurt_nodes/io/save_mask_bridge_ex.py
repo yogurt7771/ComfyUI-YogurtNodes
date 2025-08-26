@@ -68,8 +68,8 @@ class SaveMaskBridgeEx(SaveImageBridgeEx):
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
         }
 
-    RETURN_TYPES = ("MASK",)
-    RETURN_NAMES = ("masks",)
+    RETURN_TYPES = ("MASK", "INT", "INT", "INT", "LIST")
+    RETURN_NAMES = ("masks", "width", "height", "batch", "saved_paths")
     FUNCTION = "execute"
 
     _NODE_NAME = "Save Mask Bridge"
@@ -108,5 +108,5 @@ class SaveMaskBridgeEx(SaveImageBridgeEx):
             prompt=prompt,
             extra_pnginfo=extra_pnginfo,
         )
-        result["result"] = (masks,)
+        result["result"] = (masks, *result["result"][1:])
         return result

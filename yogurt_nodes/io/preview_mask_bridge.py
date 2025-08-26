@@ -22,6 +22,16 @@ class PreviewMaskBridge(SaveMaskBridgeEx):
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
         }
 
+    RETURN_TYPES = ("MASK", "INT", "INT", "INT")
+    RETURN_NAMES = ("masks", "width", "height", "batch")
+    FUNCTION = "execute"
+    OUTPUT_NODE = False
+
     _NODE_NAME = "Preview Mask Bridge"
     CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Preview the input masks."
+
+    def execute(self, masks, prompt=None, extra_pnginfo=None):
+        result = super().execute(masks, prompt=prompt, extra_pnginfo=extra_pnginfo)
+        result["result"] = (*result["result"][:-1],)
+        return result

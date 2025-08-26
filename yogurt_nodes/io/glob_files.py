@@ -88,8 +88,7 @@ class GlobFiles:
             }
         }
 
-    RETURN_TYPES = ("STRING",)
-    OUTPUT_IS_LIST = (True, )
+    RETURN_TYPES = ("LIST",)
     RETURN_NAMES = ("file_paths",)
     FUNCTION = "execute"
     OUTPUT_NODE = False

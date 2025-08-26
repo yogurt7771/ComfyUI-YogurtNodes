@@ -219,8 +219,8 @@ class SaveImageBridgeEx:
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
         }
 
-    RETURN_TYPES = ("IMAGE", "INT", "INT", "INT")
-    RETURN_NAMES = ("images", "width", "height", "batch")
+    RETURN_TYPES = ("IMAGE", "INT", "INT", "INT", "LIST")
+    RETURN_NAMES = ("images", "width", "height", "batch", "saved_paths")
     FUNCTION = "execute"
 
     OUTPUT_NODE = True
@@ -270,6 +270,7 @@ class SaveImageBridgeEx:
             )
         )
         results = []
+        saved_paths = []
         for batch_number, image in enumerate(images):
             i = 255.0 * image.cpu().numpy()
             img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
@@ -288,14 +289,16 @@ class SaveImageBridgeEx:
             else:
                 file = f"{filename_with_batch_num}_{counter:05}{suffix}"
             os.makedirs(full_output_folder, exist_ok=True)
-            # img.save(os.path.join(full_output_folder, file), pnginfo=metadata, quality=jpeg_quality, compress_level=png_compression)
+            full_path = os.path.join(full_output_folder, file)
+            # img.save(full_path, pnginfo=metadata, quality=jpeg_quality, compress_level=png_compression)
             save_image(
                 img,
-                os.path.join(full_output_folder, file),
+                full_path,
                 jpeg_quality=jpeg_quality,
                 png_compression_level=png_compression,
                 metadata=metadata,
             )
+            saved_paths.append(full_path)
             if output_dir != "" and os.path.isabs(output_dir):
                 temp_filename_prefix = filename_with_batch_num + self.temp_prefix_append
                 (
@@ -326,4 +329,4 @@ class SaveImageBridgeEx:
                 )
             counter += 1
 
-        return {"ui": {"images": results}, "result": (images, width, height, batch)}
+        return {"ui": {"images": results}, "result": (images, width, height, batch, saved_paths)}
