@@ -13,7 +13,6 @@ import requests
 from PIL import Image
 
 import comfy.model_management as model_management
-from .proxy_utils import proxy_env
 
 
 def image_to_base64(image: Image.Image) -> str:
@@ -201,6 +200,13 @@ class OpenAIClient:
             "Content-Type": "application/json",
         }
         self.proxy_url = proxy_url
+        if proxy_url:
+            self.proxies = {
+                "http": proxy_url,
+                "https": proxy_url,
+            }
+        else:
+            self.proxies = None
 
     def generate_text(
         self,
@@ -268,13 +274,13 @@ class OpenAIClient:
             model_management.throw_exception_if_processing_interrupted()
             try:
                 payload["seed"] = random.randint(0, 2**31 - 1)
-                with proxy_env(self.proxy_url):
-                    response = requests.post(
-                        f"{self.base_url}/chat/completions",
-                        headers=self.headers,
-                        json=payload,
-                        timeout=120,
-                    )
+                response = requests.post(
+                    f"{self.base_url}/chat/completions",
+                    headers=self.headers,
+                    json=payload,
+                    timeout=120,
+                    proxies=self.proxies,
+                )
                 # pprint(response.text)
 
                 if response.status_code == 200:
@@ -352,10 +358,9 @@ class OpenAIClient:
     def get_models(self) -> List[Dict[str, Any]]:
         """获取可用模型列表"""
         try:
-            with proxy_env(self.proxy_url):
-                response = requests.get(
-                    f"{self.base_url}/models", headers=self.headers, timeout=30
-                )
+            response = requests.get(
+                f"{self.base_url}/models", headers=self.headers, timeout=30, proxies=self.proxies
+            )
 
             if response.status_code == 200:
                 return response.json()["data"]
