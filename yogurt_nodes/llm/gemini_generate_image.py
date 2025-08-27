@@ -27,8 +27,8 @@ class GeminiGenerateImage:
                 "model_name": (
                     "STRING",
                     {
-                        "default": "gemini-2.0-flash-exp-image-generation",
-                        "tooltip": "Gemini model name, default is gemini-2.0-flash-exp-image-generation",
+                        "default": "gemini-2.5-flash-image-preview",
+                        "tooltip": "Gemini model name, default is gemini-2.5-flash-image-preview",
                     },
                 ),
                 "system_prompt": (

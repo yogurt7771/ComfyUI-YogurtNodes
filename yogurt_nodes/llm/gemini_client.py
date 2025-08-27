@@ -192,14 +192,22 @@ class GeminiClient:
         safety_level: str = "BLOCK_NONE",
         thinking_budget: int = 0,
         chat_template: str = "",
+        is_image_generation: bool = False,
     ):
-        config = types.GenerateContentConfig(
-            temperature=temperature,
-            top_p=top_p if top_p > 0 else None,
-            top_k=top_k if top_k > 0 else None,
-            max_output_tokens=max_output_tokens if max_output_tokens > 0 else None,
-            response_mime_type="text/plain",
-        )
+        config_params = {
+            "temperature": temperature,
+            "top_p": top_p if top_p > 0 else None,
+            "top_k": top_k if top_k > 0 else None,
+            "max_output_tokens": max_output_tokens if max_output_tokens > 0 else None,
+        }
+        
+        # 针对图像生成模型的特殊配置
+        if is_image_generation:
+            config_params["response_modalities"] = ["IMAGE", "TEXT"]
+        else:
+            config_params["response_mime_type"] = "text/plain"
+            
+        config = types.GenerateContentConfig(**config_params)
 
         thinking_config = self._get_thinking_config(model_name, thinking_budget)
         if thinking_config is not None:
@@ -350,6 +358,7 @@ class GeminiClient:
             safety_level=safety_level,
             thinking_budget=thinking_budget,
             chat_template=chat_template,
+            is_image_generation=True,
         )
 
         images = []

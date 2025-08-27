@@ -22,8 +22,8 @@ class GeminiGenerateText:
                 "model_name": (
                     "STRING",
                     {
-                        "default": "gemini-2.0-flash-exp",
-                        "tooltip": "Gemini model name, default is gemini-2.0-flash-exp",
+                        "default": "gemini-2.5-flash",
+                        "tooltip": "Gemini model name, default is gemini-2.5-flash",
                     },
                 ),
                 "system_prompt": (
