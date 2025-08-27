@@ -12,6 +12,7 @@ from PIL import Image
 
 import comfy.model_management as model_management
 from .openai_client import build_messages
+from .proxy_utils import proxy_env
 
 thinking_models = [
     "gemini-2.5-flash-preview-05-20",
@@ -25,20 +26,28 @@ class GeminiClient:
     Gemini API 客户端封装类
     """
 
-    def __init__(self, api_key: str = ""):
+    def __init__(self, api_key: str = "", proxy_url: str = ""):
         """
         初始化 Gemini 客户端
 
         Args:
             api_key (str): Gemini API 密钥（可选，优先级最高，如果未设置，则尝试从 api_key.json 文件中读取，如果未设置，则尝试从环境变量中读取）
+            proxy_url (str): 代理URL，格式为 protocol://user:pass@addr:port，支持http,https,socks5,socks5h
 
         API Key 支持三种获取方式，优先级如下：
         1. 直接通过参数 api_key 传入（推荐用于编程调用）
         2. 当前目录下 api_key.json 文件，格式为 {"gemini": "你的API密钥"}
         3. 环境变量 GEMINI_API_KEY
 
-        如三者均未设置，将抛出异常。
+        Proxy 支持三种获取方式，优先级如下：
+        1. 直接通过参数 proxy_url 传入
+        2. 当前目录下 api_key.json 文件，格式为 {"proxy": "代理URL"}  
+        3. 环境变量 HTTP_PROXY, HTTPS_PROXY, ALL_PROXY
+
+        如API Key未设置，将抛出异常。
         """
+        self.proxy_url = proxy_url
+        
         # 判断是否是是google vertex ai
         if os.environ.get("GOOGLE_GENAI_USE_VERTEXAI", "").lower() == "true":
             print("Using Google Vertex AI")
@@ -295,11 +304,12 @@ class GeminiClient:
             model_management.throw_exception_if_processing_interrupted()
             try:
                 config.seed = random.randint(0, 2**31 - 1)
-                response = self.client.models.generate_content(
-                    model=model_name,
-                    contents=contents,
-                    config=config,
-                )
+                with proxy_env(self.proxy_url):
+                    response = self.client.models.generate_content(
+                        model=model_name,
+                        contents=contents,
+                        config=config,
+                    )
                 # print(response)
                 text = response.text
                 text = text.strip() if text else None
@@ -373,11 +383,12 @@ class GeminiClient:
             model_management.throw_exception_if_processing_interrupted()
             try:
                 config.seed = random.randint(0, 2**31 - 1)
-                response = self.client.models.generate_content_stream(
-                    model=model_name,
-                    contents=contents,
-                    config=config,
-                )
+                with proxy_env(self.proxy_url):
+                    response = self.client.models.generate_content_stream(
+                        model=model_name,
+                        contents=contents,
+                        config=config,
+                    )
                 if not response_logged:
                     # print(response)
                     response_logged = True

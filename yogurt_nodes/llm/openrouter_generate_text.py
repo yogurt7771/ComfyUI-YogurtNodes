@@ -118,6 +118,14 @@ class OpenRouterGenerateText:
                         "tooltip": "Content template for the generated text",
                     },
                 ),
+                "proxy_url": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "multiline": False,
+                        "tooltip": "代理URL，格式: protocol://user:pass@addr:port，支持http,https,socks5,socks5h",
+                    },
+                ),
             },
             "optional": {
                 "history": ("HISTORY",),
@@ -149,9 +157,10 @@ class OpenRouterGenerateText:
         max_tokens: int = 8192,
         retry_count: int = 1,
         chat_template: str = "",
+        proxy_url: str = "",
         history: List[tuple[str, str]] | None = None,
     ):
-        client = OpenRouterClient(api_key)
+        client = OpenRouterClient(api_key, proxy_url)
         text, history, payload = client.generate_text(
             model_name=model_name,
             system_prompt=system_prompt,

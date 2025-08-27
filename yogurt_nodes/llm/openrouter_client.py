@@ -10,6 +10,7 @@ from PIL import Image
 
 import comfy.model_management as model_management
 from .openai_client import build_messages
+from .proxy_utils import proxy_env
 
 
 class OpenRouterClient:
@@ -17,17 +18,23 @@ class OpenRouterClient:
     OpenRouter API 客户端封装类
     """
 
-    def __init__(self, api_key: str = ""):
+    def __init__(self, api_key: str = "", proxy_url: str = ""):
         """
         初始化 OpenRouter 客户端
 
         Args:
             api_key (str): OpenRouter API 密钥
+            proxy_url (str): 代理URL，格式为 protocol://user:pass@addr:port，支持http,https,socks5,socks5h
 
         API Key 支持三种获取方式，优先级如下：
         1. 直接通过参数 api_key 传入（推荐用于编程调用）
         2. 当前目录下 api_key.json 文件，格式为 {"openrouter": "你的API密钥"}
         3. 环境变量 OPENROUTER_API_KEY
+
+        Proxy 支持三种获取方式，优先级如下：
+        1. 直接通过参数 proxy_url 传入
+        2. 当前目录下 api_key.json 文件，格式为 {"proxy": "代理URL"}  
+        3. 环境变量 HTTP_PROXY, HTTPS_PROXY, ALL_PROXY
 
         如三者均未设置，将抛出异常。
         """
@@ -52,6 +59,7 @@ class OpenRouterClient:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
+        self.proxy_url = proxy_url
 
     def generate_text(
         self,
@@ -114,12 +122,13 @@ class OpenRouterClient:
             model_management.throw_exception_if_processing_interrupted()
             try:
                 payload["seed"] = random.randint(0, 2**31 - 1)
-                response = requests.post(
-                    f"{self.base_url}/chat/completions",
-                    headers=self.headers,
-                    json=payload,
-                    timeout=120,
-                )
+                with proxy_env(self.proxy_url):
+                    response = requests.post(
+                        f"{self.base_url}/chat/completions",
+                        headers=self.headers,
+                        json=payload,
+                        timeout=120,
+                    )
                 # print(response)
 
                 if response.status_code == 200:
@@ -189,9 +198,10 @@ class OpenRouterClient:
     def get_models(self) -> List[Dict[str, Any]]:
         """获取可用模型列表"""
         try:
-            response = requests.get(
-                f"{self.base_url}/models", headers=self.headers, timeout=30
-            )
+            with proxy_env(self.proxy_url):
+                response = requests.get(
+                    f"{self.base_url}/models", headers=self.headers, timeout=30
+                )
 
             if response.status_code == 200:
                 return response.json()["data"]
@@ -258,11 +268,12 @@ class OpenRouterClient:
     def get_generation_info(self, generation_id: str) -> Dict[str, Any]:
         """获取生成信息（费用、tokens等）"""
         try:
-            response = requests.get(
-                f"{self.base_url}/generation/{generation_id}",
-                headers=self.headers,
-                timeout=30,
-            )
+            with proxy_env(self.proxy_url):
+                response = requests.get(
+                    f"{self.base_url}/generation/{generation_id}",
+                    headers=self.headers,
+                    timeout=30,
+                )
 
             if response.status_code == 200:
                 return response.json()

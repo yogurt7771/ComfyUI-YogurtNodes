@@ -136,6 +136,14 @@ class OpenAIGenerateText:
                         "tooltip": "Content template for the generated text",
                     },
                 ),
+                "proxy_url": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "multiline": False,
+                        "tooltip": "代理URL，格式: protocol://user:pass@addr:port，支持http,https,socks5,socks5h",
+                    },
+                ),
             },
             "optional": {
                 "history": ("HISTORY",),
@@ -169,9 +177,10 @@ class OpenAIGenerateText:
         presence_penalty: float,
         retry_count: int,
         chat_template: str,
+        proxy_url: str,
         history: List[tuple[str, str]] | None = None,
     ):
-        client = OpenAIClient(api_key, base_url)
+        client = OpenAIClient(api_key, base_url, proxy_url)
 
         text, history, payload = client.generate_text(
             model_name=model_name,

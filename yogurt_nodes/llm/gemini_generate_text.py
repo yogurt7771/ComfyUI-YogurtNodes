@@ -139,6 +139,14 @@ class GeminiGenerateText:
                         "tooltip": "Content template for the generated text",
                     },
                 ),
+                "proxy_url": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "multiline": False,
+                        "tooltip": "代理URL，格式: protocol://user:pass@addr:port，支持http,https,socks5,socks5h",
+                    },
+                ),
             },
             "optional": {
                 "history": ("HISTORY",),
@@ -174,9 +182,10 @@ class GeminiGenerateText:
         safety_level: str = "BLOCK_NONE",
         thinking_budget: int = 0,
         chat_template: str = "",
+        proxy_url: str = "",
         history: List[tuple[str, str]] | None = None,
     ):
-        client = GeminiClient(api_key)
+        client = GeminiClient(api_key, proxy_url)
         text, history = client.generate_text(
             model_name=model_name,
             system_prompt=system_prompt,

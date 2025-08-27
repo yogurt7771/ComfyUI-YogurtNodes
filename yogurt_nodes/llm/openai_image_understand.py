@@ -130,6 +130,14 @@ class OpenAIImageUnderstand:
                         "tooltip": "Content template for the generated text",
                     },
                 ),
+                "proxy_url": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "multiline": False,
+                        "tooltip": "代理URL，格式: protocol://user:pass@addr:port，支持http,https,socks5,socks5h",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -168,6 +176,7 @@ class OpenAIImageUnderstand:
         presence_penalty: float,
         retry_count: int,
         chat_template: str,
+        proxy_url: str,
         image: torch.Tensor | None = None,
         image1: torch.Tensor | None = None,
         image2: torch.Tensor | None = None,
@@ -175,7 +184,7 @@ class OpenAIImageUnderstand:
         image4: torch.Tensor | None = None,
         history: List[tuple[str, str]] | None = None,
     ):
-        client = OpenAIClient(api_key, base_url)
+        client = OpenAIClient(api_key, base_url, proxy_url)
 
         # 将tensor转换为PIL图像列表
         images = []

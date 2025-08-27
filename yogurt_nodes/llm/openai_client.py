@@ -13,6 +13,7 @@ import requests
 from PIL import Image
 
 import comfy.model_management as model_management
+from .proxy_utils import proxy_env
 
 
 def image_to_base64(image: Image.Image) -> str:
@@ -137,18 +138,24 @@ class OpenAIClient:
     OpenAI API 客户端封装类
     """
 
-    def __init__(self, api_key: str = "", base_url: str = ""):
+    def __init__(self, api_key: str = "", base_url: str = "", proxy_url: str = ""):
         """
         初始化 OpenAI 客户端
 
         Args:
             api_key (str): OpenAI API 密钥
             base_url (str): API 基础 URL，默认为官方 API
+            proxy_url (str): 代理URL，格式为 protocol://user:pass@addr:port，支持http,https,socks5,socks5h
 
         API Key 支持三种获取方式，优先级如下：
         1. 直接通过参数 api_key 传入（推荐用于编程调用）
         2. 当前目录下 api_key.json 文件，格式为 {"openai": "你的API密钥"}
         3. 环境变量 OPENAI_API_KEY
+
+        Proxy 支持三种获取方式，优先级如下：
+        1. 直接通过参数 proxy_url 传入
+        2. 当前目录下 api_key.json 文件，格式为 {"proxy": "代理URL"}  
+        3. 环境变量 HTTP_PROXY, HTTPS_PROXY, ALL_PROXY
 
         如三者均未设置，将抛出异常。
         """
@@ -193,6 +200,7 @@ class OpenAIClient:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
+        self.proxy_url = proxy_url
 
     def generate_text(
         self,
@@ -260,12 +268,13 @@ class OpenAIClient:
             model_management.throw_exception_if_processing_interrupted()
             try:
                 payload["seed"] = random.randint(0, 2**31 - 1)
-                response = requests.post(
-                    f"{self.base_url}/chat/completions",
-                    headers=self.headers,
-                    json=payload,
-                    timeout=120,
-                )
+                with proxy_env(self.proxy_url):
+                    response = requests.post(
+                        f"{self.base_url}/chat/completions",
+                        headers=self.headers,
+                        json=payload,
+                        timeout=120,
+                    )
                 # pprint(response.text)
 
                 if response.status_code == 200:
@@ -343,9 +352,10 @@ class OpenAIClient:
     def get_models(self) -> List[Dict[str, Any]]:
         """获取可用模型列表"""
         try:
-            response = requests.get(
-                f"{self.base_url}/models", headers=self.headers, timeout=30
-            )
+            with proxy_env(self.proxy_url):
+                response = requests.get(
+                    f"{self.base_url}/models", headers=self.headers, timeout=30
+                )
 
             if response.status_code == 200:
                 return response.json()["data"]

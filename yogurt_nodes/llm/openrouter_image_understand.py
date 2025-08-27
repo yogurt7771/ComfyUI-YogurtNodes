@@ -122,6 +122,14 @@ class OpenRouterImageUnderstand:
                         "tooltip": "Content template for the generated text",
                     },
                 ),
+                "proxy_url": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "multiline": False,
+                        "tooltip": "代理URL，格式: protocol://user:pass@addr:port，支持http,https,socks5,socks5h",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -158,6 +166,7 @@ class OpenRouterImageUnderstand:
         max_tokens: int = 8192,
         retry_count: int = 3,
         chat_template: str = "",
+        proxy_url: str = "",
         image: torch.Tensor | None = None,
         image1: torch.Tensor | None = None,
         image2: torch.Tensor | None = None,
@@ -177,7 +186,7 @@ class OpenRouterImageUnderstand:
         if not images:
             raise ValueError("At least one image must be provided")
 
-        client = OpenRouterClient(api_key)
+        client = OpenRouterClient(api_key, proxy_url)
         text, history, payload = client.understand_image(
             model_name=model_name,
             prompt=prompt,

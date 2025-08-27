@@ -118,6 +118,14 @@ class GeminiImageUnderstand:
                         "tooltip": "Content template for the generated text",
                     },
                 ),
+                "proxy_url": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "multiline": False,
+                        "tooltip": "代理URL，格式: protocol://user:pass@addr:port，支持http,https,socks5,socks5h",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -156,6 +164,7 @@ class GeminiImageUnderstand:
         disable_safety_settings: bool = False,
         disable_system_prompt: bool = False,
         chat_template: str = "",
+        proxy_url: str = "",
         image: torch.Tensor | None = None,
         image1: torch.Tensor | None = None,
         image2: torch.Tensor | None = None,
@@ -172,7 +181,7 @@ class GeminiImageUnderstand:
                 img = img.permute(2, 0, 1)
                 images.append(torchvision.transforms.ToPILImage()(img))
 
-        client = GeminiClient(api_key)
+        client = GeminiClient(api_key, proxy_url)
         text, history = client.generate_text(
             model_name=model_name,
             system_prompt=system_prompt,
