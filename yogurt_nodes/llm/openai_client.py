@@ -429,6 +429,104 @@ class OpenAIClient:
             "gpt-4-turbo-preview",
         ]
 
+    @staticmethod
+    def get_image_models() -> List[str]:
+        """获取支持图像生成的模型列表"""
+        return [
+            "gpt-5",
+            "gpt-image-1",
+            "dall-e-2",
+            "dall-e-3",
+        ]
+
+    def generate_image(
+        self,
+        model_name: str = "gpt-5",
+        prompt: str = "",
+        system_prompt: str = "",
+        images: Optional[List[Image.Image]] = None,
+        size: str = "1024x1024",
+        quality: str = "standard",
+        style: str = "vivid",
+        n: int = 1,
+        response_format: str = "url",
+        retry_count: int = 3,
+        chat_template: str = "",
+        seed: int = -1,
+        history: List[tuple[str, str]] | None = None,
+        api_type: str = "auto",
+    ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
+        """
+        使用OpenAI API生成图像
+        
+        Args:
+            model_name (str): 模型名称，默认为 gpt-5
+            prompt (str): 图像生成提示词
+            system_prompt (str): 系统提示词（用于修饰prompt）
+            images (List[Image.Image]): 输入图像列表（用于参考或编辑）
+            size (str): 图像尺寸
+            quality (str): 图像质量
+            style (str): 图像风格
+            n (int): 生成图像数量
+            response_format (str): 响应格式
+            retry_count (int): 重试次数
+            chat_template (str): 聊天模板
+            seed (int): 随机种子，-1为随机值
+            history (List[tuple[str, str]]): 对话历史
+            api_type (str): API类型选择: auto/response/image
+            
+        Returns:
+            tuple: (图像列表, 响应文本, 对话历史)
+        """
+        if history is None:
+            history = []
+        if images is None:
+            images = []
+            
+        # 处理提示词模板
+        final_prompt = prompt
+        if chat_template and system_prompt:
+            template_content = chat_template.replace("{{system_instruction}}", system_prompt)
+            template_content = template_content.replace("{{prompt}}", prompt)
+            # 移除模板标签，只保留内容
+            template_content = re.sub(r'<-\w+->', '', template_content)
+            template_content = re.sub(r'<-/\w+->', '', template_content)
+            final_prompt = template_content.strip()
+        elif system_prompt:
+            final_prompt = f"{system_prompt}\n\n{prompt}"
+
+        # 根据api_type参数选择API
+        if api_type == "image":
+            use_images_api = True
+        elif api_type == "response":
+            use_images_api = False
+        else:  # auto
+            dalle_models = ["dall-e-2", "dall-e-3"]
+            use_images_api = model_name in dalle_models
+        
+        if use_images_api:
+            return self._generate_image_with_images_api(
+                model_name=model_name,
+                prompt=final_prompt,
+                size=size,
+                quality=quality,
+                style=style,
+                n=n,
+                response_format=response_format,
+                retry_count=retry_count,
+                seed=seed,
+                history=history
+            )
+        else:
+            return self._generate_image_with_responses_api(
+                model_name=model_name,
+                prompt=final_prompt,
+                images=images,
+                retry_count=retry_count,
+                seed=seed,
+                history=history
+            )
+
     def get_usage_info(self, usage_data: Dict[str, Any]) -> Dict[str, Any]:
         """解析使用信息（token消耗等）"""
         try:
@@ -444,3 +542,167 @@ class OpenAIClient:
         except Exception as exception:
             # print(f"Error parsing usage info: {exception}")
             return {}
+
+    def _generate_image_with_images_api(
+        self,
+        model_name: str,
+        prompt: str,
+        size: str,
+        quality: str,
+        style: str,
+        n: int,
+        response_format: str,
+        retry_count: int,
+        seed: int,
+        history: List[tuple[str, str]]
+    ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
+        """使用传统Images API生成图像（适用于DALL-E模型）"""
+        
+        # 构建参数字典
+        image_kwargs = {
+            "model": model_name,
+            "prompt": prompt,
+            "size": size,
+            "quality": quality,
+            "n": n,
+            "response_format": response_format,
+        }
+        
+        # dall-e-3 特有参数
+        if model_name == "dall-e-3":
+            image_kwargs["style"] = style
+            image_kwargs["n"] = 1  # dall-e-3 只支持生成1张图
+        
+        # 处理seed参数
+        current_seed = random.randint(0, 2**31 - 1) if seed == -1 else seed
+        
+        last_exception = None
+        
+        for attempt in range(retry_count):
+            model_management.throw_exception_if_processing_interrupted()
+            try:
+                response = self.client.images.generate(**image_kwargs)
+                
+                images = []
+                revised_prompt = prompt
+                
+                for image_data in response.data:
+                    if response_format == "url":
+                        # 从URL下载图像
+                        img_response = requests.get(
+                            image_data.url, 
+                            timeout=60,
+                            proxies=self.proxies
+                        )
+                        if img_response.status_code == 200:
+                            img = Image.open(io.BytesIO(img_response.content))
+                            images.append(img)
+                    else:
+                        # 从base64解码图像
+                        img_data = base64.b64decode(image_data.b64_json)
+                        img = Image.open(io.BytesIO(img_data))
+                        images.append(img)
+                    
+                    # 获取修订后的提示词（dall-e-3特有）
+                    if hasattr(image_data, 'revised_prompt') and image_data.revised_prompt:
+                        revised_prompt = image_data.revised_prompt
+                
+                history.append(("user", prompt.split('\n\n')[-1]))  # 使用原始prompt
+                history.append(("assistant", f"Generated {len(images)} image(s). Revised prompt: {revised_prompt}"))
+                
+                return images, revised_prompt, history
+                    
+            except Exception as exception:
+                last_exception = exception
+                time.sleep(3)
+        
+        raise last_exception or Exception("All retry attempts failed")
+    
+    def _generate_image_with_responses_api(
+        self,
+        model_name: str,
+        prompt: str,
+        images: List[Image.Image],
+        retry_count: int,
+        seed: int,
+        history: List[tuple[str, str]]
+    ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
+        """使用Responses API生成图像（适用于GPT模型）"""
+        
+        # 处理seed参数
+        current_seed = random.randint(0, 2**31 - 1) if seed == -1 else seed
+        
+        last_exception = None
+        
+        for attempt in range(retry_count):
+            model_management.throw_exception_if_processing_interrupted()
+            try:
+                # 构建输入内容
+                if images:
+                    # 有图像输入时使用结构化输入
+                    content = [{"type": "input_text", "text": prompt}]
+                    
+                    # 添加图像输入
+                    for img in images:
+                        img_base64 = image_to_base64(img)
+                        content.append({
+                            "type": "input_image",
+                            "image_url": f"data:image/jpeg;base64,{img_base64}"
+                        })
+                    
+                    input_data = [{"role": "user", "content": content}]
+                else:
+                    # 仅文本输入时使用简单字符串
+                    input_data = prompt
+                
+                # 使用Responses API生成图像
+                response = self.client.responses.create(
+                    model=model_name,
+                    input=input_data,
+                    tools=[{"type": "image_generation"}],
+                    # 注意：Responses API可能不直接支持seed，但我们记录它
+                )
+                
+                # 提取图像数据
+                image_data = [
+                    output.result
+                    for output in response.output
+                    if output.type == "image_generation_call"
+                ]
+                
+                images = []
+                response_text = ""
+                
+                # 处理生成的图像
+                for img_base64 in image_data:
+                    try:
+                        img_data = base64.b64decode(img_base64)
+                        img = Image.open(io.BytesIO(img_data))
+                        images.append(img)
+                    except Exception as e:
+                        print(f"Failed to decode image: {e}")
+                        continue
+                
+                # 获取文本输出
+                text_outputs = [
+                    output.result
+                    for output in response.output
+                    if hasattr(output, 'type') and output.type == "text"
+                ]
+                if text_outputs:
+                    response_text = text_outputs[0]
+                elif hasattr(response, 'output_text'):
+                    response_text = response.output_text
+                else:
+                    response_text = f"Generated {len(images)} image(s)"
+                
+                history.append(("user", prompt))
+                history.append(("assistant", response_text))
+                
+                return images, response_text, history
+                    
+            except Exception as exception:
+                last_exception = exception
+                time.sleep(3)
+        
+        raise last_exception or Exception("All retry attempts failed")
