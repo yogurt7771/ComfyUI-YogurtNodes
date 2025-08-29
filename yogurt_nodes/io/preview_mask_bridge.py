@@ -35,3 +35,8 @@ class PreviewMaskBridge(SaveMaskBridgeEx):
         result = super().execute(masks, prompt=prompt, extra_pnginfo=extra_pnginfo)
         result["result"] = (*result["result"][:-1],)
         return result
+
+
+class PreviewMaskBridgeOutput(PreviewMaskBridge):
+    OUTPUT_NODE = False
+    _NODE_NAME = "Preview Mask Bridge (Output)"

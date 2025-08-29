@@ -49,5 +49,4 @@ class PreviewAnyBridge:
 
 class PreviewAnyBridgeOutput(PreviewAnyBridge):
     OUTPUT_NODE = True
-    _NODE_NAME = "Preview Any Bridge Output"
-    DESCRIPTION = "Preview Any Bridge Output"
+    _NODE_NAME = "Preview Any Bridge (Output)"

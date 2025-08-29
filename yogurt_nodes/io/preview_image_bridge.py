@@ -35,3 +35,8 @@ class PreviewImageBridge(SaveImageBridgeEx):
         result = super().execute(images, prompt=prompt, extra_pnginfo=extra_pnginfo)
         result["result"] = (*result["result"][:-1],)
         return result
+
+
+class PreviewImageBridgeOutput(PreviewImageBridge):
+    OUTPUT_NODE = False
+    _NODE_NAME = "Preview Image Bridge (Output)"

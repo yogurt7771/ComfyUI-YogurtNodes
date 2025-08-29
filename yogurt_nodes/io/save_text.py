@@ -158,3 +158,8 @@ class SaveTextBridge:
         save_text(text, file_path)
 
         return {"ui": {"text": (text,)}, "result": (text, str(Path(file_path)))}
+
+
+class SaveTextBridgeNonOutput(SaveTextBridge):
+    OUTPUT_NODE = False
+    _NODE_NAME = "Save Text Bridge (Non Output)"

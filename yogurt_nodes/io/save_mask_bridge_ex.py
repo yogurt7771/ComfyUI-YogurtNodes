@@ -110,3 +110,8 @@ class SaveMaskBridgeEx(SaveImageBridgeEx):
         )
         result["result"] = (masks, *result["result"][1:])
         return result
+
+
+class SaveMaskBridgeExNonOutput(SaveMaskBridgeEx):
+    OUTPUT_NODE = False
+    _NODE_NAME = "Save Mask Bridge (Non Output)"

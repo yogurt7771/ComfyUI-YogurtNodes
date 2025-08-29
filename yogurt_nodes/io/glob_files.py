@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import List, Tuple
-
+from PIL import Image
 
 class GlobFiles:
     """
@@ -85,6 +85,20 @@ class GlobFiles:
                         "tooltip": "Suffix list, multiple suffixes separated by commas, e.g. 'txt,py,json' etc. Case insensitive. If empty, all files will be returned.",
                     },
                 ),
+                "extension_list": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "tooltip": "Extension list, multiple extensions separated by commas, e.g. 'txt,py,json' etc. Case insensitive. If empty, all files will be returned.",
+                    },
+                ),
+                "extension_is_image": (
+                    "BOOLEAN",
+                    {
+                        "default": False,
+                        "tooltip": "If true, the extension list will be treated as image extensions.",
+                    },
+                ),
             }
         }
 
@@ -110,6 +124,8 @@ class GlobFiles:
         resolve_path: bool = False,
         prefix_list: str = "",
         suffix_list: str = "",
+        extension_list: str = "",
+        extension_is_image: bool = False,
     ) -> Tuple[List[str]]:
         # 输入验证
         if not root_directory or not root_directory.strip():
@@ -147,12 +163,24 @@ class GlobFiles:
         # 过滤前缀
         if prefix_list:
             prefix_list = prefix_list.split(",")
-            paths_iterator = (p for p in paths_iterator if any(p.name.lower().startswith(prefix.lower()) for prefix in prefix_list))
+            if prefix_list:
+                paths_iterator = (p for p in paths_iterator if any(p.name.lower().startswith(prefix.lower()) for prefix in prefix_list))
 
         # 过滤后缀
         if suffix_list:
-            suffix_list = suffix_list.split(",")
-            paths_iterator = (p for p in paths_iterator if any(p.name.lower().endswith(suffix.lower()) for suffix in suffix_list))
+            suffix_list = [suffix.strip().lower() for suffix in suffix_list.split(",")]
+            if suffix_list:
+                paths_iterator = (p for p in paths_iterator if any(p.name.lower().endswith(suffix.lower()) for suffix in suffix_list))
+
+        # 过滤扩展名
+        if extension_list:
+            extension_list = [extension.strip().lower() for extension in extension_list.split(",")]
+            if extension_list:
+                paths_iterator = (p for p in paths_iterator if p.suffix.lower() in extension_list)
+
+        # 过滤图片
+        if extension_is_image:
+            paths_iterator = (p for p in paths_iterator if p.suffix.lower() in Image.registered_extensions())
 
         # 路径转换
         if resolve_path:

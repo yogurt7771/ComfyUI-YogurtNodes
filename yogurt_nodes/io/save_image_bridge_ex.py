@@ -330,3 +330,8 @@ class SaveImageBridgeEx:
             counter += 1
 
         return {"ui": {"images": results}, "result": (images, width, height, batch, saved_paths)}
+
+
+class SaveImageBridgeExNonOutput(SaveImageBridgeEx):
+    OUTPUT_NODE = False
+    _NODE_NAME = "Save Image Bridge Ex (Non Output)"

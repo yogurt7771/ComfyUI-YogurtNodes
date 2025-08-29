@@ -23,7 +23,6 @@ class EndNode:
         return True
 
     RETURN_TYPES = ()
-    RETURN_NAMES = ()
     FUNCTION = "execute"
     OUTPUT_NODE = True
 
@@ -35,4 +34,4 @@ class EndNode:
         self,
         **data,
     ):
-        pass
+        return ()

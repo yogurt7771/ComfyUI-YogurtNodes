@@ -203,3 +203,8 @@ class LoadBytes:
             return (bytes_data,)
         except Exception as e:
             raise ValueError(f"Failed to load bytes data from {file_path}: {str(e)}")
+
+
+class SaveBytesBridgeNonOutput(SaveBytesBridge):
+    OUTPUT_NODE = False
+    _NODE_NAME = "Save Bytes Bridge (Non Output)"
