@@ -78,7 +78,7 @@ class SaveTextBridge:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "text": ("STRING", {"multiline": True, "tooltip": "The text to save."}),
+                "content": ("STRING", {"multiline": True, "tooltip": "The text to save."}),
                 "output_dir": (
                     "STRING",
                     {
@@ -126,7 +126,7 @@ class SaveTextBridge:
 
     def save_text_file(
         self,
-        text,
+        content,
         output_dir="",
         filename_prefix="ComfyUI",
         overwrite="false",
@@ -155,9 +155,9 @@ class SaveTextBridge:
         os.makedirs(full_output_folder, exist_ok=True)
         file_path = os.path.join(full_output_folder, file)
 
-        save_text(text, file_path)
+        save_text(content, file_path)
 
-        return {"ui": {"text": (text,)}, "result": (text, str(Path(file_path)))}
+        return {"ui": {"text": (content,)}, "result": (content, str(Path(file_path)))}
 
 
 class SaveTextBridgeNonOutput(SaveTextBridge):

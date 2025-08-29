@@ -2,9 +2,12 @@ import { app } from "../../../scripts/app.js";
 import { ComfyWidgets } from "../../../scripts/widgets.js";
 
 app.registerExtension({
-    name: "YogurtNodes.PreviewAnyBridge",
+    name: "YogurtNodes.PreviewText",
     async beforeRegisterNodeDef(nodeType, nodeData, app) {
-        if (nodeData.name === "YogurtPreviewAnyBridge" || nodeData.name === "YogurtPreviewAnyBridgeOutput") {
+        if (nodeData.name === "YogurtPreviewAnyBridge"
+               || nodeData.name === "YogurtPreviewAnyBridgeOutput"
+               || nodeData.name === "YogurtSaveTextBridge"
+               || nodeData.name === "YogurtSaveTextBridgeNonOutput") {
             const onNodeCreated = nodeType.prototype.onNodeCreated;
             nodeType.prototype.onNodeCreated = function () {
                 onNodeCreated ? onNodeCreated.apply(this, []) : undefined;
@@ -16,27 +19,7 @@ app.registerExtension({
                 onExecuted === null || onExecuted === void 0 ? void 0 : onExecuted.apply(this, [message]);
                 this.showValueWidget.value = message.text[0];
             };
-            console.log("Preview Any Bridge (Yogurt Nodes) registered");
-        }
-    },
-});
-
-app.registerExtension({
-    name: "YogurtNodes.SaveTextBridge",
-    async beforeRegisterNodeDef(nodeType, nodeData, app) {
-        if (nodeData.name === "YogurtSaveTextBridge") {
-            const onNodeCreated = nodeType.prototype.onNodeCreated;
-            nodeType.prototype.onNodeCreated = function () {
-                onNodeCreated ? onNodeCreated.apply(this, []) : undefined;
-                this.showValueWidget = ComfyWidgets["STRING"](this, "text", ["STRING", { multiline: true }], app).widget;
-                this.showValueWidget.inputEl.readOnly = true;
-            };
-            const onExecuted = nodeType.prototype.onExecuted;
-            nodeType.prototype.onExecuted = function (message) {
-                onExecuted === null || onExecuted === void 0 ? void 0 : onExecuted.apply(this, [message]);
-                this.showValueWidget.value = message.text[0];
-            };
-            console.log("Save Text Bridge (Yogurt Nodes) registered");
+            console.log("Preview Text (Yogurt Nodes) for " + nodeData.name + " registered");
         }
     },
 });

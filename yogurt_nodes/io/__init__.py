@@ -11,7 +11,7 @@ from .preview_mask_bridge import PreviewMaskBridge, PreviewMaskBridgeOutput  # n
 from .any_bridge import AnyBridge  # noqa
 from .preview_any_bridge import PreviewAnyBridge, PreviewAnyBridgeOutput  # noqa
 from .create_directory import CreateDirectory, CreateParentDirectory  # noqa
-from .save_text import SaveTextBridge, SaveTextBridgeNonOutput  # noqa
+from .save_text_bridge import SaveTextBridge, SaveTextBridgeNonOutput  # noqa
 from .glob_files import GlobFiles  # noqa
 from .split_path import SplitPath  # noqa
 from .serialize_any import SerializeAny, DeserializeAny  # noqa
