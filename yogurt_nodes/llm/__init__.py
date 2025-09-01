@@ -7,4 +7,7 @@ from .openrouter_generate_image import OpenRouterGenerateImage  # noqa
 from .openai_generate_text import OpenAIGenerateText  # noqa
 from .openai_image_understand import OpenAIImageUnderstand  # noqa
 from .openai_generate_image import OpenAIGenerateImage  # noqa
+from .freedomgpt_generate_text import FreedomGPTGenerateText  # noqa
+from .freedomgpt_image_understand import FreedomGPTImageUnderstand  # noqa
+from .freedomgpt_generate_image import FreedomGPTGenerateImage  # noqa
 from .history_builder import HistoryBuilder  # noqa
