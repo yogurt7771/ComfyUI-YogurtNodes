@@ -25,7 +25,7 @@ class FreedomGPTGenerateImage:
                     },
                 ),
                 "model_name": (
-                    FreedomGPTClient.get_image_models(),
+                    FreedomGPTClient().get_all_image_models(),
                     {
                         "default": "liberty",
                         "tooltip": "FreedomGPT image generation model name",
@@ -65,6 +65,16 @@ class FreedomGPTGenerateImage:
                         "tooltip": "Number of retry attempts if the request fails",
                     },
                 ),
+                "seed": (
+                    "INT",
+                    {
+                        "default": -1,
+                        "min": -1,
+                        "max": 2**31 - 1,
+                        "step": 1,
+                        "tooltip": "Random seed for reproducible results, -1 for random",
+                    },
+                ),
                 "proxy_url": (
                     "STRING",
                     {
@@ -75,6 +85,11 @@ class FreedomGPTGenerateImage:
                 ),
             },
             "optional": {
+                "image": ("IMAGE",),
+                "image1": ("IMAGE",),
+                "image2": ("IMAGE",),
+                "image3": ("IMAGE",),
+                "image4": ("IMAGE",),
                 "history": ("HISTORY",),
             },
         }
@@ -100,10 +115,25 @@ class FreedomGPTGenerateImage:
         prompt: str,
         number_of_images: int,
         retry_count: int,
+        seed: int,
         proxy_url: str,
+        image: torch.Tensor | None = None,
+        image1: torch.Tensor | None = None,
+        image2: torch.Tensor | None = None,
+        image3: torch.Tensor | None = None,
+        image4: torch.Tensor | None = None,
         history: List[tuple[str, str]] | None = None,
     ):
         client = FreedomGPTClient(api_key, proxy_url)
+
+        # 将tensor转换为PIL图像列表
+        input_images = []
+        for img in [image, image1, image2, image3, image4]:
+            if img is not None:
+                if len(img.shape) == 4:
+                    img = img[0]
+                img = img.permute(2, 0, 1)
+                input_images.append(torchvision.transforms.ToPILImage()(img))
 
         pil_images, response_text, history = client.generate_image(
             model_name=model_name,
@@ -112,6 +142,8 @@ class FreedomGPTGenerateImage:
             retry_count=retry_count,
             system_prompt=system_prompt,
             history=history,
+            seed=seed,
+            input_images=input_images,
         )
 
         # 转换PIL图像为ComfyUI tensor格式
@@ -123,7 +155,7 @@ class FreedomGPTGenerateImage:
                 tensor_img = tensor_img.permute(1, 2, 0)  # [C, H, W] -> [H, W, C]
                 tensor_img = tensor_img.unsqueeze(0)  # [H, W, C] -> [1, H, W, C]
                 tensors.append(tensor_img)
-            
+
             # 拼接所有图像 [N, H, W, C]
             if len(tensors) > 1:
                 result_tensor = torch.cat(tensors, dim=0)

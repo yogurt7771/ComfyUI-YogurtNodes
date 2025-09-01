@@ -14,8 +14,6 @@ class FreedomGPTImageUnderstand:
     @classmethod
     def INPUT_TYPES(cls):
         # 获取支持视觉的模型列表
-        vision_models = FreedomGPTClient.get_vision_models()
-
         return {
             "required": {
                 "api_key": (
@@ -27,7 +25,7 @@ class FreedomGPTImageUnderstand:
                     },
                 ),
                 "model_name": (
-                    vision_models,
+                    FreedomGPTClient().get_all_text_models(),
                     {
                         "default": "liberty",
                         "tooltip": "FreedomGPT vision model name",
@@ -122,6 +120,16 @@ class FreedomGPTImageUnderstand:
                         "tooltip": "Content template for the generated text",
                     },
                 ),
+                "seed": (
+                    "INT",
+                    {
+                        "default": -1,
+                        "min": -1,
+                        "max": 2**31 - 1,
+                        "step": 1,
+                        "tooltip": "Random seed for reproducible results, -1 for random",
+                    },
+                ),
                 "proxy_url": (
                     "STRING",
                     {
@@ -167,6 +175,7 @@ class FreedomGPTImageUnderstand:
         batch_size: int,
         retry_count: int,
         chat_template: str,
+        seed: int,
         proxy_url: str,
         image: torch.Tensor | None = None,
         image1: torch.Tensor | None = None,
@@ -198,6 +207,7 @@ class FreedomGPTImageUnderstand:
             chat_template=chat_template,
             top_k=top_k,
             batch_size=batch_size,
+            seed=seed,
             history=history,
         )
         return (text, history, payload)

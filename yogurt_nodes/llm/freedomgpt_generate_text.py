@@ -9,19 +9,6 @@ class FreedomGPTGenerateText:
 
     @classmethod
     def INPUT_TYPES(cls):
-        # 尝试获取动态模型列表，如果失败则使用缓存列表
-        try:
-            # 创建临时客户端获取列表（使用环境变量或缓存）
-            temp_client = FreedomGPTClient()
-            models = temp_client.get_all_models()
-        except Exception:
-            # 如果API调用失败，使用缓存列表
-            models = FreedomGPTClient.get_cached_models()
-
-        # 确保列表不为空
-        if not models:
-            models = FreedomGPTClient.get_cached_models()
-
         return {
             "required": {
                 "api_key": (
@@ -33,7 +20,7 @@ class FreedomGPTGenerateText:
                     },
                 ),
                 "model_name": (
-                    models,
+                    FreedomGPTClient().get_all_text_models(),
                     {
                         "default": "liberty",
                         "tooltip": "FreedomGPT model name",
@@ -128,6 +115,16 @@ class FreedomGPTGenerateText:
                         "tooltip": "Content template for the generated text",
                     },
                 ),
+                "seed": (
+                    "INT",
+                    {
+                        "default": -1,
+                        "min": -1,
+                        "max": 2**31 - 1,
+                        "step": 1,
+                        "tooltip": "Random seed for reproducible results, -1 for random",
+                    },
+                ),
                 "proxy_url": (
                     "STRING",
                     {
@@ -168,6 +165,7 @@ class FreedomGPTGenerateText:
         batch_size: int,
         retry_count: int,
         chat_template: str,
+        seed: int,
         proxy_url: str,
         history: List[tuple[str, str]] | None = None,
     ):
@@ -184,6 +182,7 @@ class FreedomGPTGenerateText:
             chat_template=chat_template,
             top_k=top_k,
             batch_size=batch_size,
+            seed=seed,
             history=history,
         )
         return (text, history, payload)

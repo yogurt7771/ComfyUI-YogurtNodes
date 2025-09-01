@@ -41,8 +41,9 @@ class FreedomGPTClient:
 
         如三者均未设置，将抛出异常。
         """
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        self.current_dir = current_dir
         if len(api_key) == 0:  # 如果 api_key 为空，则尝试从 api_key.json 文件中读取
-            current_dir = os.path.dirname(os.path.abspath(__file__))
             api_key_path = os.path.join(current_dir, "api_key.json")
             if os.path.exists(api_key_path):
                 with open(api_key_path, "r", encoding="utf-8") as f:
@@ -91,6 +92,7 @@ class FreedomGPTClient:
         chat_template: str = "",
         top_k: int = 40,
         batch_size: int = 1,
+        seed: int = -1,
     ) -> tuple[str, List[tuple[str, str]], Any]:
         """
         生成文本 - 扩展支持FreedomGPT特有参数
@@ -98,6 +100,7 @@ class FreedomGPTClient:
         Args:
             top_k (int): top-k 采样参数，FreedomGPT特有
             batch_size (int): 批处理大小，FreedomGPT特有
+            seed (int): 随机种子，-1为自动生成
             其他参数同父类，但frequency_penalty和presence_penalty会被忽略
         """
         messages, history = build_messages(
@@ -127,13 +130,16 @@ class FreedomGPTClient:
             payload["batch_size"] = batch_size
         # 注意：忽略 frequency_penalty 和 presence_penalty，FreedomGPT不支持
 
+        # 处理seed参数
+        current_seed = random.randint(0, 2**31 - 1) if seed == -1 else seed
+        
         # 重用父类的请求逻辑，只是payload有所不同
         last_exception = None
         response = None
         for _attempt in range(retry_count):
             model_management.throw_exception_if_processing_interrupted()
             try:
-                payload["seed"] = random.randint(0, 2**31 - 1)
+                payload["seed"] = current_seed
                 response = requests.post(
                     f"{self.base_url}/chat/completions",
                     headers=self.headers,
@@ -168,6 +174,7 @@ class FreedomGPTClient:
 
     def get_models(self) -> List[Dict[str, Any]]:
         """获取可用模型列表"""
+        cache_file = os.path.join(self.current_dir, "freedomgpt-models.json")
         try:
             response = requests.get(
                 f"{self.base_url}/models",
@@ -175,74 +182,34 @@ class FreedomGPTClient:
                 timeout=30,
                 proxies=self.proxies,
             )
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            print(f"FreedomGPT获取模型列表失败: {e}")
+            with open(cache_file, "r", encoding="utf-8") as f:
+                return json.load(f)
 
-            if response.status_code == 200:
-                return response.json()["data"]
-            else:
-                return []
-
-        except (ConnectionError, TimeoutError, requests.RequestException):
-            return []
-        except Exception:
-            return []
-
-    def get_all_models(self) -> List[str]:
-        """获取所有可用模型列表"""
-        try:
-            models = self.get_models()
-            model_ids = []
-
-            for model in models:
+    def get_all_text_models(self) -> List[str]:
+        """获取所有可用文本模型列表"""
+        models = self.get_models()
+        model_ids = []
+        for model in models:
+            if model.get("type", "") == "text":
                 model_id = model.get("model", "")
                 if model_id:
                     model_ids.append(model_id)
+        return sorted(model_ids)
 
-            return sorted(model_ids)
-
-        except (ConnectionError, TimeoutError, requests.RequestException):
-            return []
-        except Exception:
-            return []
-
-    @staticmethod
-    def get_cached_models() -> List[str]:
-        """获取缓存的模型列表（离线备用）"""
-        return [
-            "liberty",
-            "llama-2-7b-chat",
-            "llama-2-13b-chat",
-            "alpaca-7b",
-            "alpaca-13b",
-            "gpt4all-13b-snoozy",
-            "wizard-vicuna-13b-uncensored",
-            "orca-mini-3b",
-            "orca-mini-7b",
-            "orca-mini-13b",
-            "replit-code-v1-3b",
-            "starcoder-15.5b",
-            "falcon-7b-instruct",
-            "falcon-40b-instruct",
-            "mpt-7b-chat",
-            "mpt-30b-chat",
-            "nous-hermes-13b",
-        ]
-
-    @staticmethod
-    def get_vision_models() -> List[str]:
-        """获取支持视觉的模型列表"""
-        # FreedomGPT 目前主要支持文本模型，视觉支持需要进一步确认
-        return [
-            "liberty",
-        ]
-
-    @staticmethod
-    def get_image_models() -> List[str]:
-        """获取支持图像生成的模型列表"""
-        # FreedomGPT 的图像生成模型需要进一步确认
-        return [
-            "stable-diffusion-v1-5",
-            "stable-diffusion-v2-1",
-        ]
+    def get_all_image_models(self) -> List[str]:
+        """获取所有可用图像模型列表"""
+        models = self.get_models()
+        model_ids = []
+        for model in models:
+            if model.get("type", "") == "image":
+                model_id = model.get("model", "")
+                if model_id:
+                    model_ids.append(model_id)
+        return sorted(model_ids)
 
     def understand_image(
         self,
@@ -260,6 +227,7 @@ class FreedomGPTClient:
         chat_template: str = "",
         top_k: int = 40,
         batch_size: int = 1,
+        seed: int = -1,
     ) -> tuple[str, List[tuple[str, str]], Any]:
         """
         理解图像内容
@@ -278,6 +246,7 @@ class FreedomGPTClient:
             chat_template (str): 聊天模板
             top_k (int): top-k 采样参数
             batch_size (int): 批处理大小
+            seed (int): 随机种子，-1为自动生成
 
         Returns:
             tuple: (图像理解结果, 对话历史, 请求参数)
@@ -297,6 +266,7 @@ class FreedomGPTClient:
             chat_template=chat_template,
             top_k=top_k,
             batch_size=batch_size,
+            seed=seed,
         )
 
     def generate_image(
@@ -307,6 +277,8 @@ class FreedomGPTClient:
         retry_count: int = 3,
         system_prompt: str = "",
         history: List[tuple[str, str]] | None = None,
+        seed: int = -1,
+        input_images: Optional[List[Image.Image]] = None,
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """
         使用FreedomGPT API生成图像
@@ -318,23 +290,43 @@ class FreedomGPTClient:
             retry_count (int): 重试次数
             system_prompt (str): 系统提示词（用于修饰prompt）
             history (List[tuple[str, str]]): 对话历史
+            seed (int): 随机种子，-1为自动生成
+            input_images (List[Image.Image]): 输入图像列表，用于img2img等场景
 
         Returns:
             tuple: (图像列表, 响应文本, 对话历史)
         """
         if history is None:
             history = []
+        if input_images is None:
+            input_images = []
 
         # 处理提示词
         final_prompt = prompt
         if system_prompt:
             final_prompt = f"{system_prompt}\n\n{prompt}"
 
+        # 处理seed参数
+        current_seed = random.randint(0, 2**31 - 1) if seed == -1 else seed
+        
         payload = {
             "model": model_name,
             "prompt": final_prompt,
             "numberOfImages": number_of_images,
+            "seed": current_seed,
         }
+
+        # 添加输入图像（如果有）
+        if input_images:
+            # 将输入图像转换为base64格式
+            image_data = []
+            for img in input_images:
+                img_base64 = image_to_base64(img)
+                image_data.append(f"data:image/jpeg;base64,{img_base64}")
+            
+            # 添加到payload，具体字段名需要根据FreedomGPT API文档确定
+            # 常见的可能是 "images", "input_images", 或 "reference_images"
+            payload["images"] = image_data
 
         last_exception = None
 
