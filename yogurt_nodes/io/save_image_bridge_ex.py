@@ -273,7 +273,11 @@ class SaveImageBridgeEx:
         saved_paths = []
         for batch_number, image in enumerate(images):
             i = 255.0 * image.cpu().numpy()
-            img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
+            try:
+                img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
+            except Exception as e:
+                print(f"Error load image: {e}")
+                continue
             metadata = None
             if not (disable_metadata == "true"):
                 metadata = PngInfo()
