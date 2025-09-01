@@ -155,6 +155,137 @@ class OpenRouterClient:
                 time.sleep(3)
         raise last_exception or Exception("All retry attempts failed")
 
+    def generate_image(
+        self,
+        model_name: str,
+        prompt: str = "",
+        system_prompt: str = "",
+        images: Optional[List[Image.Image]] = None,
+        history: List[tuple[str, str]] | None = None,
+        temperature: float = 1.0,
+        top_p: float = 0,
+        max_tokens: int = 8192,
+        retry_count: int = 3,
+        provider: Optional[str] = None,
+        chat_template: str = "",
+        seed: int = -1,
+    ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
+        """
+        使用OpenRouter API生成图像
+        
+        Args:
+            model_name (str): 模型名称
+            prompt (str): 图像生成提示词
+            system_prompt (str): 系统提示词
+            images (List[Image.Image]): 输入图像列表（用于参考或编辑）
+            history (List[tuple[str, str]]): 对话历史
+            temperature (float): 采样温度
+            top_p (float): 采样概率阈值
+            max_tokens (int): 生成文本的最大标记数
+            retry_count (int): 重试次数
+            provider (str): 基础设施提供商（可选）
+            chat_template (str): 聊天模板
+            seed (int): 随机种子，-1为随机值
+            
+        Returns:
+            tuple: (图像列表, 响应文本, 对话历史)
+        """
+        if history is None:
+            history = []
+        if images is None:
+            images = []
+            
+        messages, history = build_messages(
+            system_prompt=system_prompt,
+            prompt=prompt,
+            images=images,
+            history=history,
+            chat_template=chat_template,
+        )
+
+        payload = {
+            "model": model_name,
+            "messages": messages,
+            "temperature": temperature,
+            "modalities": ["image", "text"]  # 关键：启用图像生成
+        }
+        
+        if top_p > 0:
+            payload["top_p"] = top_p
+        if max_tokens > 0:
+            payload["max_tokens"] = max_tokens
+
+        # 添加provider参数（基础设施提供商）
+        if provider and provider != "auto":
+            payload["provider"] = {"allow_fallbacks": False, "order": [provider]}
+            
+        # 处理seed参数
+        current_seed = random.randint(0, 2**31 - 1) if seed == -1 else seed
+        
+        last_exception = None
+        response = None
+        
+        for attempt in range(retry_count):
+            model_management.throw_exception_if_processing_interrupted()
+            try:
+                payload["seed"] = current_seed + attempt
+                response = requests.post(
+                    f"{self.base_url}/chat/completions",
+                    headers=self.headers,
+                    json=payload,
+                    timeout=120,
+                    proxies=self.proxies,
+                )
+
+                if response.status_code == 200:
+                    result = response.json()
+                    choice = result["choices"][0]
+                    message = choice["message"]
+                    
+                    # 提取文本内容
+                    text_content = message.get("content", "").strip() if message.get("content") else ""
+                    
+                    # 提取图像数据（base64格式）
+                    generated_images = []
+                    
+                    # 检查message中的images字段（按照OpenRouter文档格式）
+                    if "images" in message and isinstance(message["images"], list):
+                        for img_item in message["images"]:
+                            if isinstance(img_item, dict) and "image_url" in img_item:
+                                img_url = img_item["image_url"]["url"]
+                                if isinstance(img_url, str) and img_url.startswith("data:image"):
+                                    # 解析data URL格式: data:image/png;base64,xxxxx
+                                    try:
+                                        import base64
+                                        import io
+                                        header, img_base64 = img_url.split(",", 1)
+                                        img_bytes = base64.b64decode(img_base64)
+                                        img = Image.open(io.BytesIO(img_bytes))
+                                        generated_images.append(img)
+                                    except Exception as e:
+                                        print(f"Failed to decode image: {e}")
+                                        continue
+                    
+                    # 如果没有找到图像，但有内容，生成响应文本
+                    if not generated_images and not text_content:
+                        raise ValueError("No images or text content generated")
+                    
+                    # 更新对话历史
+                    if text_content or generated_images:
+                        history.append(("assistant", text_content if text_content else f"Generated {len(generated_images)} image(s)"))
+                    
+                    return generated_images, text_content, history
+                    
+                else:
+                    error_msg = f"API request failed with status {response.status_code}: {response.text}"
+                    last_exception = Exception(error_msg)
+
+            except Exception as e:
+                last_exception = e
+                time.sleep(3)
+                
+        raise last_exception or Exception("All retry attempts failed")
+
     def understand_image(
         self,
         model_name: str,
@@ -268,6 +399,17 @@ class OpenRouterClient:
             "mistralai/mistral-medium",
             "deepseek/deepseek-r1",
             "qwen/qwen-2.5-72b-instruct",
+        ]
+
+    @staticmethod
+    def get_image_models() -> List[str]:
+        """获取支持图像生成的模型列表"""
+        return [
+            "google/gemini-2.5-flash-image-preview",
+            "google/gemini-2.0-flash-exp",
+            "anthropic/claude-3.5-sonnet",
+            "openai/gpt-4o",
+            "openai/gpt-4o-mini",
         ]
 
     def get_generation_info(self, generation_id: str) -> Dict[str, Any]:
