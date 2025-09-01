@@ -276,8 +276,9 @@ class SaveImageBridgeEx:
             try:
                 img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
             except Exception as e:
-                print(f"Error load image: {e}")
-                continue
+                print(f"Error load image: {e}, creating empty image as fallback")
+                # Create empty black image with same dimensions as the first image
+                img = Image.new('RGB', (1, 1), color=(0, 0, 0))
             metadata = None
             if not (disable_metadata == "true"):
                 metadata = PngInfo()
@@ -332,7 +333,6 @@ class SaveImageBridgeEx:
                     {"filename": file, "subfolder": subfolder, "type": self.type}
                 )
             counter += 1
-
         return {"ui": {"images": results}, "result": (images, width, height, batch, saved_paths)}
 
 
