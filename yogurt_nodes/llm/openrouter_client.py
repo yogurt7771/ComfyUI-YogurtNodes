@@ -78,7 +78,7 @@ class OpenRouterClient:
         top_p: float = 0,
         max_tokens: int = 8192,
         retry_count: int = 3,
-        provider: Optional[str] = None,
+        provider: Optional[str | List[str]] = None,
         chat_template: str = "",
     ) -> tuple[str, List[tuple[str, str]], Any]:
         """
@@ -119,7 +119,10 @@ class OpenRouterClient:
 
         # 添加provider参数（基础设施提供商）
         if provider and provider != "auto":
-            payload["provider"] = {"allow_fallbacks": False, "order": [provider]}
+            if isinstance(provider, list):
+                payload["provider"] = {"order": provider}
+            else:
+                payload["provider"] = {"allow_fallbacks": False, "order": [provider]}
         # pprint(self.headers)
         # pprint(payload)
         last_exception = None
@@ -166,7 +169,7 @@ class OpenRouterClient:
         top_p: float = 0,
         max_tokens: int = 8192,
         retry_count: int = 3,
-        provider: Optional[str] = None,
+        provider: Optional[str | List[str]] = None,
         chat_template: str = "",
         seed: int = -1,
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
@@ -217,7 +220,10 @@ class OpenRouterClient:
 
         # 添加provider参数（基础设施提供商）
         if provider and provider != "auto":
-            payload["provider"] = {"allow_fallbacks": False, "order": [provider]}
+            if isinstance(provider, list):
+                payload["provider"] = {"order": provider}
+            else:
+                payload["provider"] = {"allow_fallbacks": False, "order": [provider]}
             
         # 处理seed参数
         current_seed = random.randint(0, 2**31 - 1) if seed == -1 else seed
@@ -297,7 +303,7 @@ class OpenRouterClient:
         top_p: float = 0,
         max_tokens: int = 8192,
         retry_count: int = 3,
-        provider: Optional[str] = None,
+        provider: Optional[str | List[str]] = None,
         chat_template: str = "",
     ) -> tuple[str, List[tuple[str, str]], Any]:
         """

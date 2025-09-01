@@ -91,6 +91,14 @@ class OpenRouterGenerateImage:
                         "tooltip": "Infrastructure provider preference",
                     },
                 ),
+                "provider_list": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "multiline": False,
+                        "tooltip": "Provider list (comma separated, e.g: 'openai,azure,together'), empty means use provider",
+                    },
+                ),
                 "chat_template": (
                     "STRING",
                     {
@@ -159,6 +167,7 @@ class OpenRouterGenerateImage:
         max_tokens: int,
         retry_count: int,
         provider: str,
+        provider_list: str,
         chat_template: str,
         proxy_url: str,
         seed: int,
@@ -179,6 +188,17 @@ class OpenRouterGenerateImage:
                 images.append(torchvision.transforms.ToPILImage()(img))
         
         client = OpenRouterClient(api_key, proxy_url)
+        
+        # Parse provider list or use single provider
+        provider_param = None
+        if provider_list.strip():
+            # Convert comma-separated string to list
+            providers = [p.strip() for p in provider_list.split(",") if p.strip()]
+            if providers:
+                provider_param = providers
+        elif provider != "auto":
+            provider_param = provider
+            
         images, text, history = client.generate_image(
             model_name=model_name,
             prompt=prompt,
@@ -188,7 +208,7 @@ class OpenRouterGenerateImage:
             top_p=top_p,
             max_tokens=max_tokens,
             retry_count=retry_count,
-            provider=provider,
+            provider=provider_param,
             chat_template=chat_template,
             seed=seed,
             history=history,

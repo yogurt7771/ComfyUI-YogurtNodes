@@ -122,6 +122,14 @@ class OpenRouterImageUnderstand:
                         "tooltip": "Content template for the generated text",
                     },
                 ),
+                "provider_list": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "multiline": False,
+                        "tooltip": "Provider list (comma separated, e.g: 'openai,azure,together'), empty means use infrastructure_provider",
+                    },
+                ),
                 "proxy_url": (
                     "STRING",
                     {
@@ -166,6 +174,7 @@ class OpenRouterImageUnderstand:
         max_tokens: int = 8192,
         retry_count: int = 3,
         chat_template: str = "",
+        provider_list: str = "",
         proxy_url: str = "",
         image: torch.Tensor | None = None,
         image1: torch.Tensor | None = None,
@@ -187,6 +196,17 @@ class OpenRouterImageUnderstand:
             raise ValueError("At least one image must be provided")
 
         client = OpenRouterClient(api_key, proxy_url)
+        
+        # Parse provider list or use single infrastructure_provider
+        provider_param = None
+        if provider_list.strip():
+            # Convert comma-separated string to list
+            providers = [p.strip() for p in provider_list.split(",") if p.strip()]
+            if providers:
+                provider_param = providers
+        elif infrastructure_provider != "auto":
+            provider_param = infrastructure_provider
+            
         text, history, payload = client.understand_image(
             model_name=model_name,
             prompt=prompt,
@@ -196,9 +216,7 @@ class OpenRouterImageUnderstand:
             top_p=top_p,
             max_tokens=max_tokens,
             retry_count=retry_count,
-            provider=(
-                infrastructure_provider if infrastructure_provider != "auto" else None
-            ),
+            provider=provider_param,
             chat_template=chat_template,
             history=history,
         )
