@@ -2,7 +2,7 @@ from ..utils import ANY_TYPE
 
 
 class ListLength:
-    """Get the length of any list-like object."""
+    """获取任何列表类型对象的长度。"""
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -10,7 +10,7 @@ class ListLength:
             "required": {
                 "list_data": (
                     ANY_TYPE,
-                    {"tooltip": "Any list-like object that supports len()"},
+                    {"tooltip": "任何支持len()函数的列表类型对象"},
                 ),
             },
         }
@@ -25,7 +25,7 @@ class ListLength:
     OUTPUT_NODE = False
 
     _NODE_NAME = "ListLength"
-    DESCRIPTION = "Get the length of any list-like object"
+    DESCRIPTION = "获取任何列表类型对象的长度"
     CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, list_data):
@@ -33,7 +33,7 @@ class ListLength:
 
 
 class ListIndex:
-    """Get an item by index from any list-like object."""
+    """通过索引从任何列表类型对象中获取元素。"""
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -41,13 +41,13 @@ class ListIndex:
             "required": {
                 "list_data": (
                     ANY_TYPE,
-                    {"tooltip": "Any list-like object that supports indexing"},
+                    {"tooltip": "任何支持索引访问的列表类型对象"},
                 ),
                 "index": (
                     "INT",
                     {
                         "default": 0,
-                        "tooltip": "Index to access (supports negative indexing)",
+                        "tooltip": "要访问的索引（支持负索引）",
                     },
                 ),
             },
@@ -63,7 +63,7 @@ class ListIndex:
     OUTPUT_NODE = False
 
     _NODE_NAME = "ListIndex"
-    DESCRIPTION = "Get an item by index from any list-like object"
+    DESCRIPTION = "通过索引从任何列表类型对象中获取元素"
     CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, list_data, index):
@@ -71,7 +71,14 @@ class ListIndex:
 
 
 class ListSlice:
-    """Get a slice from any list-like object."""
+    """从任何列表类型对象中获取切片。
+    
+    start: 起始索引（包含）。None表示从开头开始
+    stop: 结束索引（不包含）。None表示到结尾
+    step: 步长。默认为1
+    use_none_start: 使用None作为起始位置（从开头切片）
+    use_none_stop: 使用None作为结束位置（切片到结尾）
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -79,7 +86,7 @@ class ListSlice:
             "required": {
                 "list_data": (
                     ANY_TYPE,
-                    {"tooltip": "Any list-like object that supports slicing"},
+                    {"tooltip": "任何支持切片操作的列表类型对象"},
                 ),
             },
             "optional": {
@@ -87,35 +94,41 @@ class ListSlice:
                     "INT",
                     {
                         "default": 0,
-                        "tooltip": "Start index (inclusive). None means from beginning",
+                        "tooltip": "起始索引（包含）。None表示从开头开始",
+                        "min": -2**31,
+                        "max": 2**31 - 1,
                     },
                 ),
                 "stop": (
                     "INT",
                     {
                         "default": -1,
-                        "tooltip": "Stop index (exclusive). None means to end",
+                        "min": -2**31,
+                        "max": 2**31 - 1,
+                        "tooltip": "结束索引（不包含）。None表示到结尾",
                     },
                 ),
                 "step": (
                     "INT",
                     {
                         "default": 1,
-                        "tooltip": "Step size. Default is 1",
+                        "min": -2**31,
+                        "max": 2**31 - 1,
+                        "tooltip": "步长。默认为1",
                     },
                 ),
                 "use_none_start": (
                     "BOOLEAN",
                     {
                         "default": False,
-                        "tooltip": "Use None as start (slice from beginning)",
+                        "tooltip": "使用None作为起始位置（从开头切片）",
                     },
                 ),
                 "use_none_stop": (
                     "BOOLEAN",
                     {
-                        "default": True,
-                        "tooltip": "Use None as stop (slice to end)",
+                        "default": False,
+                        "tooltip": "使用None作为结束位置（切片到结尾）",
                     },
                 ),
             },
@@ -131,7 +144,7 @@ class ListSlice:
     OUTPUT_NODE = False
 
     _NODE_NAME = "ListSlice"
-    DESCRIPTION = "Get a slice from any list-like object"
+    DESCRIPTION = "从任何列表类型对象中获取切片"
     CATEGORY = "YogurtNodes/Logic"
 
     def execute(
