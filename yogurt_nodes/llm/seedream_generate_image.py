@@ -24,6 +24,13 @@ class SeeDreamGenerateImage:
                         "tooltip": "豆包SeeDream API密钥 (ARK_API_KEY)",
                     },
                 ),
+                "model": (
+                    "STRING",
+                    {
+                        "default": "doubao-seedream-4.0",
+                        "tooltip": "豆包SeeDream模型名称",
+                    },
+                ),
                 "prompt": (
                     "STRING",
                     {
@@ -31,11 +38,24 @@ class SeeDreamGenerateImage:
                         "tooltip": "图像生成的提示词",
                     },
                 ),
-                "size": (
-                    SeeDreamClient.get_supported_sizes(),
+                "width": (
+                    "INT",
                     {
-                        "default": "2K",
-                        "tooltip": "生成图像的尺寸",
+                        "default": 2048,
+                        "min": 1024,
+                        "max": 4096,
+                        "step": 64,
+                        "tooltip": "生成图像的宽度",
+                    },
+                ),
+                "height": (
+                    "INT",
+                    {
+                        "default": 2048,
+                        "min": 1024,
+                        "max": 4096,
+                        "step": 64,
+                        "tooltip": "生成图像的高度",
                     },
                 ),
                 "sequential_image_generation": (
@@ -93,6 +113,16 @@ class SeeDreamGenerateImage:
                         "tooltip": "代理URL，格式: protocol://user:pass@addr:port，支持http,https,socks5,socks5h",
                     },
                 ),
+                "seed": (
+                    "INT",
+                    {
+                        "default": -1,
+                        "min": -1,
+                        "max": 99999999,
+                        "step": 1,
+                        "tooltip": "随机种子",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE", {"tooltip": "输入图像（用于图生图）"}),
@@ -121,15 +151,17 @@ class SeeDreamGenerateImage:
     def generate_image(
         self,
         api_key: str,
+        model: str,
         prompt: str,
-        size: str,
+        width: int,
+        height: int,
         sequential_image_generation: str,
         max_images: int,
         response_format: str,
-        watermark: bool,
         retry_count: int,
         region: str,
         proxy_url: str,
+        seed: int,
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -141,8 +173,10 @@ class SeeDreamGenerateImage:
 
         Args:
             api_key: API密钥
+            model: 模型名称
             prompt: 提示词
-            size: 图像尺寸
+            width: 图像宽度
+            height: 图像高度
             sequential_image_generation: 序列生成模式
             max_images: 最大图像数量
             response_format: 响应格式
@@ -173,16 +207,18 @@ class SeeDreamGenerateImage:
 
         # 调用API
         generated_images, response_text = client.generate_image(
+            model=model,
             prompt=prompt,
             images=input_images if input_images else None,
-            size=size,
+            size=f"{width}x{height}",
             sequential_image_generation=sequential_image_generation,
             max_images=max_images,
             stream=False,  # ComfyUI不支持流式
             response_format=response_format,
-            watermark=watermark,
+            watermark=False,
             region=region,
             retry_count=retry_count,
+            seed=seed,
         )
 
         # 转换PIL图像回ComfyUI格式

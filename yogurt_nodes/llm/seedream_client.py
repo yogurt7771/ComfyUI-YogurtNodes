@@ -4,7 +4,7 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import requests
 from PIL import Image
@@ -83,6 +83,7 @@ class SeeDreamClient:
 
     def generate_image(
         self,
+        model: str,
         prompt: str,
         images: Optional[List[Image.Image]] = None,
         size: str = "2K",
@@ -93,11 +94,13 @@ class SeeDreamClient:
         watermark: bool = True,
         region: str = "cn-beijing",
         retry_count: int = 3,
+        seed: int = -1,
     ) -> Tuple[List[Image.Image], str]:
         """
         生成图像
 
         Args:
+            model: 模型名称
             prompt: 提示词
             images: 输入图像列表（用于图生图）
             size: 图像尺寸
@@ -107,7 +110,7 @@ class SeeDreamClient:
             response_format: 响应格式
             watermark: 是否添加水印
             retry_count: 重试次数
-
+            seed: 随机种子
         Returns:
             (生成的图像列表, 响应文本)
         """
@@ -115,13 +118,14 @@ class SeeDreamClient:
         base_url = f"https://ark.{region}.volces.com/api/v3/images/generations"
         # 准备请求数据
         data = {
-            "model": "doubao-seedream-4-0-250828",
+            "model": model,
             "prompt": prompt,
             "size": size,
             "sequential_image_generation": sequential_image_generation,
             "stream": stream,
             "response_format": response_format,
             "watermark": watermark,
+            "seed": seed,
         }
 
         # 处理输入图像
@@ -143,6 +147,8 @@ class SeeDreamClient:
             try:
                 print(f"[SeeDream] 发送请求 (尝试 {attempt + 1}/{retry_count})")
                 print(f"[SeeDream] 提示词: {prompt[:100]}...")
+
+                model_management.throw_exception_if_processing_interrupted()
 
                 # 使用requests进行API调用
                 headers = self._prepare_headers()
@@ -200,11 +206,6 @@ class SeeDreamClient:
         # 返回空白图像和错误信息
         placeholder = Image.new("RGB", (512, 512), color="red")
         return [placeholder], error_msg
-
-    @classmethod
-    def get_supported_sizes(cls) -> List[str]:
-        """获取支持的图像尺寸"""
-        return ["2K", "1K", "512x512", "1024x1024", "1024x2048", "2048x1024"]
 
     @classmethod
     def get_sequential_modes(cls) -> List[str]:

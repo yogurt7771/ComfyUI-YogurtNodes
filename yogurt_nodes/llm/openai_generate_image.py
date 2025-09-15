@@ -161,7 +161,9 @@ class OpenAIGenerateImage:
     FUNCTION = "generate_image"
 
     _NODE_NAME = "OpenAI Generate Image"
-    DESCRIPTION = "Generate image using OpenAI API and return as torch.Tensor (h,w,c) and text"
+    DESCRIPTION = (
+        "Generate image using OpenAI API and return as torch.Tensor (h,w,c) and text"
+    )
     CATEGORY = "YogurtNodes/LLM"
 
     def generate_image(
@@ -196,7 +198,7 @@ class OpenAIGenerateImage:
                     img = img[0]
                 img = img.permute(2, 0, 1)
                 images.append(torchvision.transforms.ToPILImage()(img))
-        
+
         client = OpenAIClient(api_key, base_url, proxy_url)
         images, text, history = client.generate_image(
             model_name=model_name,
@@ -214,13 +216,13 @@ class OpenAIGenerateImage:
             history=history,
             api_type=api_type,
         )
-        
+
         tensor_imgs = []
         for image in images:
             tensor_img = torchvision.transforms.ToTensor()(image)
             tensor_img = tensor_img.permute(1, 2, 0).unsqueeze(0)
             tensor_imgs.append(tensor_img)
-        
+
         if len(tensor_imgs) == 1:
             return (tensor_imgs[0], text, history)
         elif len(tensor_imgs) > 1:

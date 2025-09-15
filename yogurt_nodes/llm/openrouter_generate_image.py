@@ -186,9 +186,9 @@ class OpenRouterGenerateImage:
                     img = img[0]
                 img = img.permute(2, 0, 1)
                 images.append(torchvision.transforms.ToPILImage()(img))
-        
+
         client = OpenRouterClient(api_key, proxy_url)
-        
+
         # Parse provider list or use single provider
         provider_param = None
         if provider_list.strip():
@@ -198,7 +198,7 @@ class OpenRouterGenerateImage:
                 provider_param = providers
         elif provider != "auto":
             provider_param = provider
-            
+
         images, text, history = client.generate_image(
             model_name=model_name,
             prompt=prompt,
@@ -213,13 +213,13 @@ class OpenRouterGenerateImage:
             seed=seed,
             history=history,
         )
-        
+
         tensor_imgs = []
         for image in images:
             tensor_img = torchvision.transforms.ToTensor()(image)
             tensor_img = tensor_img.permute(1, 2, 0).unsqueeze(0)
             tensor_imgs.append(tensor_img)
-        
+
         if len(tensor_imgs) == 1:
             return (tensor_imgs[0], text, history)
         elif len(tensor_imgs) > 1:
