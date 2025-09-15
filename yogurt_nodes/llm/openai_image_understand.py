@@ -108,7 +108,7 @@ class OpenAIImageUnderstand:
                 "retry_count": (
                     "INT",
                     {
-                        "default": 3,
+                        "default": 1,
                         "min": 1,
                         "max": 10,
                         "step": 1,

@@ -98,7 +98,7 @@ class FreedomGPTImageUnderstand:
                 "retry_count": (
                     "INT",
                     {
-                        "default": 3,
+                        "default": 1,
                         "min": 1,
                         "max": 10,
                         "step": 1,
@@ -125,7 +125,7 @@ class FreedomGPTImageUnderstand:
                     {
                         "default": -1,
                         "min": -1,
-                        "max": 2**31 - 1,
+                        "max": 99999999,
                         "step": 1,
                         "tooltip": "Random seed for reproducible results, -1 for random",
                     },

@@ -78,7 +78,7 @@ class OpenRouterGenerateImage:
                 "retry_count": (
                     "INT",
                     {
-                        "default": 3,
+                        "default": 1,
                         "min": 1,
                         "step": 1,
                         "tooltip": "Number of retries when request fails",
@@ -127,7 +127,7 @@ class OpenRouterGenerateImage:
                     {
                         "default": -1,
                         "min": -1,
-                        "max": 2147483647,
+                        "max": 99999999,
                         "step": 1,
                         "tooltip": "Random seed for generation (-1 for random)",
                     },

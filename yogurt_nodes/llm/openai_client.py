@@ -112,10 +112,12 @@ def build_messages(
                             message_role = model_role
                         contents = []
                         if len(message_content) > 0:
-                            contents.append({
-                                "type": "text",
-                                "text": message_content,
-                            })
+                            contents.append(
+                                {
+                                    "type": "text",
+                                    "text": message_content,
+                                }
+                            )
                         if role == "user" and with_user_prompt and not added_image:
                             add_image_contents(images, contents)
                             added_image = True
@@ -153,7 +155,7 @@ class OpenAIClient:
 
         Proxy 支持三种获取方式，优先级如下：
         1. 直接通过参数 proxy_url 传入
-        2. 当前目录下 api_key.json 文件，格式为 {"proxy": "代理URL"}  
+        2. 当前目录下 api_key.json 文件，格式为 {"proxy": "代理URL"}
         3. 环境变量 HTTP_PROXY, HTTPS_PROXY, ALL_PROXY
 
         如三者均未设置，将抛出异常。
@@ -295,7 +297,11 @@ class OpenAIClient:
                     # pprint(f"Attempt {attempt + 1} failed: {error_msg}")
                     last_exception = Exception(error_msg)
 
-            except (ConnectionError, TimeoutError, requests.RequestException) as exception:
+            except (
+                ConnectionError,
+                TimeoutError,
+                requests.RequestException,
+            ) as exception:
                 # pprint(f"Network error in attempt {attempt + 1}/{retry_count}: {exception}")
                 last_exception = exception
                 time.sleep(3)
@@ -359,7 +365,10 @@ class OpenAIClient:
         """获取可用模型列表"""
         try:
             response = requests.get(
-                f"{self.base_url}/models", headers=self.headers, timeout=30, proxies=self.proxies
+                f"{self.base_url}/models",
+                headers=self.headers,
+                timeout=30,
+                proxies=self.proxies,
             )
 
             if response.status_code == 200:
@@ -458,7 +467,7 @@ class OpenAIClient:
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """
         使用OpenAI API生成图像
-        
+
         Args:
             model_name (str): 模型名称，默认为 gpt-5
             prompt (str): 图像生成提示词
@@ -474,7 +483,7 @@ class OpenAIClient:
             seed (int): 随机种子，-1为随机值
             history (List[tuple[str, str]]): 对话历史
             api_type (str): API类型选择: auto/response/image
-            
+
         Returns:
             tuple: (图像列表, 响应文本, 对话历史)
         """
@@ -482,15 +491,17 @@ class OpenAIClient:
             history = []
         if images is None:
             images = []
-            
+
         # 处理提示词模板
         final_prompt = prompt
         if chat_template and system_prompt:
-            template_content = chat_template.replace("{{system_instruction}}", system_prompt)
+            template_content = chat_template.replace(
+                "{{system_instruction}}", system_prompt
+            )
             template_content = template_content.replace("{{prompt}}", prompt)
             # 移除模板标签，只保留内容
-            template_content = re.sub(r'<-\w+->', '', template_content)
-            template_content = re.sub(r'<-/\w+->', '', template_content)
+            template_content = re.sub(r"<-\w+->", "", template_content)
+            template_content = re.sub(r"<-/\w+->", "", template_content)
             final_prompt = template_content.strip()
         elif system_prompt:
             final_prompt = f"{system_prompt}\n\n{prompt}"
@@ -503,7 +514,7 @@ class OpenAIClient:
         else:  # auto
             dalle_models = ["dall-e-2", "dall-e-3"]
             use_images_api = model_name in dalle_models
-        
+
         if use_images_api:
             return self._generate_image_with_images_api(
                 model_name=model_name,
@@ -515,7 +526,7 @@ class OpenAIClient:
                 response_format=response_format,
                 retry_count=retry_count,
                 seed=seed,
-                history=history
+                history=history,
             )
         else:
             return self._generate_image_with_responses_api(
@@ -524,7 +535,7 @@ class OpenAIClient:
                 images=images,
                 retry_count=retry_count,
                 seed=seed,
-                history=history
+                history=history,
             )
 
     def get_usage_info(self, usage_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -554,10 +565,10 @@ class OpenAIClient:
         response_format: str,
         retry_count: int,
         seed: int,
-        history: List[tuple[str, str]]
+        history: List[tuple[str, str]],
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """使用传统Images API生成图像（适用于DALL-E模型）"""
-        
+
         # 构建参数字典
         image_kwargs = {
             "model": model_name,
@@ -567,32 +578,30 @@ class OpenAIClient:
             "n": n,
             "response_format": response_format,
         }
-        
+
         # dall-e-3 特有参数
         if model_name == "dall-e-3":
             image_kwargs["style"] = style
             image_kwargs["n"] = 1  # dall-e-3 只支持生成1张图
-        
+
         # 处理seed参数
         current_seed = random.randint(0, 2**31 - 1) if seed == -1 else seed
-        
+
         last_exception = None
-        
-        for attempt in range(retry_count):
+
+        for _attempt in range(retry_count):
             model_management.throw_exception_if_processing_interrupted()
             try:
                 response = self.client.images.generate(**image_kwargs)
-                
+
                 images = []
                 revised_prompt = prompt
-                
+
                 for image_data in response.data:
                     if response_format == "url":
                         # 从URL下载图像
                         img_response = requests.get(
-                            image_data.url, 
-                            timeout=60,
-                            proxies=self.proxies
+                            image_data.url, timeout=60, proxies=self.proxies
                         )
                         if img_response.status_code == 200:
                             img = Image.open(io.BytesIO(img_response.content))
@@ -602,22 +611,30 @@ class OpenAIClient:
                         img_data = base64.b64decode(image_data.b64_json)
                         img = Image.open(io.BytesIO(img_data))
                         images.append(img)
-                    
+
                     # 获取修订后的提示词（dall-e-3特有）
-                    if hasattr(image_data, 'revised_prompt') and image_data.revised_prompt:
+                    if (
+                        hasattr(image_data, "revised_prompt")
+                        and image_data.revised_prompt
+                    ):
                         revised_prompt = image_data.revised_prompt
-                
-                history.append(("user", prompt.split('\n\n')[-1]))  # 使用原始prompt
-                history.append(("assistant", f"Generated {len(images)} image(s). Revised prompt: {revised_prompt}"))
-                
+
+                history.append(("user", prompt.split("\n\n")[-1]))  # 使用原始prompt
+                history.append(
+                    (
+                        "assistant",
+                        f"Generated {len(images)} image(s). Revised prompt: {revised_prompt}",
+                    )
+                )
+
                 return images, revised_prompt, history
-                    
+
             except Exception as exception:
                 last_exception = exception
                 time.sleep(3)
-        
+
         raise last_exception or Exception("All retry attempts failed")
-    
+
     def _generate_image_with_responses_api(
         self,
         model_name: str,
@@ -625,36 +642,38 @@ class OpenAIClient:
         images: List[Image.Image],
         retry_count: int,
         seed: int,
-        history: List[tuple[str, str]]
+        history: List[tuple[str, str]],
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """使用Responses API生成图像（适用于GPT模型）"""
-        
+
         # 处理seed参数
         current_seed = random.randint(0, 2**31 - 1) if seed == -1 else seed
-        
+
         last_exception = None
-        
-        for attempt in range(retry_count):
+
+        for _attempt in range(retry_count):
             model_management.throw_exception_if_processing_interrupted()
             try:
                 # 构建输入内容
                 if images:
                     # 有图像输入时使用结构化输入
                     content = [{"type": "input_text", "text": prompt}]
-                    
+
                     # 添加图像输入
                     for img in images:
                         img_base64 = image_to_base64(img)
-                        content.append({
-                            "type": "input_image",
-                            "image_url": f"data:image/jpeg;base64,{img_base64}"
-                        })
-                    
+                        content.append(
+                            {
+                                "type": "input_image",
+                                "image_url": f"data:image/jpeg;base64,{img_base64}",
+                            }
+                        )
+
                     input_data = [{"role": "user", "content": content}]
                 else:
                     # 仅文本输入时使用简单字符串
                     input_data = prompt
-                
+
                 # 使用Responses API生成图像
                 response = self.client.responses.create(
                     model=model_name,
@@ -662,17 +681,17 @@ class OpenAIClient:
                     tools=[{"type": "image_generation"}],
                     # 注意：Responses API可能不直接支持seed，但我们记录它
                 )
-                
+
                 # 提取图像数据
                 image_data = [
                     output.result
                     for output in response.output
                     if output.type == "image_generation_call"
                 ]
-                
+
                 images = []
                 response_text = ""
-                
+
                 # 处理生成的图像
                 for img_base64 in image_data:
                     try:
@@ -682,27 +701,27 @@ class OpenAIClient:
                     except Exception as e:
                         print(f"Failed to decode image: {e}")
                         continue
-                
+
                 # 获取文本输出
                 text_outputs = [
                     output.result
                     for output in response.output
-                    if hasattr(output, 'type') and output.type == "text"
+                    if hasattr(output, "type") and output.type == "text"
                 ]
                 if text_outputs:
                     response_text = text_outputs[0]
-                elif hasattr(response, 'output_text'):
+                elif hasattr(response, "output_text"):
                     response_text = response.output_text
                 else:
                     response_text = f"Generated {len(images)} image(s)"
-                
+
                 history.append(("user", prompt))
                 history.append(("assistant", response_text))
-                
+
                 return images, response_text, history
-                    
+
             except Exception as exception:
                 last_exception = exception
                 time.sleep(3)
-        
+
         raise last_exception or Exception("All retry attempts failed")

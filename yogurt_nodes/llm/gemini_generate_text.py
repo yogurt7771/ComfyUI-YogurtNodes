@@ -81,7 +81,7 @@ class GeminiGenerateText:
                 "retry_count": (
                     "INT",
                     {
-                        "default": 3,
+                        "default": 1,
                         "min": 1,
                         "step": 1,
                         "tooltip": "Number of retries when request fails",
