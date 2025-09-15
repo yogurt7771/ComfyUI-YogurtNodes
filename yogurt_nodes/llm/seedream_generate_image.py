@@ -82,13 +82,6 @@ class SeeDreamGenerateImage:
                         "tooltip": "响应格式：URL或base64编码",
                     },
                 ),
-                "watermark": (
-                    "BOOLEAN",
-                    {
-                        "default": False,
-                        "tooltip": "是否添加水印",
-                    },
-                ),
                 "retry_count": (
                     "INT",
                     {
@@ -180,7 +173,6 @@ class SeeDreamGenerateImage:
             sequential_image_generation: 序列生成模式
             max_images: 最大图像数量
             response_format: 响应格式
-            watermark: 是否添加水印
             retry_count: 重试次数
             proxy_url: 代理URL
             image: 主输入图像
