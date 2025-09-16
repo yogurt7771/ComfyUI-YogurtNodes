@@ -50,9 +50,7 @@ class SeeDreamClient:
         if env_key:
             return env_key
 
-        raise ValueError(
-            "SeeDream API key not found. Please provide it via parameter, api_key.json file, or environment variable."
-        )
+        return ""
 
     def _prepare_headers(self) -> Dict[str, str]:
         """准备请求头"""

@@ -72,8 +72,6 @@ class GeminiClient:
                             api_key = api_keys["gemini"]
             if len(api_key) == 0:  # 如果 api_key 为空，则尝试从环境变量中读取
                 api_key = os.getenv("GEMINI_API_KEY", "")
-            if len(api_key) == 0:
-                raise ValueError("API key is not set")
             self.client = genai.Client(api_key=api_key, http_options=http_options)
 
     def _get_safety_settings(

@@ -49,9 +49,6 @@ class OpenRouterClient:
         if len(api_key) == 0:  # 如果 api_key 为空，则尝试从环境变量中读取
             api_key = os.getenv("OPENROUTER_API_KEY", "")
 
-        if len(api_key) == 0:
-            raise ValueError("OpenRouter API key is not set")
-
         self.api_key = api_key
         self.base_url = "https://openrouter.ai/api/v1"
         self.headers = {

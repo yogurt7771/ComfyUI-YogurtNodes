@@ -54,9 +54,6 @@ class FreedomGPTClient:
         if len(api_key) == 0:  # 如果 api_key 为空，则尝试从环境变量中读取
             api_key = os.getenv("FREEDOMGPT_API_KEY", "")
 
-        if len(api_key) == 0:
-            raise ValueError("FreedomGPT API key is not set")
-
         self.api_key = api_key
 
         # FreedomGPT 固定基础 URL
