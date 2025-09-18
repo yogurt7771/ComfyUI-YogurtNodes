@@ -65,13 +65,6 @@ class GlobFiles:
                         "tooltip": "Convert the path to a POSIX format.",
                     },
                 ),
-                "relative": (
-                    "BOOLEAN",
-                    {
-                        "default": False,
-                        "tooltip": "Return paths relative to the root directory.",
-                    },
-                ),
                 "full_path": (
                     "BOOLEAN",
                     {
@@ -114,6 +107,13 @@ class GlobFiles:
                         "tooltip": "If true, the extension list will be treated as image extensions.",
                     },
                 ),
+                "relative": (
+                    "BOOLEAN",
+                    {
+                        "default": False,
+                        "tooltip": "Return paths relative to the root directory.",
+                    },
+                ),
             }
         }
 
@@ -135,13 +135,13 @@ class GlobFiles:
         glob_mode: str = "glob",
         files_only: bool = False,
         as_posix: bool = False,
-        relative: bool = False,
         full_path: bool = False,
         resolve_path: bool = False,
         prefix_list: str = "",
         suffix_list: str = "",
         extension_list: str = "",
         extension_is_image: bool = False,
+        relative: bool = False,
     ) -> Tuple[List[str]]:
         if not root_directory or not root_directory.strip():
             root_directory = "."
