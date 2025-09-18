@@ -1,10 +1,17 @@
+import os
+from itertools import chain
 from pathlib import Path
 from typing import List, Tuple
+
 from PIL import Image
+
 
 class GlobFiles:
     """
-    使用 glob 模式遍历文件夹，返回匹配的文件路径列表
+    使用 glob 模式遍历文件夹，返回匹配的文件路径列表。
+
+    支持在 `glob_pattern` 中按行提供多个模式；结果会依次拼接。
+    可选返回相对于 root_directory 的路径。
     """
 
     @classmethod
@@ -22,7 +29,8 @@ class GlobFiles:
                     "STRING",
                     {
                         "default": "*",
-                        "tooltip": "Glob search pattern, e.g. '*.txt', '**/*.py', 'test_*.json' etc.",
+                        "multiline": True,
+                        "tooltip": "One glob pattern per line, e.g. '*.txt' or '**/*.py'. Empty lines are ignored.",
                     },
                 ),
                 "sort_files": (
@@ -55,6 +63,13 @@ class GlobFiles:
                     {
                         "default": False,
                         "tooltip": "Convert the path to a POSIX format.",
+                    },
+                ),
+                "relative": (
+                    "BOOLEAN",
+                    {
+                        "default": False,
+                        "tooltip": "Return paths relative to the root directory.",
                     },
                 ),
                 "full_path": (
@@ -120,6 +135,7 @@ class GlobFiles:
         glob_mode: str = "glob",
         files_only: bool = False,
         as_posix: bool = False,
+        relative: bool = False,
         full_path: bool = False,
         resolve_path: bool = False,
         prefix_list: str = "",
@@ -127,77 +143,88 @@ class GlobFiles:
         extension_list: str = "",
         extension_is_image: bool = False,
     ) -> Tuple[List[str]]:
-        # 输入验证
         if not root_directory or not root_directory.strip():
             root_directory = "."
 
-        if not glob_pattern or not glob_pattern.strip():
-            glob_pattern = "*"
+        pattern_lines = [line.strip() for line in glob_pattern.splitlines() if line.strip()]
+        if not pattern_lines:
+            pattern_lines = ["*"]
 
         root_path = Path(root_directory)
 
-        # 检查根目录是否存在
         if not root_path.exists():
             raise FileNotFoundError(f"Root directory does not exist: {root_directory}")
 
         if not root_path.is_dir():
             raise NotADirectoryError(f"Root path is not a directory: {root_directory}")
 
-        # 获取路径迭代器
-        try:
-            if glob_mode == "glob":
-                paths_iterator = root_path.glob(glob_pattern)
-            elif glob_mode == "rglob":
-                paths_iterator = root_path.rglob(glob_pattern)
-            else:
-                raise ValueError(
-                    f"Invalid glob mode: {glob_mode}. Must be 'glob' or 'rglob'."
-                )
-        except Exception as e:
-            raise ValueError(f"Invalid glob pattern '{glob_pattern}': {e}")
+        def iter_matches(pattern: str):
+            try:
+                iterator = root_path.glob(pattern) if glob_mode == "glob" else root_path.rglob(pattern)
+                for match in iterator:
+                    yield match
+            except Exception as exc:
+                raise ValueError(f"Invalid glob pattern '{pattern}': {exc}") from exc
 
-        # 过滤只要文件（如果需要）
+        paths_iter = chain.from_iterable(iter_matches(pattern) for pattern in pattern_lines)
+
         if files_only:
-            paths_iterator = (p for p in paths_iterator if p.is_file())
+            paths_iter = (p for p in paths_iter if p.is_file())
 
-        # 过滤前缀
         if prefix_list:
-            prefix_list = prefix_list.split(",")
-            if prefix_list:
-                paths_iterator = (p for p in paths_iterator if any(p.name.lower().startswith(prefix.lower()) for prefix in prefix_list))
+            prefixes = [item.strip().lower() for item in prefix_list.split(",") if item.strip()]
+            if prefixes:
+                paths_iter = (
+                    p for p in paths_iter if any(p.name.lower().startswith(prefix) for prefix in prefixes)
+                )
 
-        # 过滤后缀
         if suffix_list:
-            suffix_list = [suffix.strip().lower() for suffix in suffix_list.split(",")]
-            if suffix_list:
-                paths_iterator = (p for p in paths_iterator if any(p.name.lower().endswith(suffix.lower()) for suffix in suffix_list))
+            suffixes = [item.strip().lower() for item in suffix_list.split(",") if item.strip()]
+            if suffixes:
+                paths_iter = (
+                    p for p in paths_iter if any(p.name.lower().endswith(suffix) for suffix in suffixes)
+                )
 
-        # 过滤扩展名
         if extension_list:
-            extension_list = [extension.strip().lower() for extension in extension_list.split(",")]
-            if extension_list:
-                paths_iterator = (p for p in paths_iterator if p.suffix.lower() in extension_list)
+            extensions = [item.strip().lower().lstrip(".") for item in extension_list.split(",") if item.strip()]
+            if extensions:
+                paths_iter = (
+                    p for p in paths_iter if p.suffix.lower().lstrip(".") in extensions
+                )
 
-        # 过滤图片
         if extension_is_image:
-            paths_iterator = (p for p in paths_iterator if p.suffix.lower() in Image.registered_extensions())
+            image_extensions = {
+                ext.lower().lstrip(".") for ext in Image.registered_extensions().keys()
+            }
+            paths_iter = (
+                p for p in paths_iter if p.suffix.lower().lstrip(".") in image_extensions
+            )
 
-        # 路径转换
+        root_reference = root_path
         if resolve_path:
-            paths_iterator = (p.resolve() for p in paths_iterator)
+            paths_iter = (p.resolve() for p in paths_iter)
+            root_reference = root_path.resolve()
         elif full_path:
-            paths_iterator = (p.absolute() for p in paths_iterator)
+            paths_iter = (p.absolute() for p in paths_iter)
+            root_reference = root_path.absolute()
 
-        # 字符串转换
+        if relative:
+            def to_relative(path: Path) -> Path:
+                try:
+                    return path.relative_to(root_reference)
+                except ValueError:
+                    return Path(os.path.relpath(path, start=os.fspath(root_reference)))
+
+            paths_iter = (to_relative(p) for p in paths_iter)
+
         if as_posix:
-            string_paths_iterator = (p.as_posix() for p in paths_iterator)
+            string_iter = (p.as_posix() for p in paths_iter)
         else:
-            string_paths_iterator = (str(p) for p in paths_iterator)
+            string_iter = (str(p) for p in paths_iter)
 
-        # 排序和返回
         if sort_files:
-            final_paths = sorted(string_paths_iterator, reverse=sort_reverse)
+            string_paths = sorted(string_iter, reverse=sort_reverse)
         else:
-            final_paths = list(string_paths_iterator)
+            string_paths = list(string_iter)
 
-        return (final_paths,)
+        return (string_paths,)

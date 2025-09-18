@@ -14,5 +14,6 @@ from .create_directory import CreateDirectory, CreateParentDirectory  # noqa
 from .save_text_bridge import SaveTextBridge, SaveTextBridgeNonOutput  # noqa
 from .glob_files import GlobFiles  # noqa
 from .split_path import SplitPath  # noqa
+from .path_operator import PathOperator  # noqa
 from .serialize_any import SerializeAny, DeserializeAny  # noqa
 from .bytes_bridge import SaveBytesBridge, SaveBytesBridgeNonOutput, LoadBytes  # noqa
