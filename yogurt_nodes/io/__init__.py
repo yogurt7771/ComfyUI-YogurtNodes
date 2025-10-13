@@ -17,3 +17,6 @@ from .split_path import SplitPath  # noqa
 from .path_operator import PathOperator  # noqa
 from .serialize_any import SerializeAny, DeserializeAny  # noqa
 from .bytes_bridge import SaveBytesBridge, SaveBytesBridgeNonOutput, LoadBytes  # noqa
+
+from .load_image import LoadImage  # noqa
+from .load_image_path import LoadImagePath  # noqa
