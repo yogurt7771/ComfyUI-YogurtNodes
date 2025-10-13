@@ -80,16 +80,6 @@ class FreedomGPTGenerateText:
                         "tooltip": "Maximum number of tokens in the generated text",
                     },
                 ),
-                "batch_size": (
-                    "INT",
-                    {
-                        "default": 1,
-                        "min": 1,
-                        "max": 10,
-                        "step": 1,
-                        "tooltip": "Batch size for processing multiple requests",
-                    },
-                ),
                 "retry_count": (
                     "INT",
                     {
@@ -162,7 +152,6 @@ class FreedomGPTGenerateText:
         top_p: float,
         top_k: int,
         max_tokens: int,
-        batch_size: int,
         retry_count: int,
         chat_template: str,
         seed: int,
@@ -181,7 +170,6 @@ class FreedomGPTGenerateText:
             retry_count=retry_count,
             chat_template=chat_template,
             top_k=top_k,
-            batch_size=batch_size,
             seed=seed,
             history=history,
         )

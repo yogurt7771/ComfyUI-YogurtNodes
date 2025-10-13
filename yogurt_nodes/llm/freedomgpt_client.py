@@ -73,6 +73,53 @@ class FreedomGPTClient:
         else:
             self.proxies = None
 
+    def split_system(self, messages):
+        """将系统消息和用户消息分开"""
+        system_messages = []
+        user_messages = []
+        for message in messages:
+            if message["role"] == "system":
+                system_messages.append(message)
+            else:
+                user_messages.append(message)
+        return system_messages, user_messages
+
+    def build_payload(self, model_name, system_prompt, prompt, images, history, chat_template, temperature, top_p, max_tokens, top_k, seed=-1):
+        messages, history = build_messages(
+            system_prompt=system_prompt,
+            prompt=prompt,
+            images=images,
+            history=history,
+            chat_template=chat_template,
+        )
+
+        system_messages, user_messages = self.split_system(messages)
+        messages = user_messages
+
+        # 调用父类方法构建基础payload，然后添加FreedomGPT特有参数
+        payload = {
+            "model": model_name,
+            "messages": messages,
+            "temperature": temperature,
+            "stream": False,
+        }
+
+        if len(system_messages) > 0:
+            payload["customPrompt"] = True
+            payload["prompt"] = "\n".join(msg["content"] for msg in system_messages)
+
+        if top_p > 0:
+            payload["top_p"] = top_p
+        if top_k > 0:
+            payload["top_k"] = top_k
+        if max_tokens > 0:
+            payload["max_tokens"] = max_tokens
+
+        # 处理seed参数
+        current_seed = random.randint(0, 2**31 - 1) if seed == -1 else seed
+        payload["seed"] = current_seed
+        return payload
+
     def generate_text(
         self,
         model_name: str,
@@ -84,11 +131,8 @@ class FreedomGPTClient:
         top_p: float = 1.0,
         max_tokens: int = 4096,
         retry_count: int = 3,
-        frequency_penalty: float = 0.0,
-        presence_penalty: float = 0.0,
         chat_template: str = "",
         top_k: int = 40,
-        batch_size: int = 1,
         seed: int = -1,
     ) -> tuple[str, List[tuple[str, str]], Any]:
         """
@@ -100,43 +144,27 @@ class FreedomGPTClient:
             seed (int): 随机种子，-1为自动生成
             其他参数同父类，但frequency_penalty和presence_penalty会被忽略
         """
-        messages, history = build_messages(
+
+        payload = self.build_payload(
+            model_name=model_name,
             system_prompt=system_prompt,
             prompt=prompt,
             images=images,
-            history=history,
+            history=history if history is not None else [],
             chat_template=chat_template,
+            temperature=temperature,
+            top_p=top_p,
+            max_tokens=max_tokens,
+            top_k=top_k,
+            seed=seed,
         )
 
-        # 调用父类方法构建基础payload，然后添加FreedomGPT特有参数
-        payload = {
-            "model": model_name,
-            "messages": messages,
-            "temperature": temperature,
-        }
-
-        if top_p > 0:
-            payload["top_p"] = top_p
-        if max_tokens > 0:
-            payload["max_tokens"] = max_tokens
-
-        # FreedomGPT 特有参数
-        if top_k > 0:
-            payload["top_k"] = top_k
-        if batch_size > 0:
-            payload["batch_size"] = batch_size
-        # 注意：忽略 frequency_penalty 和 presence_penalty，FreedomGPT不支持
-
-        # 处理seed参数
-        current_seed = random.randint(0, 2**31 - 1) if seed == -1 else seed
-        
         # 重用父类的请求逻辑，只是payload有所不同
         last_exception = None
         response = None
         for _attempt in range(retry_count):
             model_management.throw_exception_if_processing_interrupted()
             try:
-                payload["seed"] = current_seed
                 response = requests.post(
                     f"{self.base_url}/chat/completions",
                     headers=self.headers,
@@ -219,11 +247,8 @@ class FreedomGPTClient:
         top_p: float = 1.0,
         max_tokens: int = 4096,
         retry_count: int = 3,
-        frequency_penalty: float = 0.0,
-        presence_penalty: float = 0.0,
         chat_template: str = "",
         top_k: int = 40,
-        batch_size: int = 1,
         seed: int = -1,
     ) -> tuple[str, List[tuple[str, str]], Any]:
         """
@@ -258,11 +283,8 @@ class FreedomGPTClient:
             top_p=top_p,
             max_tokens=max_tokens,
             retry_count=retry_count,
-            frequency_penalty=frequency_penalty,
-            presence_penalty=presence_penalty,
             chat_template=chat_template,
             top_k=top_k,
-            batch_size=batch_size,
             seed=seed,
         )
 
@@ -305,7 +327,7 @@ class FreedomGPTClient:
 
         # 处理seed参数
         current_seed = random.randint(0, 2**31 - 1) if seed == -1 else seed
-        
+
         payload = {
             "model": model_name,
             "prompt": final_prompt,
@@ -320,14 +342,14 @@ class FreedomGPTClient:
             for img in input_images:
                 img_base64 = image_to_base64(img)
                 image_data.append(f"data:image/jpeg;base64,{img_base64}")
-            
+
             # 添加到payload，具体字段名需要根据FreedomGPT API文档确定
             # 常见的可能是 "images", "input_images", 或 "reference_images"
             payload["images"] = image_data
 
         last_exception = None
 
-        for attempt in range(retry_count):
+        for _attempt in range(retry_count):
             model_management.throw_exception_if_processing_interrupted()
             try:
                 response = requests.post(
