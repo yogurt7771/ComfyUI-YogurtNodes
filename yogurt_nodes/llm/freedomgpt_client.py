@@ -79,7 +79,7 @@ class FreedomGPTClient:
         user_messages = []
         for message in messages:
             if message["role"] == "system":
-                system_messages.append(message)
+                system_messages.extend(message["content"])  # 将所有系统消息合并
             else:
                 user_messages.append(message)
         return system_messages, user_messages
@@ -106,7 +106,7 @@ class FreedomGPTClient:
 
         if len(system_messages) > 0:
             payload["customPrompt"] = True
-            payload["prompt"] = "\n".join(msg["content"] for msg in system_messages)
+            payload["prompt"] = "\n".join(msg["text"] for msg in system_messages)
 
         if top_p > 0:
             payload["top_p"] = top_p
@@ -118,7 +118,7 @@ class FreedomGPTClient:
         # 处理seed参数
         current_seed = random.randint(0, 2**31 - 1) if seed == -1 else seed
         payload["seed"] = current_seed
-        return payload
+        return payload, history
 
     def generate_text(
         self,
@@ -144,13 +144,12 @@ class FreedomGPTClient:
             seed (int): 随机种子，-1为自动生成
             其他参数同父类，但frequency_penalty和presence_penalty会被忽略
         """
-
-        payload = self.build_payload(
+        payload, history = self.build_payload(
             model_name=model_name,
             system_prompt=system_prompt,
             prompt=prompt,
             images=images,
-            history=history if history is not None else [],
+            history=history,
             chat_template=chat_template,
             temperature=temperature,
             top_p=top_p,
