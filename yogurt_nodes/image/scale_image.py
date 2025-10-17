@@ -188,7 +188,7 @@ class ImageScaleToTotalPixelsAdvanced:
         # 5) 生成 mask（白=有效，黑=pad）
         white = self._white_value(dtype)
         if sel_w == 0 and sel_h == 0:
-            mask_nc1 = torch.full(
+            mask_out = torch.full(
                 (N, 1, Hout, Wout), fill_value=white, dtype=dtype, device=device
             )
         else:
