@@ -1,12 +1,7 @@
-import os
-import hashlib
-from pathlib import Path
-
 import numpy as np
 import torch
 from PIL import Image, ImageOps, ImageSequence
 
-import folder_paths
 import node_helpers
 
 
@@ -73,18 +68,3 @@ class LoadImagePath:
             output_mask = output_masks[0]
 
         return (output_image, output_mask)
-
-    @classmethod
-    def IS_CHANGED(s, image):
-        image_path = folder_paths.get_annotated_filepath(image)
-        m = hashlib.sha256()
-        with open(image_path, "rb") as f:
-            m.update(f.read())
-        return m.digest().hex()
-
-    @classmethod
-    def VALIDATE_INPUTS(s, image):
-        if not folder_paths.exists_annotated_filepath(image):
-            return "Invalid image file: {}".format(image)
-
-        return True

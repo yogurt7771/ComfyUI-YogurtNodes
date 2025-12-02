@@ -9,6 +9,8 @@ from pathlib import Path
 from pprint import pprint
 from typing import Any, Dict, List, Optional
 
+import httpx
+import openai
 import requests
 from PIL import Image
 
@@ -589,10 +591,15 @@ class OpenAIClient:
 
         last_exception = None
 
+        http_client = httpx.Client(proxy=(self.proxy_url if self.proxy_url else None), timeout=120.0)
+        client = openai.Client(
+            api_key=self.api_key, base_url=self.base_url, http_client=http_client
+        )
+
         for _attempt in range(retry_count):
             model_management.throw_exception_if_processing_interrupted()
             try:
-                response = self.client.images.generate(**image_kwargs)
+                response = client.images.generate(**image_kwargs)
 
                 images = []
                 revised_prompt = prompt
@@ -651,6 +658,11 @@ class OpenAIClient:
 
         last_exception = None
 
+        http_client = httpx.Client(proxy=(self.proxy_url if self.proxy_url else None), timeout=120.0)
+        client = openai.Client(
+            api_key=self.api_key, base_url=self.base_url, http_client=http_client
+        )
+
         for _attempt in range(retry_count):
             model_management.throw_exception_if_processing_interrupted()
             try:
@@ -675,7 +687,7 @@ class OpenAIClient:
                     input_data = prompt
 
                 # 使用Responses API生成图像
-                response = self.client.responses.create(
+                response = client.responses.create(
                     model=model_name,
                     input=input_data,
                     tools=[{"type": "image_generation"}],
