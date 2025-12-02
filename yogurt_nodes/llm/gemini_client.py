@@ -75,6 +75,7 @@ class GeminiClient:
             http_options = types.HttpOptions()
 
         if use_vertex_ai:
+            os.environ
             print("Using Vertex AI Gemini API")
             # 创建 Vertex AI Credentials
             from google.oauth2 import service_account
@@ -87,6 +88,7 @@ class GeminiClient:
                     print("Warning: Vertex AI service account JSON is not set. Trying to read from environment variable GOOGLE_APPLICATION_CREDENTIALS.")
                     credentials = None
                 else:
+                    print(f"Loading Vertex AI credentials from file: {vertex_ai_json}")
                     credentials = service_account.Credentials.from_service_account_file(vertex_ai_json)
             else:
                 credentials = service_account.Credentials.from_service_account_info(json.loads(vertex_ai_json))
@@ -97,6 +99,8 @@ class GeminiClient:
                 if len(vertex_ai_project) == 0:
                     print("Warning: Vertex AI project ID is not set. Trying to read from environment variable GOOGLE_CLOUD_PROJECT.")
                     vertex_ai_project = None
+                else:
+                    print(f"Using Vertex AI project ID: {vertex_ai_project}")
             if vertex_ai_region is None or len(vertex_ai_region) == 0:
                 if api_keys is None:
                     api_keys = load_api_keys_from_file("api_key.json")
@@ -104,8 +108,10 @@ class GeminiClient:
                 if len(vertex_ai_region) == 0:
                     print("Warning: Vertex AI region is not set. Trying to read from environment variable VERTEX_AI_REGION.")
                     vertex_ai_region = None
+                else:
+                    print(f"Using Vertex AI region: {vertex_ai_region}")
             http_options.api_version = "v1"
-            self.client = genai.Client(http_options=http_options, credentials=credentials, project=vertex_ai_project, location=vertex_ai_region)
+            self.client = genai.Client(http_options=http_options, vertexai=True, credentials=credentials, project=vertex_ai_project, location=vertex_ai_region)
         else:
             print("Using Google Gemini API")
             if len(api_key) == 0:  # 如果 api_key 为空，则尝试从 api_key.json 文件中读取
