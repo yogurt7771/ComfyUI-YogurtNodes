@@ -9,6 +9,7 @@ from typing import List, Optional
 from google import genai
 from google.genai import types
 from PIL import Image
+from wandb import api
 
 import comfy.model_management as model_management
 from .openai_client import build_messages
@@ -19,12 +20,31 @@ thinking_models = [
 ]
 
 
+def load_api_keys_from_file(file_path: str) -> dict:
+    """从指定的 JSON 文件中加载 API 密钥"""
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    api_key_path = os.path.join(current_dir, "api_key.json")
+    if os.path.exists(api_key_path):
+        with open(api_key_path, "r", encoding="utf-8") as f:
+            api_keys = json.load(f)
+            return api_keys
+    return {}
+
+
 class GeminiClient:
     """
     Gemini API 客户端封装类
     """
 
-    def __init__(self, api_key: str = "", proxy_url: str = ""):
+    def __init__(
+        self,
+        api_key: str = "",
+        use_vertex_ai=False,
+        vertex_ai_project=None,
+        vertex_ai_json=None,
+        vertex_ai_region=None,
+        proxy_url: str = "",
+    ):
         """
         初始化 Gemini 客户端
 
@@ -45,7 +65,7 @@ class GeminiClient:
         如API Key未设置，将抛出异常。
         """
         self.proxy_url = proxy_url
-        
+
         if proxy_url:
             http_options = types.HttpOptions(
                 client_args={'proxy': proxy_url},
@@ -54,25 +74,47 @@ class GeminiClient:
         else:
             http_options = types.HttpOptions()
 
-        # 判断是否是是google vertex ai
-        if os.environ.get("GOOGLE_GENAI_USE_VERTEXAI", "").lower() == "true":
-            print("Using Google Vertex AI")
+        if use_vertex_ai:
+            print("Using Vertex AI Gemini API")
+            # 创建 Vertex AI Credentials
+            from google.oauth2 import service_account
+            api_keys = None
+            if vertex_ai_json is None or len(vertex_ai_json) == 0:
+                if api_keys is None:
+                    api_keys = load_api_keys_from_file("api_key.json")
+                vertex_ai_json = api_keys.get("vertex_ai_json", "")
+                if len(vertex_ai_json) == 0:
+                    print("Warning: Vertex AI service account JSON is not set. Trying to read from environment variable GOOGLE_APPLICATION_CREDENTIALS.")
+                    credentials = None
+                else:
+                    credentials = service_account.Credentials.from_service_account_file(vertex_ai_json)
+            else:
+                credentials = service_account.Credentials.from_service_account_info(json.loads(vertex_ai_json))
+            if vertex_ai_project is None or len(vertex_ai_project) == 0:
+                if api_keys is None:
+                    api_keys = load_api_keys_from_file("api_key.json")
+                vertex_ai_project = api_keys.get("vertex_ai_project", "")
+                if len(vertex_ai_project) == 0:
+                    print("Warning: Vertex AI project ID is not set. Trying to read from environment variable GOOGLE_CLOUD_PROJECT.")
+                    vertex_ai_project = None
+            if vertex_ai_region is None or len(vertex_ai_region) == 0:
+                if api_keys is None:
+                    api_keys = load_api_keys_from_file("api_key.json")
+                vertex_ai_region = api_keys.get("vertex_ai_region", "")
+                if len(vertex_ai_region) == 0:
+                    print("Warning: Vertex AI region is not set. Trying to read from environment variable VERTEX_AI_REGION.")
+                    vertex_ai_region = None
             http_options.api_version = "v1"
-            self.client = genai.Client(http_options=http_options)
+            self.client = genai.Client(http_options=http_options, credentials=credentials, project=vertex_ai_project, location=vertex_ai_region)
         else:
             print("Using Google Gemini API")
             if len(api_key) == 0:  # 如果 api_key 为空，则尝试从 api_key.json 文件中读取
                 # 读取 api_key.json 文件
-                current_dir = os.path.dirname(os.path.abspath(__file__))
-                api_key_path = os.path.join(current_dir, "api_key.json")
-                if os.path.exists(api_key_path):
-                    with open(api_key_path, "r", encoding="utf-8") as f:
-                        api_keys = json.load(f)
-                        if "gemini" in api_keys:
-                            api_key = api_keys["gemini"]
+                api_keys = load_api_keys_from_file("api_key.json")
+                api_key = api_keys.get("gemini", "")
             if len(api_key) == 0:  # 如果 api_key 为空，则尝试从环境变量中读取
-                api_key = os.getenv("GEMINI_API_KEY", "")
-            self.client = genai.Client(api_key=api_key, http_options=http_options)
+                print("Warning: Gemini API key is not set. Trying to read from environment variable GEMINI_API_KEY.")
+            self.client = genai.Client(http_options=http_options)
 
     def _get_safety_settings(
         self, disable_safety_settings: bool, safety_level: str
@@ -214,13 +256,13 @@ class GeminiClient:
             "top_k": top_k if top_k > 0 else None,
             "max_output_tokens": max_output_tokens if max_output_tokens > 0 else None,
         }
-        
+
         # 针对图像生成模型的特殊配置
         if is_image_generation:
             config_params["response_modalities"] = ["IMAGE", "TEXT"]
         else:
             config_params["response_mime_type"] = "text/plain"
-            
+
         config = types.GenerateContentConfig(**config_params)
 
         thinking_config = self._get_thinking_config(model_name, thinking_budget)
@@ -262,6 +304,7 @@ class GeminiClient:
         safety_level: str = "BLOCK_NONE",
         thinking_budget: int = 0,
         chat_template: str = "",
+        seed: int = -1,
     ) -> tuple[str, List[tuple[str, str]]]:
         """
         生成文本
@@ -308,7 +351,9 @@ class GeminiClient:
         for _attempt in range(retry_count):
             model_management.throw_exception_if_processing_interrupted()
             try:
-                config.seed = random.randint(0, 2**31 - 1)
+                if seed < 0:
+                    seed = random.randint(0, 2**31 - 1)
+                config.seed = seed
                 response = self.client.models.generate_content(
                     model=model_name,
                     contents=contents,
@@ -329,7 +374,7 @@ class GeminiClient:
                 # print(f"Unexpected error in attempt {attempt + 1}/{retry_count} for model {model_name}: {exception}")
                 last_exception = exception
                 time.sleep(3)
-        
+
         raise RuntimeError(
             f"Failed to generate text after {retry_count} retries. "
             f"Last error: {last_exception}. Response: {response}"
@@ -352,6 +397,7 @@ class GeminiClient:
         safety_level: str = "BLOCK_NONE",
         thinking_budget: int = 0,
         chat_template: str = "",
+        seed: int = -1,
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """
         生成图片
@@ -386,7 +432,9 @@ class GeminiClient:
         for _attempt in range(retry_count):
             model_management.throw_exception_if_processing_interrupted()
             try:
-                config.seed = random.randint(0, 2**31 - 1)
+                if seed < 0:
+                    seed = random.randint(0, 2**31 - 1)
+                config.seed = seed
                 response = self.client.models.generate_content_stream(
                     model=model_name,
                     contents=contents,
@@ -425,7 +473,7 @@ class GeminiClient:
                 # print(f"Unexpected error in attempt {attempt + 1}/{retry_count} for model {model_name}: {exception}")
                 last_exception = exception
                 time.sleep(3)
-        
+
         raise RuntimeError(
             f"Failed to generate image after {retry_count} retries. "
             f"Last error: {last_exception}. Response: {response}"
