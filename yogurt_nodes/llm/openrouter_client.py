@@ -77,6 +77,7 @@ class OpenRouterClient:
         retry_count: int = 3,
         provider: Optional[str | List[str]] = None,
         chat_template: str = "",
+        seed: int = -1,
     ) -> tuple[str, List[tuple[str, str]], Any]:
         """
         生成文本
@@ -92,6 +93,7 @@ class OpenRouterClient:
             retry_count (int): 重试次数
             provider (str): 基础设施提供商（可选，如azure, aws等）
             chat_template (str): 聊天模板
+            seed (int): 随机种子，-1为随机值
 
         Returns:
             str: 生成的文本
@@ -120,6 +122,9 @@ class OpenRouterClient:
                 payload["provider"] = {"order": provider}
             else:
                 payload["provider"] = {"allow_fallbacks": False, "order": [provider]}
+
+        current_seed = random.randint(0, 2**31 - 1) if seed < 0 else seed
+
         # pprint(self.headers)
         # pprint(payload)
         last_exception = None
@@ -127,7 +132,7 @@ class OpenRouterClient:
         for _attempt in range(retry_count):
             model_management.throw_exception_if_processing_interrupted()
             try:
-                payload["seed"] = random.randint(0, 2**31 - 1)
+                payload["seed"] = current_seed + _attempt
                 response = requests.post(
                     f"{self.base_url}/chat/completions",
                     headers=self.headers,
@@ -169,6 +174,7 @@ class OpenRouterClient:
         provider: Optional[str | List[str]] = None,
         chat_template: str = "",
         seed: int = -1,
+        aspect_ratio: str = "auto",
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """
         使用OpenRouter API生成图像
@@ -221,13 +227,17 @@ class OpenRouterClient:
                 payload["provider"] = {"order": provider}
             else:
                 payload["provider"] = {"allow_fallbacks": False, "order": [provider]}
-            
+
+        # 如果指定了aspect_ratio参数，添加到payload
+        if aspect_ratio != "auto":
+            payload.setdefault("image_config", {})["aspect_ratio"] = aspect_ratio
+
         # 处理seed参数
-        current_seed = random.randint(0, 2**31 - 1) if seed == -1 else seed
-        
+        current_seed = random.randint(0, 2**31 - 1) if seed < 0 else seed
+
         last_exception = None
         response = None
-        
+
         for attempt in range(retry_count):
             model_management.throw_exception_if_processing_interrupted()
             try:
@@ -278,7 +288,7 @@ class OpenRouterClient:
                         history.append(("assistant", text_content if text_content else f"Generated {len(generated_images)} image(s)"))
                     
                     return generated_images, text_content, history
-                    
+
                 else:
                     error_msg = f"API request failed with status {response.status_code}: {response.text}"
                     last_exception = Exception(error_msg)
@@ -302,6 +312,7 @@ class OpenRouterClient:
         retry_count: int = 3,
         provider: Optional[str | List[str]] = None,
         chat_template: str = "",
+        seed: int = -1,
     ) -> tuple[str, List[tuple[str, str]], Any]:
         """
         理解图像内容
@@ -333,6 +344,7 @@ class OpenRouterClient:
             retry_count=retry_count,
             provider=provider,
             chat_template=chat_template,
+            seed=seed,
         )
 
     def get_models(self) -> List[Dict[str, Any]]:

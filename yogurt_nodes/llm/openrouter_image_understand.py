@@ -138,6 +138,16 @@ class OpenRouterImageUnderstand:
                         "tooltip": "代理URL，格式: protocol://user:pass@addr:port，支持http,https,socks5,socks5h",
                     },
                 ),
+                "seed": (
+                    "INT",
+                    {
+                        "default": -1,
+                        "min": -1,
+                        "max": 99999999,
+                        "step": 1,
+                        "tooltip": "Random seed for generation (-1 for random)",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -176,6 +186,7 @@ class OpenRouterImageUnderstand:
         chat_template: str = "",
         provider_list: str = "",
         proxy_url: str = "",
+        seed: int = -1,
         image: torch.Tensor | None = None,
         image1: torch.Tensor | None = None,
         image2: torch.Tensor | None = None,
@@ -196,7 +207,7 @@ class OpenRouterImageUnderstand:
             raise ValueError("At least one image must be provided")
 
         client = OpenRouterClient(api_key, proxy_url)
-        
+
         # Parse provider list or use single infrastructure_provider
         provider_param = None
         if provider_list.strip():
@@ -206,7 +217,7 @@ class OpenRouterImageUnderstand:
                 provider_param = providers
         elif infrastructure_provider != "auto":
             provider_param = infrastructure_provider
-            
+
         text, history, payload = client.understand_image(
             model_name=model_name,
             prompt=prompt,
@@ -218,6 +229,7 @@ class OpenRouterImageUnderstand:
             retry_count=retry_count,
             provider=provider_param,
             chat_template=chat_template,
+            seed=seed,
             history=history,
         )
         return (text, history, payload)

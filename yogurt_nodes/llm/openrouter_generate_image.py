@@ -132,6 +132,13 @@ class OpenRouterGenerateImage:
                         "tooltip": "Random seed for generation (-1 for random)",
                     },
                 ),
+                "aspect_ratio": (
+                    ["auto", "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"],
+                    {
+                        "default": "auto",
+                        "tooltip": "Aspect ratio for generated images",
+                    },
+                )
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -171,6 +178,7 @@ class OpenRouterGenerateImage:
         chat_template: str,
         proxy_url: str,
         seed: int,
+        aspect_ratio: str,
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -211,6 +219,7 @@ class OpenRouterGenerateImage:
             provider=provider_param,
             chat_template=chat_template,
             seed=seed,
+            aspect_ratio=aspect_ratio,
             history=history,
         )
 
