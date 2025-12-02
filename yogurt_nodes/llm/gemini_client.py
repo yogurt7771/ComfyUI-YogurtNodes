@@ -80,6 +80,7 @@ class GeminiClient:
             # 创建 Vertex AI Credentials
             from google.oauth2 import service_account
             api_keys = None
+            SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
             if vertex_ai_json is None or len(vertex_ai_json) == 0:
                 if api_keys is None:
                     api_keys = load_api_keys_from_file("api_key.json")
@@ -89,9 +90,15 @@ class GeminiClient:
                     credentials = None
                 else:
                     print(f"Loading Vertex AI credentials from file: {vertex_ai_json}")
-                    credentials = service_account.Credentials.from_service_account_file(vertex_ai_json)
+                    credentials = service_account.Credentials.from_service_account_file(
+                        vertex_ai_json
+                    )
             else:
-                credentials = service_account.Credentials.from_service_account_info(json.loads(vertex_ai_json))
+                credentials = service_account.Credentials.from_service_account_info(
+                    json.loads(vertex_ai_json)
+                )
+            if credentials is not None:
+                credentials = credentials.with_scopes(SCOPES)
             if vertex_ai_project is None or len(vertex_ai_project) == 0:
                 if api_keys is None:
                     api_keys = load_api_keys_from_file("api_key.json")
