@@ -262,6 +262,8 @@ class GeminiClient:
         thinking_budget: int = 0,
         chat_template: str = "",
         is_image_generation: bool = False,
+        aspect_ratio: str | None = None,
+        image_size: str | None = None,
     ):
         config_params = {
             "temperature": temperature,
@@ -298,6 +300,14 @@ class GeminiClient:
         )
         if system_instruction is not None:
             config.system_instruction = system_instruction  # type: ignore
+
+        if aspect_ratio is not None or image_size is not None:
+            image_config = types.ImageConfig()
+            if aspect_ratio is not None:
+                image_config.aspect_ratio = aspect_ratio
+            if image_size is not None:
+                image_config.image_size = image_size
+            config.image_config = image_config
         return config, contents, history
 
     def generate_text(
@@ -411,6 +421,8 @@ class GeminiClient:
         thinking_budget: int = 0,
         chat_template: str = "",
         seed: int = -1,
+        aspect_ratio: str | None = None,
+        image_size: str | None = None,
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """
         生成图片
@@ -432,6 +444,8 @@ class GeminiClient:
             thinking_budget=thinking_budget,
             chat_template=chat_template,
             is_image_generation=True,
+            aspect_ratio=aspect_ratio,
+            image_size=image_size,
         )
 
         images = []

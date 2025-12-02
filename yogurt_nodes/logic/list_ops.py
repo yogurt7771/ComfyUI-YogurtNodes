@@ -48,6 +48,7 @@ class ListIndex:
                     {
                         "default": 0,
                         "tooltip": "要访问的索引（支持负索引）",
+                        "control_after_generate": True,
                     },
                 ),
             },

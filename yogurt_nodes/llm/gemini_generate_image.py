@@ -7,6 +7,173 @@ import torchvision
 from .gemini_client import GeminiClient
 
 
+def inputs_def():
+    return {
+        "required": {
+            "model_name": (
+                "STRING",
+                {
+                    "default": "gemini-2.5-flash-image-preview",
+                    "tooltip": "Gemini model name, default is gemini-2.5-flash-image-preview",
+                },
+            ),
+            "system_prompt": (
+                "STRING",
+                {
+                    "multiline": True,
+                    "tooltip": "System-level prompt that affects the overall conversation style",
+                },
+            ),
+            "prompt": (
+                "STRING",
+                {
+                    "multiline": True,
+                    "tooltip": "Main prompt content input by the user",
+                },
+            ),
+            "temperature": (
+                "FLOAT",
+                {
+                    "default": 1,
+                    "min": 0.0,
+                    "step": 0.01,
+                    "tooltip": "Sampling temperature, higher values produce more random outputs",
+                },
+            ),
+            "top_p": (
+                "FLOAT",
+                {
+                    "default": 0,
+                    "min": 0.0,
+                    "max": 1.0,
+                    "step": 0.01,
+                    "tooltip": "Sampling probability threshold, controls output diversity",
+                },
+            ),
+            "top_k": (
+                "INT",
+                {
+                    "default": 0,
+                    "min": 0,
+                    "step": 1,
+                    "tooltip": "Number of highest probability tokens to consider during sampling",
+                },
+            ),
+            "max_output_tokens": (
+                "INT",
+                {
+                    "default": 8192,
+                    "min": 0,
+                    "max": 2147483647,
+                    "step": 1,
+                    "tooltip": "Maximum number of tokens in the generated text",
+                },
+            ),
+            "retry_count": (
+                "INT",
+                {
+                    "default": 1,
+                    "min": 1,
+                    "step": 1,
+                    "tooltip": "Number of retries when request fails",
+                },
+            ),
+            "disable_safety_settings": (
+                "BOOLEAN",
+                {
+                    "default": False,
+                    "tooltip": "Whether to disable safety settings, if true, the safety settings will not be set",
+                },
+            ),
+            "disable_system_prompt": (
+                "BOOLEAN",
+                {
+                    "default": False,
+                    "tooltip": "Whether to disable the system prompt, if true, the system prompt will sent as a user prompt",
+                },
+            ),
+            "safety_level": (
+                "STRING",
+                {
+                    "default": "BLOCK_NONE",
+                    "values": [
+                        "OFF",
+                        "BLOCK_NONE",
+                        "BLOCK_ONLY_HIGH",
+                        "BLOCK_MEDIUM_AND_ABOVE",
+                        "BLOCK_LOW_AND_ABOVE",
+                    ],
+                    "tooltip": "Safety level for the generated text",
+                },
+            ),
+            "thinking_budget": (
+                "INT",
+                {
+                    "default": 0,
+                    "min": -1,
+                    "step": 1,
+                    "tooltip": "Thinking budget for the model, if set to -1, the model will not limit thinking budget, if set to 0, the model will disable thinking",
+                },
+            ),
+            "chat_template": (
+                "STRING",
+                {
+                    "multiline": True,
+                    "default": (
+                        "<-system->\n"
+                        "{{system_instruction}}\n"
+                        "<-/system->\n"
+                        "<-user->\n"
+                        "{{prompt}}\n"
+                        "<-/user->"
+                    ),
+                    "tooltip": "Content template for the generated text",
+                },
+            ),
+            "proxy_url": (
+                "STRING",
+                {
+                    "default": "",
+                    "multiline": False,
+                    "tooltip": "代理URL，格式: protocol://user:pass@addr:port，支持http,https,socks5,socks5h",
+                },
+            ),
+            "seed": (
+                "INT",
+                {
+                    "default": -1,
+                    "min": -1,
+                    "max": 2**32 - 1,
+                    "step": 1,
+                    "tooltip": "随机种子，设置为-1时随机种子",
+                },
+            ),
+            "aspect_ratio": (
+                ["auto", "1:1", "9:16", "16:9", "3:4", "4:3", "3:2", "2:3", "5:4", "4:5", "21:9"],
+                {
+                    "default": "auto",
+                    "tooltip": "Aspect ratio for the generated image",
+                },
+            ),
+            "image_size": (
+                ["1k", "2k", "4k"],
+                {
+                    "default": "2k",
+                    "tooltip": "Image size for the generated image",
+                }
+            )
+        },
+        "optional": {
+            "image": ("IMAGE",),
+            "image1": ("IMAGE",),
+            "image2": ("IMAGE",),
+            "image3": ("IMAGE",),
+            "image4": ("IMAGE",),
+            "history": ("HISTORY",),
+        },
+    }
+
+
 def generate_image(
     client: GeminiClient,
     model_name: str = "",
@@ -23,6 +190,8 @@ def generate_image(
     thinking_budget: int = 0,
     chat_template: str = "",
     seed: int = -1,
+    aspect_ratio: str | None = None,
+    image_size: str | None = None,
     image: Optional[torch.Tensor] = None,
     image1: Optional[torch.Tensor] = None,
     image2: Optional[torch.Tensor] = None,
@@ -55,6 +224,8 @@ def generate_image(
         chat_template=chat_template,
         history=history,
         seed=seed,
+        aspect_ratio=aspect_ratio,
+        image_size=image_size,
     )
     tensor_imgs = []
     for image in images:  # type: ignore
@@ -76,6 +247,7 @@ class GeminiGenerateImage:
 
     @classmethod
     def INPUT_TYPES(cls):
+        input_types = inputs_def()
         return {
             "required": {
                 "api_key": (
@@ -86,151 +258,10 @@ class GeminiGenerateImage:
                         "tooltip": "API key for accessing Gemini API",
                     },
                 ),
-                "model_name": (
-                    "STRING",
-                    {
-                        "default": "gemini-2.5-flash-image-preview",
-                        "tooltip": "Gemini model name, default is gemini-2.5-flash-image-preview",
-                    },
-                ),
-                "system_prompt": (
-                    "STRING",
-                    {
-                        "multiline": True,
-                        "tooltip": "System-level prompt that affects the overall conversation style",
-                    },
-                ),
-                "prompt": (
-                    "STRING",
-                    {
-                        "multiline": True,
-                        "tooltip": "Main prompt content input by the user",
-                    },
-                ),
-                "temperature": (
-                    "FLOAT",
-                    {
-                        "default": 1,
-                        "min": 0.0,
-                        "step": 0.01,
-                        "tooltip": "Sampling temperature, higher values produce more random outputs",
-                    },
-                ),
-                "top_p": (
-                    "FLOAT",
-                    {
-                        "default": 0,
-                        "min": 0.0,
-                        "max": 1.0,
-                        "step": 0.01,
-                        "tooltip": "Sampling probability threshold, controls output diversity",
-                    },
-                ),
-                "top_k": (
-                    "INT",
-                    {
-                        "default": 0,
-                        "min": 0,
-                        "step": 1,
-                        "tooltip": "Number of highest probability tokens to consider during sampling",
-                    },
-                ),
-                "max_output_tokens": (
-                    "INT",
-                    {
-                        "default": 8192,
-                        "min": 0,
-                        "max": 2147483647,
-                        "step": 1,
-                        "tooltip": "Maximum number of tokens in the generated text",
-                    },
-                ),
-                "retry_count": (
-                    "INT",
-                    {
-                        "default": 1,
-                        "min": 1,
-                        "step": 1,
-                        "tooltip": "Number of retries when request fails",
-                    },
-                ),
-                "disable_safety_settings": (
-                    "BOOLEAN",
-                    {
-                        "default": False,
-                        "tooltip": "Whether to disable safety settings, if true, the safety settings will not be set",
-                    },
-                ),
-                "disable_system_prompt": (
-                    "BOOLEAN",
-                    {
-                        "default": False,
-                        "tooltip": "Whether to disable the system prompt, if true, the system prompt will sent as a user prompt",
-                    },
-                ),
-                "safety_level": (
-                    "STRING",
-                    {
-                        "default": "BLOCK_NONE",
-                        "values": [
-                            "OFF",
-                            "BLOCK_NONE",
-                            "BLOCK_ONLY_HIGH",
-                            "BLOCK_MEDIUM_AND_ABOVE",
-                            "BLOCK_LOW_AND_ABOVE",
-                        ],
-                        "tooltip": "Safety level for the generated text",
-                    },
-                ),
-                "thinking_budget": (
-                    "INT",
-                    {
-                        "default": 0,
-                        "min": -1,
-                        "step": 1,
-                        "tooltip": "Thinking budget for the model, if set to -1, the model will not limit thinking budget, if set to 0, the model will disable thinking",
-                    },
-                ),
-                "chat_template": (
-                    "STRING",
-                    {
-                        "multiline": True,
-                        "default": (
-                            "<-system->\n"
-                            "{{system_instruction}}\n"
-                            "<-/system->\n"
-                            "<-user->\n"
-                            "{{prompt}}\n"
-                            "<-/user->"
-                        ),
-                        "tooltip": "Content template for the generated text",
-                    },
-                ),
-                "proxy_url": (
-                    "STRING",
-                    {
-                        "default": "",
-                        "multiline": False,
-                        "tooltip": "代理URL，格式: protocol://user:pass@addr:port，支持http,https,socks5,socks5h",
-                    },
-                ),
-                "seed": (
-                    "INT",
-                    {
-                        "default": -1,
-                        "min": -1,
-                        "step": 1,
-                        "tooltip": "随机种子，设置为-1时随机种子",
-                    },
-                ),
+                **input_types["required"],
             },
             "optional": {
-                "image": ("IMAGE",),
-                "image1": ("IMAGE",),
-                "image2": ("IMAGE",),
-                "image3": ("IMAGE",),
-                "image4": ("IMAGE",),
-                "history": ("HISTORY",),
+                **input_types["optional"],
             },
         }
 
@@ -267,6 +298,8 @@ class GeminiGenerateImage:
         chat_template: str = "",
         proxy_url: str = "",
         seed: int = -1,
+        aspect_ratio: str = "auto",
+        image_size: str = "2k",
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -291,6 +324,8 @@ class GeminiGenerateImage:
             thinking_budget=thinking_budget,
             chat_template=chat_template,
             seed=seed,
+            aspect_ratio=None if aspect_ratio == "auto" else aspect_ratio,
+            image_size=image_size,
             image=image,
             image1=image1,
             image2=image2,
@@ -331,151 +366,10 @@ class VertexAIGenerateImage:
                         "tooltip": "Vertex AI location/region",
                     },
                 ),
-                "model_name": (
-                    "STRING",
-                    {
-                        "default": "gemini-2.5-flash-image-preview",
-                        "tooltip": "Gemini model name, default is gemini-2.5-flash-image-preview",
-                    },
-                ),
-                "system_prompt": (
-                    "STRING",
-                    {
-                        "multiline": True,
-                        "tooltip": "System-level prompt that affects the overall conversation style",
-                    },
-                ),
-                "prompt": (
-                    "STRING",
-                    {
-                        "multiline": True,
-                        "tooltip": "Main prompt content input by the user",
-                    },
-                ),
-                "temperature": (
-                    "FLOAT",
-                    {
-                        "default": 1,
-                        "min": 0.0,
-                        "step": 0.01,
-                        "tooltip": "Sampling temperature, higher values produce more random outputs",
-                    },
-                ),
-                "top_p": (
-                    "FLOAT",
-                    {
-                        "default": 0,
-                        "min": 0.0,
-                        "max": 1.0,
-                        "step": 0.01,
-                        "tooltip": "Sampling probability threshold, controls output diversity",
-                    },
-                ),
-                "top_k": (
-                    "INT",
-                    {
-                        "default": 0,
-                        "min": 0,
-                        "step": 1,
-                        "tooltip": "Number of highest probability tokens to consider during sampling",
-                    },
-                ),
-                "max_output_tokens": (
-                    "INT",
-                    {
-                        "default": 8192,
-                        "min": 0,
-                        "max": 2147483647,
-                        "step": 1,
-                        "tooltip": "Maximum number of tokens in the generated text",
-                    },
-                ),
-                "retry_count": (
-                    "INT",
-                    {
-                        "default": 1,
-                        "min": 1,
-                        "step": 1,
-                        "tooltip": "Number of retries when request fails",
-                    },
-                ),
-                "disable_safety_settings": (
-                    "BOOLEAN",
-                    {
-                        "default": False,
-                        "tooltip": "Whether to disable safety settings, if true, the safety settings will not be set",
-                    },
-                ),
-                "disable_system_prompt": (
-                    "BOOLEAN",
-                    {
-                        "default": False,
-                        "tooltip": "Whether to disable the system prompt, if true, the system prompt will sent as a user prompt",
-                    },
-                ),
-                "safety_level": (
-                    "STRING",
-                    {
-                        "default": "BLOCK_NONE",
-                        "values": [
-                            "OFF",
-                            "BLOCK_NONE",
-                            "BLOCK_ONLY_HIGH",
-                            "BLOCK_MEDIUM_AND_ABOVE",
-                            "BLOCK_LOW_AND_ABOVE",
-                        ],
-                        "tooltip": "Safety level for the generated text",
-                    },
-                ),
-                "thinking_budget": (
-                    "INT",
-                    {
-                        "default": 0,
-                        "min": -1,
-                        "step": 1,
-                        "tooltip": "Thinking budget for the model, if set to -1, the model will not limit thinking budget, if set to 0, the model will disable thinking",
-                    },
-                ),
-                "chat_template": (
-                    "STRING",
-                    {
-                        "multiline": True,
-                        "default": (
-                            "<-system->\n"
-                            "{{system_instruction}}\n"
-                            "<-/system->\n"
-                            "<-user->\n"
-                            "{{prompt}}\n"
-                            "<-/user->"
-                        ),
-                        "tooltip": "Content template for the generated text",
-                    },
-                ),
-                "proxy_url": (
-                    "STRING",
-                    {
-                        "default": "",
-                        "multiline": False,
-                        "tooltip": "代理URL，格式: protocol://user:pass@addr:port，支持http,https,socks5,socks5h",
-                    },
-                ),
-                "seed": (
-                    "INT",
-                    {
-                        "default": -1,
-                        "min": -1,
-                        "step": 1,
-                        "tooltip": "随机种子，设置为-1时随机种子",
-                    },
-                ),
+                **inputs_def()["required"],
             },
             "optional": {
-                "image": ("IMAGE",),
-                "image1": ("IMAGE",),
-                "image2": ("IMAGE",),
-                "image3": ("IMAGE",),
-                "image4": ("IMAGE",),
-                "history": ("HISTORY",),
+                **inputs_def()["optional"],
             },
         }
 
@@ -514,6 +408,8 @@ class VertexAIGenerateImage:
         chat_template: str = "",
         proxy_url: str = "",
         seed: int = -1,
+        aspect_ratio: str = "auto",
+        image_size: str = "2k",
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -544,6 +440,8 @@ class VertexAIGenerateImage:
             thinking_budget=thinking_budget,
             chat_template=chat_template,
             seed=seed,
+            aspect_ratio=None if aspect_ratio == "auto" else aspect_ratio,
+            image_size=image_size,
             image=image,
             image1=image1,
             image2=image2,
