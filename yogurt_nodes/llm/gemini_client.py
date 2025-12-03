@@ -9,7 +9,6 @@ from typing import List, Optional
 from google import genai
 from google.genai import types
 from PIL import Image
-from wandb import api
 
 import comfy.model_management as model_management
 from .openai_client import build_messages
