@@ -135,7 +135,7 @@ class OpenAIGenerateImage:
                     {
                         "default": -1,
                         "min": -1,
-                        "max": 99999999,
+                        "max": 2**31 - 1,
                         "step": 1,
                         "tooltip": "Random seed for generation (-1 for random)",
                     },

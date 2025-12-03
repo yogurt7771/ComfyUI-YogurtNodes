@@ -131,7 +131,7 @@ class GeminiImageUnderstand:
                     {
                         "default": -1,
                         "min": -1,
-                        "max": 2**32 - 1,
+                        "max": 2**31 - 1,
                         "step": 1,
                         "tooltip": "随机种子，设置为-1时随机种子",
                     },
@@ -352,7 +352,7 @@ class VertexAIImageUnderstand:
                     {
                         "default": -1,
                         "min": -1,
-                        "max": 2**32 - 1,
+                        "max": 2**31 - 1,
                         "step": 1,
                         "tooltip": "随机种子，设置为-1时随机种子",
                     },
