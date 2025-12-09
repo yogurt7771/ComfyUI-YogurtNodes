@@ -66,7 +66,7 @@ class GeminiClient:
         """
         self.proxy_url = proxy_url
 
-        with SetProxyEnv(proxy_url):
+        with SetProxyEnv(self.proxy_url):
             if use_vertex_ai:
                 print("Using Vertex AI Gemini API")
                 # 创建 Vertex AI Credentials
@@ -364,32 +364,34 @@ class GeminiClient:
         # pprint(config)
         last_exception = None
         response = None
-        for _attempt in range(retry_count):
-            model_management.throw_exception_if_processing_interrupted()
-            try:
-                if seed < 0:
-                    seed = random.randint(0, 2**31 - 1)
-                config.seed = seed
-                response = self.client.models.generate_content(
-                    model=model_name,
-                    contents=contents,
-                    config=config,
-                )
-                # print(response)
-                text = response.text
-                text = text.strip() if text else None
-                if text is not None and len(text) > 0:
-                    history.append(("assistant", text))
-                    return text, history
-                raise ValueError(f"Model {model_name} returned empty text response.")
-            except (ValueError, ConnectionError, TimeoutError) as exception:
-                # print(f"Attempt {attempt + 1}/{retry_count} failed for model {model_name}: {exception}")
-                last_exception = exception
-                time.sleep(3)
-            except Exception as exception:
-                # print(f"Unexpected error in attempt {attempt + 1}/{retry_count} for model {model_name}: {exception}")
-                last_exception = exception
-                time.sleep(3)
+        with SetProxyEnv(self.proxy_url):
+            for _attempt in range(retry_count):
+                model_management.throw_exception_if_processing_interrupted()
+                try:
+                    if seed < 0:
+                        seed = random.randint(0, 2**31 - 1)
+                    config.seed = seed
+                    
+                    response = self.client.models.generate_content(
+                        model=model_name,
+                        contents=contents,
+                        config=config,
+                    )
+                    # print(response)
+                    text = response.text
+                    text = text.strip() if text else None
+                    if text is not None and len(text) > 0:
+                        history.append(("assistant", text))
+                        return text, history
+                    raise ValueError(f"Model {model_name} returned empty text response.")
+                except (ValueError, ConnectionError, TimeoutError) as exception:
+                    # print(f"Attempt {attempt + 1}/{retry_count} failed for model {model_name}: {exception}")
+                    last_exception = exception
+                    time.sleep(3)
+                except Exception as exception:
+                    # print(f"Unexpected error in attempt {attempt + 1}/{retry_count} for model {model_name}: {exception}")
+                    last_exception = exception
+                    time.sleep(3)
 
         raise RuntimeError(
             f"Failed to generate text after {retry_count} retries. "
@@ -449,50 +451,51 @@ class GeminiClient:
         # pprint(config)
         response = None
         response_logged = False
-        for _attempt in range(retry_count):
-            model_management.throw_exception_if_processing_interrupted()
-            try:
-                if seed < 0:
-                    seed = random.randint(0, 2**31 - 1)
-                config.seed = seed
-                response = self.client.models.generate_content_stream(
-                    model=model_name,
-                    contents=contents,
-                    config=config,
-                )
-                if not response_logged:
-                    # print(response)
-                    response_logged = True
-                for chunk in response:
-                    if (
-                        chunk.candidates is None
-                        or chunk.candidates[0].content is None
-                        or chunk.candidates[0].content.parts is None
-                    ):
-                        continue
-                    if chunk.candidates[0].content.parts[0].inline_data:
-                        inline_data = chunk.candidates[0].content.parts[0].inline_data
-                        data_buffer = inline_data.data
-                        if data_buffer is not None:
-                            image = Image.open(BytesIO(data_buffer)).convert("RGB")
-                            images.append(image)
+        with SetProxyEnv(self.proxy_url):
+            for _attempt in range(retry_count):
+                model_management.throw_exception_if_processing_interrupted()
+                try:
+                    if seed < 0:
+                        seed = random.randint(0, 2**31 - 1)
+                    config.seed = seed
+                    response = self.client.models.generate_content_stream(
+                        model=model_name,
+                        contents=contents,
+                        config=config,
+                    )
+                    if not response_logged:
+                        # print(response)
+                        response_logged = True
+                    for chunk in response:
+                        if (
+                            chunk.candidates is None
+                            or chunk.candidates[0].content is None
+                            or chunk.candidates[0].content.parts is None
+                        ):
+                            continue
+                        if chunk.candidates[0].content.parts[0].inline_data:
+                            inline_data = chunk.candidates[0].content.parts[0].inline_data
+                            data_buffer = inline_data.data
+                            if data_buffer is not None:
+                                image = Image.open(BytesIO(data_buffer)).convert("RGB")
+                                images.append(image)
+                            else:
+                                raise ValueError(
+                                    f"Model {model_name} returned empty image data."
+                                )
                         else:
-                            raise ValueError(
-                                f"Model {model_name} returned empty image data."
-                            )
-                    else:
-                        if hasattr(chunk, "text") and chunk.text:
-                            last_text += chunk.text
-                history.append(("assistant", last_text))
-                return images, last_text, history
-            except (ValueError, ConnectionError, TimeoutError) as exception:
-                # print(f"Attempt {attempt + 1}/{retry_count} failed for model {model_name}: {exception}")
-                last_exception = exception
-                time.sleep(3)
-            except Exception as exception:
-                # print(f"Unexpected error in attempt {attempt + 1}/{retry_count} for model {model_name}: {exception}")
-                last_exception = exception
-                time.sleep(3)
+                            if hasattr(chunk, "text") and chunk.text:
+                                last_text += chunk.text
+                    history.append(("assistant", last_text))
+                    return images, last_text, history
+                except (ValueError, ConnectionError, TimeoutError) as exception:
+                    # print(f"Attempt {attempt + 1}/{retry_count} failed for model {model_name}: {exception}")
+                    last_exception = exception
+                    time.sleep(3)
+                except Exception as exception:
+                    # print(f"Unexpected error in attempt {attempt + 1}/{retry_count} for model {model_name}: {exception}")
+                    last_exception = exception
+                    time.sleep(3)
 
         raise RuntimeError(
             f"Failed to generate image after {retry_count} retries. "
