@@ -77,6 +77,9 @@ class AddTextToImage:
         """
         device = images.device
         image_w, image_h = images.shape[2], images.shape[1]
+        if image_w < 8 or image_h < 8:
+            # too small to add text, maybe an error image
+            return (images,)
         font = ImageFont.truetype(str(FONT_DIR / font), font_size)
         # create a text banner and concatenate it with the image
         lines, (text_width, text_height) = wraptext(font, text, image_w - font_size // 2)

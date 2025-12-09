@@ -11,6 +11,7 @@ from google.genai import types
 from PIL import Image
 
 import comfy.model_management as model_management
+from ..utils import SetProxyEnv
 from .openai_client import build_messages
 
 thinking_models = [
@@ -58,23 +59,14 @@ class GeminiClient:
 
         Proxy 支持三种获取方式，优先级如下：
         1. 直接通过参数 proxy_url 传入
-        2. 当前目录下 api_key.json 文件，格式为 {"proxy": "代理URL"}  
+        2. 当前目录下 api_key.json 文件，格式为 {"proxy": "代理URL"}
         3. 环境变量 HTTP_PROXY, HTTPS_PROXY, ALL_PROXY
 
         如API Key未设置，将抛出异常。
         """
         self.proxy_url = proxy_url
 
-        if proxy_url:
-            http_options = types.HttpOptions(
-                client_args={'proxy': proxy_url},
-                async_client_args={'proxy': proxy_url},
-            )
-        else:
-            http_options = types.HttpOptions()
-
         if use_vertex_ai:
-            os.environ
             print("Using Vertex AI Gemini API")
             # 创建 Vertex AI Credentials
             from google.oauth2 import service_account
@@ -116,8 +108,10 @@ class GeminiClient:
                     vertex_ai_region = None
                 else:
                     print(f"Using Vertex AI region: {vertex_ai_region}")
+            http_options = types.HttpOptions()
             http_options.api_version = "v1"
-            self.client = genai.Client(http_options=http_options, vertexai=True, credentials=credentials, project=vertex_ai_project, location=vertex_ai_region)
+            with SetProxyEnv(proxy_url):
+                self.client = genai.Client(http_options=http_options, vertexai=True, credentials=credentials, project=vertex_ai_project, location=vertex_ai_region)
         else:
             print("Using Google Gemini API")
             if len(api_key) == 0:  # 如果 api_key 为空，则尝试从 api_key.json 文件中读取

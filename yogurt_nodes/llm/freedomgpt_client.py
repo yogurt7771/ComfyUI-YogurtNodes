@@ -1,12 +1,8 @@
-import base64
 import io
 import json
 import os
 import random
-import re
 import time
-from pathlib import Path
-from pprint import pprint
 from typing import Any, Dict, List, Optional
 
 import requests
