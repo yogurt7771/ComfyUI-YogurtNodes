@@ -3,13 +3,13 @@ import io
 import json
 import os
 import time
-from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import requests
 from PIL import Image
 
 import comfy.model_management as model_management
+from .api_keys import load_api_keys
 
 
 def image_to_base64(image: Image.Image) -> str:
@@ -36,12 +36,9 @@ class SeeDreamClient:
 
         # 尝试从配置文件读取
         try:
-            config_path = Path(__file__).parent / "api_key.json"
-            if config_path.exists():
-                with open(config_path, "r", encoding="utf-8") as f:
-                    config = json.load(f)
-                    if "seedream" in config:
-                        return config["seedream"]
+            api_keys = load_api_keys()
+            if "seedream" in api_keys:
+                return api_keys["seedream"]
         except Exception:
             pass
 

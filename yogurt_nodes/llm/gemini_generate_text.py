@@ -159,7 +159,7 @@ class GeminiGenerateText:
                         "tooltip": "随机种子，设置为-1时随机种子",
                     },
                 ),
-                "think_level": (
+                "thinking_level": (
                     ["OFF", "AUTO", "LOW", "HIGH"],
                     {
                         "default": "OFF",
@@ -176,8 +176,8 @@ class GeminiGenerateText:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("STRING", "HISTORY")
-    RETURN_NAMES = ("text", "history")
+    RETURN_TYPES = ("STRING", "HISTORY", "STRING")
+    RETURN_NAMES = ("text", "history", "thought")
 
     FUNCTION = "generate_text"
 
@@ -207,7 +207,7 @@ class GeminiGenerateText:
         thinking_level: str = "OFF",
     ):
         client = GeminiClient(api_key=api_key, proxy_url=proxy_url)
-        text, history = client.generate_text(
+        text, thought, history = client.generate_text(
             model_name=model_name,
             system_prompt=system_prompt,
             prompt=prompt,
@@ -225,7 +225,7 @@ class GeminiGenerateText:
             history=history,
             seed=seed,
         )
-        return (text, history)
+        return (text, history, thought)
 
 
 class VertexAIGenerateText:
@@ -398,7 +398,7 @@ class VertexAIGenerateText:
                         "tooltip": "随机种子，设置为-1时随机种子",
                     },
                 ),
-                "think_level": (
+                "thinking_level": (
                     ["OFF", "AUTO", "LOW", "HIGH"],
                     {
                         "default": "OFF",
@@ -415,8 +415,8 @@ class VertexAIGenerateText:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("STRING", "HISTORY")
-    RETURN_NAMES = ("text", "history")
+    RETURN_TYPES = ("STRING", "HISTORY", "STRING")
+    RETURN_NAMES = ("text", "history", "thought")
 
     FUNCTION = "generate_text"
 
@@ -454,7 +454,7 @@ class VertexAIGenerateText:
             vertex_ai_region=location,
             proxy_url=proxy_url,
         )
-        text, history = client.generate_text(
+        text, thought, history = client.generate_text(
             model_name=model_name,
             system_prompt=system_prompt,
             prompt=prompt,
@@ -472,4 +472,4 @@ class VertexAIGenerateText:
             history=history,
             seed=seed,
         )
-        return (text, history)
+        return (text, history, thought)

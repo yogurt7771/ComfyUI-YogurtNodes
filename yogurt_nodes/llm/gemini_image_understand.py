@@ -147,7 +147,7 @@ class GeminiImageUnderstand:
                         "tooltip": "Thinking budget for the model, if set to -1, the model will not limit thinking budget, if set to 0, the model will disable thinking",
                     },
                 ),
-                "think_level": (
+                "thinking_level": (
                     ["OFF", "AUTO", "LOW", "HIGH"],
                     {
                         "default": "OFF",
@@ -169,8 +169,8 @@ class GeminiImageUnderstand:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("STRING", "HISTORY")
-    RETURN_NAMES = ("text", "history")
+    RETURN_TYPES = ("STRING", "HISTORY", "STRING")
+    RETURN_NAMES = ("text", "history", "thought")
 
     FUNCTION = "understand_image"
 
@@ -213,7 +213,7 @@ class GeminiImageUnderstand:
                 images.append(torchvision.transforms.ToPILImage()(img))
 
         client = GeminiClient(api_key=api_key, proxy_url=proxy_url)
-        text, history = client.generate_text(
+        text, thought, history = client.generate_text(
             model_name=model_name,
             system_prompt=system_prompt,
             prompt=prompt,
@@ -231,7 +231,7 @@ class GeminiImageUnderstand:
             thinking_budget=thinking_budget,
             thinking_level=thinking_level,
         )
-        return (text, history)
+        return (text, history, thought)
 
 
 class VertexAIImageUnderstand:
@@ -389,7 +389,7 @@ class VertexAIImageUnderstand:
                         "tooltip": "Thinking budget for the model, if set to -1, the model will not limit thinking budget, if set to 0, the model will disable thinking",
                     },
                 ),
-                "think_level": (
+                "thinking_level": (
                     ["OFF", "AUTO", "LOW", "HIGH"],
                     {
                         "default": "OFF",
@@ -411,8 +411,8 @@ class VertexAIImageUnderstand:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("STRING", "HISTORY")
-    RETURN_NAMES = ("text", "history")
+    RETURN_TYPES = ("STRING", "HISTORY", "STRING")
+    RETURN_NAMES = ("text", "history", "thought")
 
     FUNCTION = "understand_image"
 
@@ -463,7 +463,7 @@ class VertexAIImageUnderstand:
             vertex_ai_region=location,
             proxy_url=proxy_url,
         )
-        text, history = client.generate_text(
+        text, thought, history = client.generate_text(
             model_name=model_name,
             system_prompt=system_prompt,
             prompt=prompt,
@@ -481,4 +481,4 @@ class VertexAIImageUnderstand:
             thinking_budget=thinking_budget,
             thinking_level=thinking_level,
         )
-        return (text, history)
+        return (text, history, thought)

@@ -1,6 +1,5 @@
 import base64
 import io
-import json
 import os
 import random
 import re
@@ -14,6 +13,7 @@ import requests
 from PIL import Image
 
 import comfy.model_management as model_management
+from .api_keys import load_api_keys
 
 
 def image_to_base64(image: Image.Image) -> str:
@@ -151,24 +151,23 @@ class OpenAIClient:
 
         API Key 支持三种获取方式，优先级如下：
         1. 直接通过参数 api_key 传入（推荐用于编程调用）
-        2. 当前目录下 api_key.json 文件，格式为 {"openai": "你的API密钥"}
+        2. llm目录下 api_key.json 文件，格式为 {"openai": "你的API密钥"}
         3. 环境变量 OPENAI_API_KEY
 
         Proxy 支持三种获取方式，优先级如下：
         1. 直接通过参数 proxy_url 传入
-        2. 当前目录下 api_key.json 文件，格式为 {"proxy": "代理URL"}
+        2. llm目录下 api_key.json 文件，格式为 {"proxy": "代理URL"}
         3. 环境变量 HTTP_PROXY, HTTPS_PROXY, ALL_PROXY
 
         如三者均未设置，将抛出异常。
         """
+        api_keys = None
         if len(api_key) == 0:  # 如果 api_key 为空，则尝试从 api_key.json 文件中读取
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            api_key_path = os.path.join(current_dir, "api_key.json")
-            if os.path.exists(api_key_path):
-                with open(api_key_path, "r", encoding="utf-8") as f:
-                    api_keys = json.load(f)
-                    if "openai" in api_keys:
-                        api_key = api_keys["openai"]
+            if api_keys is None:
+                api_keys = load_api_keys()
+            if "openai" in api_keys:
+                api_key = api_keys["openai"]
 
         if len(api_key) == 0:  # 如果 api_key 为空，则尝试从环境变量中读取
             api_key = os.getenv("OPENAI_API_KEY", "")
@@ -181,13 +180,10 @@ class OpenAIClient:
         # 设置基础 URL
         if len(base_url) == 0:
             # 尝试从 api_key.json 读取
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            api_key_path = os.path.join(current_dir, "api_key.json")
-            if os.path.exists(api_key_path):
-                with open(api_key_path, "r", encoding="utf-8") as f:
-                    api_keys = json.load(f)
-                    if "openai_base_url" in api_keys:
-                        base_url = api_keys["openai_base_url"]
+            if api_keys is None:
+                api_keys = load_api_keys()
+            if "openai_base_url" in api_keys:
+                base_url = api_keys["openai_base_url"]
 
         if len(base_url) == 0:
             # 尝试从环境变量读取

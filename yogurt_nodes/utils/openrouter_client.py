@@ -9,6 +9,7 @@ import requests
 from PIL import Image
 
 import comfy.model_management as model_management
+from .api_keys import load_api_keys
 from .openai_client import build_messages
 
 
@@ -27,24 +28,20 @@ class OpenRouterClient:
 
         API Key 支持三种获取方式，优先级如下：
         1. 直接通过参数 api_key 传入（推荐用于编程调用）
-        2. 当前目录下 api_key.json 文件，格式为 {"openrouter": "你的API密钥"}
+        2. llm目录下 api_key.json 文件，格式为 {"openrouter": "你的API密钥"}
         3. 环境变量 OPENROUTER_API_KEY
 
         Proxy 支持三种获取方式，优先级如下：
         1. 直接通过参数 proxy_url 传入
-        2. 当前目录下 api_key.json 文件，格式为 {"proxy": "代理URL"}  
+        2. llm目录下 api_key.json 文件，格式为 {"proxy": "代理URL"}
         3. 环境变量 HTTP_PROXY, HTTPS_PROXY, ALL_PROXY
 
         如三者均未设置，将抛出异常。
         """
         if len(api_key) == 0:  # 如果 api_key 为空，则尝试从 api_key.json 文件中读取
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            api_key_path = os.path.join(current_dir, "api_key.json")
-            if os.path.exists(api_key_path):
-                with open(api_key_path, "r", encoding="utf-8") as f:
-                    api_keys = json.load(f)
-                    if "openrouter" in api_keys:
-                        api_key = api_keys["openrouter"]
+            api_keys = load_api_keys()
+            if "openrouter" in api_keys:
+                api_key = api_keys["openrouter"]
 
         if len(api_key) == 0:  # 如果 api_key 为空，则尝试从环境变量中读取
             api_key = os.getenv("OPENROUTER_API_KEY", "")
@@ -200,7 +197,7 @@ class OpenRouterClient:
             history = []
         if images is None:
             images = []
-            
+
         messages, history = build_messages(
             system_prompt=system_prompt,
             prompt=prompt,
@@ -215,7 +212,7 @@ class OpenRouterClient:
             "temperature": temperature,
             "modalities": ["image", "text"]  # 关键：启用图像生成
         }
-        
+
         if top_p > 0:
             payload["top_p"] = top_p
         if max_tokens > 0:
@@ -254,13 +251,13 @@ class OpenRouterClient:
                     result = response.json()
                     choice = result["choices"][0]
                     message = choice["message"]
-                    
+
                     # 提取文本内容
                     text_content = message.get("content", "").strip() if message.get("content") else ""
-                    
+
                     # 提取图像数据（base64格式）
                     generated_images = []
-                    
+
                     # 检查message中的images字段（按照OpenRouter文档格式）
                     if "images" in message and isinstance(message["images"], list):
                         for img_item in message["images"]:
@@ -278,15 +275,15 @@ class OpenRouterClient:
                                     except Exception as e:
                                         print(f"Failed to decode image: {e}")
                                         continue
-                    
+
                     # 如果没有找到图像，但有内容，生成响应文本
                     if not generated_images and not text_content:
                         raise ValueError("No images or text content generated")
-                    
+
                     # 更新对话历史
                     if text_content or generated_images:
                         history.append(("assistant", text_content if text_content else f"Generated {len(generated_images)} image(s)"))
-                    
+
                     return generated_images, text_content, history
 
                 else:
@@ -296,7 +293,7 @@ class OpenRouterClient:
             except Exception as e:
                 last_exception = e
                 time.sleep(3)
-                
+
         raise last_exception or Exception("All retry attempts failed")
 
     def understand_image(

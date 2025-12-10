@@ -1,6 +1,5 @@
 import io
 import json
-import os
 import random
 import time
 from io import BytesIO
@@ -11,6 +10,7 @@ from google.genai import types
 from PIL import Image
 
 import comfy.model_management as model_management
+from .api_keys import load_api_keys
 from .proxy_utils import SetProxyEnv
 from .openai_client import build_messages
 
@@ -20,17 +20,6 @@ thinking_models = [
     "gemini-3-pro-preview",
     "gemini-3-pro-image-preview",
 ]
-
-
-def load_api_keys_from_file(file_path: str) -> dict:
-    """从指定的 JSON 文件中加载 API 密钥"""
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    api_key_path = os.path.join(current_dir, "api_key.json")
-    if os.path.exists(api_key_path):
-        with open(api_key_path, "r", encoding="utf-8") as f:
-            api_keys = json.load(f)
-            return api_keys
-    return {}
 
 
 class GeminiClient:
@@ -56,12 +45,12 @@ class GeminiClient:
 
         API Key 支持三种获取方式，优先级如下：
         1. 直接通过参数 api_key 传入（推荐用于编程调用）
-        2. 当前目录下 api_key.json 文件，格式为 {"gemini": "你的API密钥"}
+        2. llm目录下 api_key.json 文件，格式为 {"gemini": "你的API密钥"}
         3. 环境变量 GEMINI_API_KEY
 
         Proxy 支持三种获取方式，优先级如下：
         1. 直接通过参数 proxy_url 传入
-        2. 当前目录下 api_key.json 文件，格式为 {"proxy": "代理URL"}
+        2. llm目录下 api_key.json 文件，格式为 {"proxy": "代理URL"}
         3. 环境变量 HTTP_PROXY, HTTPS_PROXY, ALL_PROXY
 
         如API Key未设置，将抛出异常。
@@ -77,7 +66,7 @@ class GeminiClient:
                 SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
                 if vertex_ai_json is None or len(vertex_ai_json) == 0:
                     if api_keys is None:
-                        api_keys = load_api_keys_from_file("api_key.json")
+                        api_keys = load_api_keys()
                     vertex_ai_json = api_keys.get("vertex_ai_json", "")
                     if len(vertex_ai_json) == 0:
                         print("Warning: Vertex AI service account JSON is not set. Trying to read from environment variable GOOGLE_APPLICATION_CREDENTIALS.")
@@ -95,7 +84,7 @@ class GeminiClient:
                     credentials = credentials.with_scopes(SCOPES)
                 if vertex_ai_project is None or len(vertex_ai_project) == 0:
                     if api_keys is None:
-                        api_keys = load_api_keys_from_file("api_key.json")
+                        api_keys = load_api_keys()
                     vertex_ai_project = api_keys.get("vertex_ai_project", "")
                     if len(vertex_ai_project) == 0:
                         print("Warning: Vertex AI project ID is not set. Trying to read from environment variable GOOGLE_CLOUD_PROJECT.")
@@ -104,7 +93,7 @@ class GeminiClient:
                         print(f"Using Vertex AI project ID: {vertex_ai_project}")
                 if vertex_ai_region is None or len(vertex_ai_region) == 0:
                     if api_keys is None:
-                        api_keys = load_api_keys_from_file("api_key.json")
+                        api_keys = load_api_keys()
                     vertex_ai_region = api_keys.get("vertex_ai_region", "")
                     if len(vertex_ai_region) == 0:
                         print("Warning: Vertex AI region is not set. Trying to read from environment variable VERTEX_AI_REGION.")
@@ -118,7 +107,8 @@ class GeminiClient:
                 print("Using Google Gemini API")
                 if len(api_key) == 0:  # 如果 api_key 为空，则尝试从 api_key.json 文件中读取
                     # 读取 api_key.json 文件
-                    api_keys = load_api_keys_from_file("api_key.json")
+                    if api_keys is None:
+                        api_keys = load_api_keys()
                     api_key = api_keys.get("gemini", "")
                 if len(api_key) == 0:  # 如果 api_key 为空，则尝试从环境变量中读取
                     print("Warning: Gemini API key is not set. Trying to read from environment variable GEMINI_API_KEY.")
@@ -397,12 +387,22 @@ class GeminiClient:
                         contents=contents,
                         config=config,
                     )
-                    # print(response)
-                    text = response.text
-                    text = text.strip() if text else None
-                    if text is not None and len(text) > 0:
-                        history.append(("assistant", text))
-                        return text, history
+                    if (
+                        response.candidates is None
+                        or response.candidates[0].content is None
+                        or response.candidates[0].content.parts is None
+                    ):
+                        raise ValueError(f"Model {model_name} returned no candidates.")
+                    last_thought = ""
+                    last_text = ""
+                    for part in response.candidates[0].content.parts:
+                        if hasattr(part, 'thought') and part.thought is True:
+                            last_thought += part.text
+                        else:
+                            last_text += part.text
+                    if last_text is not None and len(last_text) > 0:
+                        history.append(("assistant", last_text))
+                        return last_text, last_thought, history
                     raise ValueError(f"Model {model_name} returned empty text response.")
                 except (ValueError, ConnectionError, TimeoutError) as exception:
                     # print(f"Attempt {attempt + 1}/{retry_count} failed for model {model_name}: {exception}")
@@ -466,7 +466,6 @@ class GeminiClient:
         )
 
         images = []
-        last_text = ""
         last_exception = None
         # pprint(f"Generating image with model {model_name}...")
         # pprint(contents)
@@ -475,12 +474,14 @@ class GeminiClient:
         response_logged = False
         with SetProxyEnv(self.proxy_url):
             for _attempt in range(retry_count):
+                last_text = ""
+                last_thought = ""
                 model_management.throw_exception_if_processing_interrupted()
                 try:
                     if seed < 0:
                         seed = random.randint(0, 2**31 - 1)
                     config.seed = seed
-                    response = self.client.models.generate_content_stream(
+                    response = self.client.models.generate_content(
                         model=model_name,
                         contents=contents,
                         config=config,
@@ -488,28 +489,41 @@ class GeminiClient:
                     if not response_logged:
                         # print(response)
                         response_logged = True
-                    for chunk in response:
-                        if (
-                            chunk.candidates is None
-                            or chunk.candidates[0].content is None
-                            or chunk.candidates[0].content.parts is None
-                        ):
-                            continue
-                        if chunk.candidates[0].content.parts[0].inline_data:
-                            inline_data = chunk.candidates[0].content.parts[0].inline_data
-                            data_buffer = inline_data.data
-                            if data_buffer is not None:
-                                image = Image.open(BytesIO(data_buffer)).convert("RGB")
-                                images.append(image)
-                            else:
-                                raise ValueError(
-                                    f"Model {model_name} returned empty image data."
-                                )
-                        else:
-                            if hasattr(chunk, "text") and chunk.text:
-                                last_text += chunk.text
-                    history.append(("assistant", last_text))
-                    return images, last_text, history
+                    if (
+                        response.candidates is None
+                        or not response.candidates
+                        or response.candidates[0].content is None
+                        or response.candidates[0].content.parts is None
+                    ):
+                        raise ValueError(f"Model {model_name} returned no candidates.")
+
+                    for part in response.candidates[0].content.parts:
+                        # 1. 优先检查：是否为思维链 (Thought)
+                        # 注意：思维链的内容也存储在 text 字段中，所以必须先通过 thought 属性判断
+                        if hasattr(part, "thought") and part.thought is True:
+                            if hasattr(part, "text") and part.text:
+                                last_thought += part.text
+                        elif hasattr(part, "text") and part.text:
+                            last_text += part.text
+
+                        # 2. 其次检查：是否为图片 (Inline Data)
+                        # 使用 elif 避免逻辑重叠
+                        if hasattr(part, "inline_data") and part.inline_data:
+                            inline_data = part.inline_data
+                            if inline_data is not None and hasattr(inline_data, "data"):
+                                data_buffer = inline_data.data
+                                if data_buffer is not None:
+                                    try:
+                                        image = Image.open(BytesIO(data_buffer)).convert("RGB")
+                                        images.append(image)
+                                    except Exception as e:
+                                        print(f"Image processing error: {e}")
+
+                    # 循环结束后，将最终文本存入历史记录
+                    if last_text:
+                        history.append(("assistant", last_text))
+
+                    return images, last_text, last_thought, history
                 except (ValueError, ConnectionError, TimeoutError) as exception:
                     # print(f"Attempt {attempt + 1}/{retry_count} failed for model {model_name}: {exception}")
                     last_exception = exception

@@ -162,7 +162,7 @@ def inputs_def():
                     "tooltip": "Image size for the generated image",
                 }
             ),
-            "think_level": (
+            "thinking_level": (
                 ["OFF", "AUTO", "LOW", "HIGH"],
                 {
                     "default": "OFF",
@@ -215,7 +215,7 @@ def generate_image(
                 img = img[0]
             img = img.permute(2, 0, 1)
             images.append(torchvision.transforms.ToPILImage()(img))
-    images, text, history = client.generate_image(
+    images, text, thought, history = client.generate_image(
         model_name=model_name,
         prompt=prompt,
         system_prompt=system_prompt,
@@ -242,11 +242,11 @@ def generate_image(
         tensor_img = tensor_img.permute(1, 2, 0).unsqueeze(0)
         tensor_imgs.append(tensor_img)
     if len(tensor_imgs) == 1:
-        return (tensor_imgs[0], text, 1, history)
+        return (tensor_imgs[0], text, 1, history, thought)
     elif len(tensor_imgs) > 1:
-        return (torch.cat(tensor_imgs, dim=0), text, len(tensor_imgs), history)
+        return (torch.cat(tensor_imgs, dim=0), text, len(tensor_imgs), history, thought)
     else:
-        return (torch.zeros(1, 3, 1, 1, dtype=torch.float32), text, 0, history)
+        return (torch.zeros(1, 3, 1, 1, dtype=torch.float32), text, 0, history, thought)
 
 
 class GeminiGenerateImage:
@@ -278,8 +278,8 @@ class GeminiGenerateImage:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("IMAGE", "STRING", "INT", "HISTORY")
-    RETURN_NAMES = ("image", "text", "num_images", "history")
+    RETURN_TYPES = ("IMAGE", "STRING", "INT", "HISTORY", "STRING")
+    RETURN_NAMES = ("image", "text", "num_images", "history", "thought")
 
     FUNCTION = "generate_image"
 
@@ -388,8 +388,8 @@ class VertexAIGenerateImage:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("IMAGE", "STRING", "INT", "HISTORY")
-    RETURN_NAMES = ("image", "text", "num_images", "history")
+    RETURN_TYPES = ("IMAGE", "STRING", "INT", "HISTORY", "STRING")
+    RETURN_NAMES = ("image", "text", "num_images", "history", "thought")
 
     FUNCTION = "generate_image"
 
