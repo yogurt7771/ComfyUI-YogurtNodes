@@ -3,7 +3,7 @@ from typing import List
 import torch
 import torchvision
 
-from .freedomgpt_client import FreedomGPTClient
+from ..utils import FreedomGPTClient
 
 
 class FreedomGPTImageUnderstand:

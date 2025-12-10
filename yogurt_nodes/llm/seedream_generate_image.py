@@ -3,7 +3,7 @@ from typing import Optional
 import torch
 import torchvision
 
-from .seedream_client import SeeDreamClient
+from ..utils import SeeDreamClient
 
 
 class SeeDreamGenerateImage:

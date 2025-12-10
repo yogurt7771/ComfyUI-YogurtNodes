@@ -1,5 +1,6 @@
 from typing import List
-from .openai_client import OpenAIClient
+
+from ..utils import OpenAIClient
 
 
 class OpenAIGenerateText:

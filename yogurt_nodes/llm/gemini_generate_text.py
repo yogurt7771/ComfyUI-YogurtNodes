@@ -1,5 +1,6 @@
 from typing import List
-from .gemini_client import GeminiClient
+
+from ..utils import GeminiClient
 
 
 class GeminiGenerateText:
@@ -120,6 +121,7 @@ class GeminiGenerateText:
                     {
                         "default": 0,
                         "min": -1,
+                        "max": 2**31 - 1,
                         "step": 1,
                         "tooltip": "Thinking budget for the model, if set to -1, the model will not limit thinking budget, if set to 0, the model will disable thinking",
                     },
@@ -155,6 +157,13 @@ class GeminiGenerateText:
                         "max": 2**31 - 1,
                         "step": 1,
                         "tooltip": "随机种子，设置为-1时随机种子",
+                    },
+                ),
+                "think_level": (
+                    ["OFF", "AUTO", "LOW", "HIGH"],
+                    {
+                        "default": "OFF",
+                        "tooltip": "Thinking level for the model, if thinking budget is not 0, this parameter will be ignored",
                     },
                 ),
             },
@@ -195,6 +204,7 @@ class GeminiGenerateText:
         proxy_url: str = "",
         history: List[tuple[str, str]] | None = None,
         seed: int = -1,
+        thinking_level: str = "OFF",
     ):
         client = GeminiClient(api_key=api_key, proxy_url=proxy_url)
         text, history = client.generate_text(
@@ -210,6 +220,7 @@ class GeminiGenerateText:
             disable_system_prompt=disable_system_prompt,
             safety_level=safety_level,
             thinking_budget=thinking_budget,
+            thinking_level=thinking_level,
             chat_template=chat_template,
             history=history,
             seed=seed,
@@ -349,6 +360,7 @@ class VertexAIGenerateText:
                     {
                         "default": 0,
                         "min": -1,
+                        "max": 2**31 - 1,
                         "step": 1,
                         "tooltip": "Thinking budget for the model, if set to -1, the model will not limit thinking budget, if set to 0, the model will disable thinking",
                     },
@@ -384,6 +396,13 @@ class VertexAIGenerateText:
                         "max": 2**31 - 1,
                         "step": 1,
                         "tooltip": "随机种子，设置为-1时随机种子",
+                    },
+                ),
+                "think_level": (
+                    ["OFF", "AUTO", "LOW", "HIGH"],
+                    {
+                        "default": "OFF",
+                        "tooltip": "Thinking level for the model, if thinking budget is not 0, this parameter will be ignored",
                     },
                 ),
             },
@@ -426,6 +445,7 @@ class VertexAIGenerateText:
         proxy_url: str = "",
         history: List[tuple[str, str]] | None = None,
         seed: int = -1,
+        thinking_level: str = "OFF",
     ):
         client = GeminiClient(
             use_vertex_ai=True,
@@ -447,6 +467,7 @@ class VertexAIGenerateText:
             disable_system_prompt=disable_system_prompt,
             safety_level=safety_level,
             thinking_budget=thinking_budget,
+            thinking_level=thinking_level,
             chat_template=chat_template,
             history=history,
             seed=seed,

@@ -11,12 +11,14 @@ from google.genai import types
 from PIL import Image
 
 import comfy.model_management as model_management
-from ..utils import SetProxyEnv
+from .proxy_utils import SetProxyEnv
 from .openai_client import build_messages
 
 thinking_models = [
     "gemini-2.5-flash",
     "gemini-2.5-pro",
+    "gemini-3-pro-preview",
+    "gemini-3-pro-image-preview",
 ]
 
 
@@ -222,7 +224,7 @@ class GeminiClient:
         return system_instruction, results, history
 
     def _get_thinking_config(
-        self, model_name, thinking_budget: int
+        self, model_name, thinking_budget: int, thinking_level: str = "OFF"
     ) -> Optional[types.ThinkingConfig]:
         """获取思考配置"""
         thinking_config = None
@@ -232,9 +234,24 @@ class GeminiClient:
                     include_thoughts=True,
                     thinking_budget=thinking_budget if thinking_budget > 0 else None,
                 )
-            else:
+            elif thinking_level == "OFF":
                 thinking_config = types.ThinkingConfig(
                     include_thoughts=False  # type: ignore
+                )
+            elif thinking_level == "AUTO":
+                thinking_config = types.ThinkingConfig(
+                    include_thoughts=True,
+                    thinking_level=types.ThinkingLevel.THINKING_LEVEL_UNSPECIFIED,
+                )
+            elif thinking_level == "HIGH":
+                thinking_config = types.ThinkingConfig(
+                    include_thoughts=True,
+                    thinking_level=types.ThinkingLevel.HIGH,
+                )
+            elif thinking_level == "LOW":
+                thinking_config = types.ThinkingConfig(
+                    include_thoughts=True,
+                    thinking_level=types.ThinkingLevel.LOW,
                 )
         return thinking_config
 
@@ -253,6 +270,7 @@ class GeminiClient:
         disable_system_prompt: bool = False,
         safety_level: str = "BLOCK_NONE",
         thinking_budget: int = 0,
+        thinking_level: str = "OFF",
         chat_template: str = "",
         is_image_generation: bool = False,
         aspect_ratio: str | None = None,
@@ -273,7 +291,7 @@ class GeminiClient:
 
         config = types.GenerateContentConfig(**config_params)
 
-        thinking_config = self._get_thinking_config(model_name, thinking_budget)
+        thinking_config = self._get_thinking_config(model_name, thinking_budget, thinking_level)
         if thinking_config is not None:
             config.thinking_config = thinking_config
 
@@ -319,6 +337,7 @@ class GeminiClient:
         disable_system_prompt: bool = False,
         safety_level: str = "BLOCK_NONE",
         thinking_budget: int = 0,
+        thinking_level: str = "OFF",
         chat_template: str = "",
         seed: int = -1,
     ) -> tuple[str, List[tuple[str, str]]]:
@@ -357,6 +376,7 @@ class GeminiClient:
             disable_system_prompt=disable_system_prompt,
             safety_level=safety_level,
             thinking_budget=thinking_budget,
+            thinking_level=thinking_level,
             chat_template=chat_template,
         )
         # pprint(f"Generating text with model {model_name}...")
@@ -371,7 +391,7 @@ class GeminiClient:
                     if seed < 0:
                         seed = random.randint(0, 2**31 - 1)
                     config.seed = seed
-                    
+
                     response = self.client.models.generate_content(
                         model=model_name,
                         contents=contents,
@@ -414,6 +434,7 @@ class GeminiClient:
         disable_system_prompt: bool = False,
         safety_level: str = "BLOCK_NONE",
         thinking_budget: int = 0,
+        thinking_level: str = "OFF",
         chat_template: str = "",
         seed: int = -1,
         aspect_ratio: str | None = None,
@@ -437,6 +458,7 @@ class GeminiClient:
             disable_system_prompt=disable_system_prompt,
             safety_level=safety_level,
             thinking_budget=thinking_budget,
+            thinking_level=thinking_level,
             chat_template=chat_template,
             is_image_generation=True,
             aspect_ratio=aspect_ratio,

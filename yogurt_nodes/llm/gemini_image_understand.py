@@ -1,8 +1,9 @@
 from typing import List
+
 import torch
 import torchvision
 
-from .gemini_client import GeminiClient
+from ..utils import GeminiClient
 
 
 class GeminiImageUnderstand:
@@ -136,6 +137,23 @@ class GeminiImageUnderstand:
                         "tooltip": "随机种子，设置为-1时随机种子",
                     },
                 ),
+                "thinking_budget": (
+                    "INT",
+                    {
+                        "default": 0,
+                        "min": -1,
+                        "max": 2**31 - 1,
+                        "step": 1,
+                        "tooltip": "Thinking budget for the model, if set to -1, the model will not limit thinking budget, if set to 0, the model will disable thinking",
+                    },
+                ),
+                "think_level": (
+                    ["OFF", "AUTO", "LOW", "HIGH"],
+                    {
+                        "default": "OFF",
+                        "tooltip": "Thinking level for the model, if thinking budget is not 0, this parameter will be ignored",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -176,6 +194,8 @@ class GeminiImageUnderstand:
         chat_template: str = "",
         proxy_url: str = "",
         seed: int = -1,
+        thinking_budget: int = 0,
+        thinking_level: str = "OFF",
         image: torch.Tensor | None = None,
         image1: torch.Tensor | None = None,
         image2: torch.Tensor | None = None,
@@ -208,6 +228,8 @@ class GeminiImageUnderstand:
             chat_template=chat_template,
             history=history,
             seed=seed,
+            thinking_budget=thinking_budget,
+            thinking_level=thinking_level,
         )
         return (text, history)
 
@@ -357,6 +379,23 @@ class VertexAIImageUnderstand:
                         "tooltip": "随机种子，设置为-1时随机种子",
                     },
                 ),
+                "thinking_budget": (
+                    "INT",
+                    {
+                        "default": 0,
+                        "min": -1,
+                        "max": 2**31 - 1,
+                        "step": 1,
+                        "tooltip": "Thinking budget for the model, if set to -1, the model will not limit thinking budget, if set to 0, the model will disable thinking",
+                    },
+                ),
+                "think_level": (
+                    ["OFF", "AUTO", "LOW", "HIGH"],
+                    {
+                        "default": "OFF",
+                        "tooltip": "Thinking level for the model, if thinking budget is not 0, this parameter will be ignored",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -399,6 +438,8 @@ class VertexAIImageUnderstand:
         chat_template: str = "",
         proxy_url: str = "",
         seed: int = -1,
+        thinking_budget: int = 0,
+        thinking_level: str = "OFF",
         image: torch.Tensor | None = None,
         image1: torch.Tensor | None = None,
         image2: torch.Tensor | None = None,
@@ -437,5 +478,7 @@ class VertexAIImageUnderstand:
             chat_template=chat_template,
             history=history,
             seed=seed,
+            thinking_budget=thinking_budget,
+            thinking_level=thinking_level,
         )
         return (text, history)

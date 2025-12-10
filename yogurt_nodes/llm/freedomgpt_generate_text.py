@@ -1,5 +1,6 @@
 from typing import List
-from .freedomgpt_client import FreedomGPTClient
+
+from ..utils import FreedomGPTClient
 
 
 class FreedomGPTGenerateText:

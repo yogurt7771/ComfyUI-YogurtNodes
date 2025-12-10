@@ -3,7 +3,7 @@ from typing import List
 import torch
 import torchvision
 
-from .openai_client import OpenAIClient
+from ..utils import OpenAIClient
 
 
 class OpenAIImageUnderstand:

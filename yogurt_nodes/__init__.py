@@ -5,3 +5,4 @@ from .logic import *
 from .models import *
 from .number import *
 from .string import *
+from .net import *

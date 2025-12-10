@@ -4,7 +4,7 @@ from typing_extensions import List
 import torch
 import torchvision
 
-from .gemini_client import GeminiClient
+from ..utils import GeminiClient
 
 
 def inputs_def():
@@ -161,7 +161,14 @@ def inputs_def():
                     "default": "2k",
                     "tooltip": "Image size for the generated image",
                 }
-            )
+            ),
+            "think_level": (
+                ["OFF", "AUTO", "LOW", "HIGH"],
+                {
+                    "default": "OFF",
+                    "tooltip": "Thinking level for the model, if thinking budget is not 0, this parameter will be ignored",
+                },
+            ),
         },
         "optional": {
             "image": ("IMAGE",),
@@ -192,6 +199,7 @@ def generate_image(
     seed: int = -1,
     aspect_ratio: str | None = None,
     image_size: str | None = None,
+    thinking_level: str | None = None,
     image: Optional[torch.Tensor] = None,
     image1: Optional[torch.Tensor] = None,
     image2: Optional[torch.Tensor] = None,
@@ -221,6 +229,7 @@ def generate_image(
         disable_system_prompt=disable_system_prompt,
         safety_level=safety_level,
         thinking_budget=thinking_budget,
+        thinking_level=thinking_level,
         chat_template=chat_template,
         history=history,
         seed=seed,
@@ -300,6 +309,7 @@ class GeminiGenerateImage:
         seed: int = -1,
         aspect_ratio: str = "auto",
         image_size: str = "2k",
+        thinking_level: str = "OFF",
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -322,6 +332,7 @@ class GeminiGenerateImage:
             disable_system_prompt=disable_system_prompt,
             safety_level=safety_level,
             thinking_budget=thinking_budget,
+            thinking_level=thinking_level,
             chat_template=chat_template,
             seed=seed,
             aspect_ratio=None if aspect_ratio == "auto" else aspect_ratio,
@@ -410,6 +421,7 @@ class VertexAIGenerateImage:
         seed: int = -1,
         aspect_ratio: str = "auto",
         image_size: str = "2k",
+        thinking_level: str = "OFF",
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -438,6 +450,7 @@ class VertexAIGenerateImage:
             disable_system_prompt=disable_system_prompt,
             safety_level=safety_level,
             thinking_budget=thinking_budget,
+            thinking_level=thinking_level,
             chat_template=chat_template,
             seed=seed,
             aspect_ratio=None if aspect_ratio == "auto" else aspect_ratio,

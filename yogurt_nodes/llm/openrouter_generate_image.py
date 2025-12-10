@@ -4,7 +4,7 @@ from typing_extensions import List
 import torch
 import torchvision
 
-from .openrouter_client import OpenRouterClient
+from ..utils import OpenRouterClient
 
 
 class OpenRouterGenerateImage:

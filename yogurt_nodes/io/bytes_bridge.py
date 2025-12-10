@@ -37,10 +37,7 @@ def get_save_bytes_path(filename_prefix: str, filename_suffix: str, output_dir: 
         )
         counter = (
             max(
-                map(
-                    lambda x: map_filename(x.name)[0],
-                    exists_files,
-                ),
+                (map_filename(x.name)[0] for x in exists_files),
                 default=0,
             )
             + 1

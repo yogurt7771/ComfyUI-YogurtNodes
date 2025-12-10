@@ -1,5 +1,6 @@
 from typing import List
-from .openrouter_client import OpenRouterClient
+
+from ..utils import OpenRouterClient
 
 
 class OpenRouterGenerateText:

@@ -4,7 +4,7 @@ from typing_extensions import List
 import torch
 import torchvision
 
-from .openai_client import OpenAIClient
+from ..utils import OpenAIClient
 
 
 class OpenAIGenerateImage:
