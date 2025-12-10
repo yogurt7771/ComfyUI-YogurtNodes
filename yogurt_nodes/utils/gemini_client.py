@@ -102,6 +102,7 @@ class GeminiClient:
                         print(f"Using Vertex AI region: {vertex_ai_region}")
                 http_options = types.HttpOptions()
                 http_options.api_version = "v1"
+                http_options.timeout = 120_000  # timeout 120 seconds
                 self.client = genai.Client(http_options=http_options, vertexai=True, credentials=credentials, project=vertex_ai_project, location=vertex_ai_region)
             else:
                 print("Using Google Gemini API")
@@ -112,6 +113,8 @@ class GeminiClient:
                     api_key = api_keys.get("gemini", "")
                 if len(api_key) == 0:  # 如果 api_key 为空，则尝试从环境变量中读取
                     print("Warning: Gemini API key is not set. Trying to read from environment variable GEMINI_API_KEY.")
+                http_options = types.HttpOptions()
+                http_options.timeout = 120_000  # timeout 120 seconds
                 self.client = genai.Client(http_options=http_options)
 
     def _get_safety_settings(
