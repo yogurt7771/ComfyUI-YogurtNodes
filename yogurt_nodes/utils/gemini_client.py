@@ -222,7 +222,7 @@ class GeminiClient:
             if thinking_budget != 0:
                 thinking_config = types.ThinkingConfig(
                     include_thoughts=True,
-                    thinking_budget=thinking_budget if thinking_budget > 0 else None,
+                    thinking_budget=thinking_budget,
                 )
             elif thinking_level == "OFF":
                 thinking_config = types.ThinkingConfig(
