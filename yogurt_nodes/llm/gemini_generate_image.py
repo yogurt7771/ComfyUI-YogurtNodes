@@ -34,8 +34,9 @@ def inputs_def():
             "temperature": (
                 "FLOAT",
                 {
-                    "default": 1,
+                    "default": 1.0,
                     "min": 0.0,
+                    "max": 10.0,
                     "step": 0.01,
                     "tooltip": "Sampling temperature, higher values produce more random outputs",
                 },
@@ -55,6 +56,7 @@ def inputs_def():
                 {
                     "default": 0,
                     "min": 0,
+                    "max": 2**31 - 1,
                     "step": 1,
                     "tooltip": "Number of highest probability tokens to consider during sampling",
                 },
@@ -62,9 +64,9 @@ def inputs_def():
             "max_output_tokens": (
                 "INT",
                 {
-                    "default": 8192,
+                    "default": 32768,
                     "min": 0,
-                    "max": 2147483647,
+                    "max": 2**31 - 1,
                     "step": 1,
                     "tooltip": "Maximum number of tokens in the generated text",
                 },
@@ -149,7 +151,19 @@ def inputs_def():
                 },
             ),
             "aspect_ratio": (
-                ["auto", "1:1", "9:16", "16:9", "3:4", "4:3", "3:2", "2:3", "5:4", "4:5", "21:9"],
+                [
+                    "auto",
+                    "1:1",
+                    "9:16",
+                    "16:9",
+                    "3:4",
+                    "4:3",
+                    "3:2",
+                    "2:3",
+                    "5:4",
+                    "4:5",
+                    "21:9",
+                ],
                 {
                     "default": "auto",
                     "tooltip": "Aspect ratio for the generated image",
@@ -160,7 +174,7 @@ def inputs_def():
                 {
                     "default": "2k",
                     "tooltip": "Image size for the generated image",
-                }
+                },
             ),
             "thinking_level": (
                 ["OFF", "AUTO", "LOW", "HIGH"],
@@ -267,6 +281,13 @@ class GeminiGenerateImage:
                         "tooltip": "API key for accessing Gemini API",
                     },
                 ),
+                "vertex": (
+                    "BOOLEAN",
+                    {
+                        "default": False,
+                        "tooltip": "Use Vertex AI for Gemini API",
+                    },
+                ),
                 **input_types["required"],
             },
             "optional": {
@@ -292,6 +313,7 @@ class GeminiGenerateImage:
     def generate_image(
         self,
         api_key: str = "",
+        vertex: bool = False,
         model_name: str = "",
         system_prompt: str = "",
         prompt: str = "",
@@ -317,7 +339,7 @@ class GeminiGenerateImage:
         image4: Optional[torch.Tensor] = None,
         history: List[tuple[str, str]] | None = None,
     ):
-        client = GeminiClient(api_key=api_key, proxy_url=proxy_url)
+        client = GeminiClient(api_key=api_key, use_vertex_api_key=vertex, proxy_url=proxy_url)
         return generate_image(
             client=client,
             model_name=model_name,

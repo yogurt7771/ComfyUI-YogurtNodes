@@ -23,6 +23,13 @@ class GeminiImageUnderstand:
                         "tooltip": "API key for accessing Gemini API",
                     },
                 ),
+                "vertex": (
+                    "BOOLEAN",
+                    {
+                        "default": False,
+                        "tooltip": "Use Vertex AI for Gemini API",
+                    },
+                ),
                 "model_name": (
                     "STRING",
                     {
@@ -181,6 +188,7 @@ class GeminiImageUnderstand:
     def understand_image(
         self,
         api_key: str = "",
+        vertex: bool = False,
         model_name: str = "",
         system_prompt: str = "",
         prompt: str = "",
@@ -212,7 +220,7 @@ class GeminiImageUnderstand:
                 img = img.permute(2, 0, 1)
                 images.append(torchvision.transforms.ToPILImage()(img))
 
-        client = GeminiClient(api_key=api_key, proxy_url=proxy_url)
+        client = GeminiClient(api_key=api_key, use_vertex_api_key=vertex, proxy_url=proxy_url)
         text, thought, history = client.generate_text(
             model_name=model_name,
             system_prompt=system_prompt,

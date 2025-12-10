@@ -30,6 +30,7 @@ class GeminiClient:
     def __init__(
         self,
         api_key: str = "",
+        use_vertex_api_key: bool = False,
         use_vertex_ai=False,
         vertex_ai_project=None,
         vertex_ai_json=None,
@@ -115,7 +116,14 @@ class GeminiClient:
                     print("Warning: Gemini API key is not set. Trying to read from environment variable GEMINI_API_KEY.")
                 http_options = types.HttpOptions()
                 http_options.timeout = 120_000  # timeout 120 seconds
-                self.client = genai.Client(http_options=http_options)
+                if use_vertex_api_key:
+                    self.client = genai.Client(
+                        vertexai=True, api_key=api_key, http_options=http_options
+                    )
+                else:
+                    self.client = genai.Client(
+                        api_key=api_key, http_options=http_options
+                    )
 
     def _get_safety_settings(
         self, disable_safety_settings: bool, safety_level: str
@@ -278,7 +286,7 @@ class GeminiClient:
 
         # 针对图像生成模型的特殊配置
         if is_image_generation:
-            config_params["response_modalities"] = ["IMAGE", "TEXT"]
+            config_params["response_modalities"] = ["TEXT", "IMAGE"]
         else:
             config_params["response_mime_type"] = "text/plain"
 
