@@ -1,5 +1,4 @@
-from .gemini_generate_text import GeminiGenerateText, VertexAIGenerateText  # noqa
-from .gemini_image_understand import GeminiImageUnderstand, VertexAIImageUnderstand  # noqa
+from .gemini_generate_text import GeminiGenerateText, VertexAIGenerateText, GeminiImageUnderstand, VertexAIImageUnderstand  # noqa
 from .gemini_generate_image import GeminiGenerateImage, VertexAIGenerateImage  # noqa
 from .openrouter_generate_text import OpenRouterGenerateText  # noqa
 from .openrouter_image_understand import OpenRouterImageUnderstand  # noqa

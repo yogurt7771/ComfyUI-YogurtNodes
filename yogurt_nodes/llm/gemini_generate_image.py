@@ -13,8 +13,8 @@ def inputs_def():
             "model_name": (
                 "STRING",
                 {
-                    "default": "gemini-2.5-flash-image-preview",
-                    "tooltip": "Gemini model name, default is gemini-2.5-flash-image-preview",
+                    "default": "gemini-3-pro-image-preview",
+                    "tooltip": "Gemini model name",
                 },
             ),
             "system_prompt": (
