@@ -132,6 +132,25 @@ class OpenRouterGenerateImage:
                         "tooltip": "Random seed for generation (-1 for random)",
                     },
                 ),
+                "aspect_ratio": (
+                    [
+                        "auto",
+                        "1:1",
+                        "2:3",
+                        "3:2",
+                        "3:4",
+                        "4:3",
+                        "4:5",
+                        "5:4",
+                        "9:16",
+                        "16:9",
+                        "21:9",
+                    ],
+                    {
+                        "default": "auto",
+                        "tooltip": "Aspect ratio for generated images",
+                    },
+                ),
                 "timeout": (
                     "INT",
                     {
@@ -142,13 +161,6 @@ class OpenRouterGenerateImage:
                         "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                     },
                 ),
-                "aspect_ratio": (
-                    ["auto", "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"],
-                    {
-                        "default": "auto",
-                        "tooltip": "Aspect ratio for generated images",
-                    },
-                )
             },
             "optional": {
                 "image": ("IMAGE",),

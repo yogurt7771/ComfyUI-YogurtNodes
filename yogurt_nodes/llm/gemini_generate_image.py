@@ -140,16 +140,6 @@ def inputs_def():
                     "tooltip": "代理URL，格式: protocol://user:pass@addr:port，支持http,https,socks5,socks5h",
                 },
             ),
-            "timeout": (
-                "INT",
-                {
-                    "default": 0,
-                    "min": 0,
-                    "max": 2**31 - 1,
-                    "step": 1,
-                    "tooltip": "Timeout for the request in seconds, 0 means no timeout",
-                },
-            ),
             "seed": (
                 "INT",
                 {
@@ -199,6 +189,16 @@ def inputs_def():
                     "default": "",
                     "multiline": False,
                     "tooltip": "Base URL for Gemini API",
+                },
+            ),
+            "timeout": (
+                "INT",
+                {
+                    "default": 0,
+                    "min": 0,
+                    "max": 2**31 - 1,
+                    "step": 1,
+                    "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                 },
             ),
         },
