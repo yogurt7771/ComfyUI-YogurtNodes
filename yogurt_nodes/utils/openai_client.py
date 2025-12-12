@@ -469,7 +469,8 @@ class OpenAIClient:
         prompt: str = "",
         system_prompt: str = "",
         images: Optional[List[Image.Image]] = None,
-        size: str = "1024x1024",
+        size: str = "auto",
+        aspect_ratio: str = "auto",
         quality: str = "standard",
         style: str = "vivid",
         n: int = 1,
@@ -537,6 +538,7 @@ class OpenAIClient:
                 prompt=final_prompt,
                 images=images,
                 size=size,
+                aspect_ratio=aspect_ratio,
                 quality=quality,
                 style=style,
                 n=n,
@@ -550,6 +552,8 @@ class OpenAIClient:
                 model_name=model_name,
                 prompt=final_prompt,
                 images=images,
+                size=size,
+                aspect_ratio=aspect_ratio,
                 retry_count=retry_count,
                 seed=seed,
                 history=history,
@@ -577,6 +581,7 @@ class OpenAIClient:
         prompt: str,
         images: List[Image.Image],
         size: str,
+        aspect_ratio: str,
         quality: str,
         style: str,
         n: int,
@@ -604,29 +609,26 @@ class OpenAIClient:
         image_kwargs: Dict[str, Any] = {
             "model": model_name,
             "prompt": prompt,
-            "size": size,
             "n": n,
             "response_format": response_format,
         }
-
-        if model_name == "dall-e-2":
-            # dall-e-2 不支持 quality/style
-            image_kwargs.pop("response_format", None)
-            image_kwargs.pop("size", None)
-            # 保持与旧逻辑一致：url 需要二次下载；dall-e-2 仍使用 response_format
+        if size != "auto":
             image_kwargs["size"] = size
-            image_kwargs["response_format"] = response_format
-        elif model_name == "dall-e-3":
-            image_kwargs["style"] = style
+        if aspect_ratio != "auto":
+            image_kwargs["aspect_ratio"] = aspect_ratio
+        if quality != "standard" and quality:
             image_kwargs["quality"] = quality
-            image_kwargs["n"] = 1  # dall-e-3 只支持生成1张图
-        elif model_name == "gpt-image-1":
-            # gpt-image-1 常见 quality 值为 high/medium/low；
-            # 节点历史上使用 standard/hd（dall-e-3 风格），这里做兼容映射。
-            if quality == "hd":
-                image_kwargs["quality"] = "high"
-            elif quality != "standard" and quality:
-                image_kwargs["quality"] = quality
+        if style != "vivid":
+            image_kwargs["style"] = style
+
+        upload_files = []
+        if images:
+            for i, img in enumerate(images):
+                upload_files.append(
+                    _pil_to_upload_file(img, f"image_{i}.png")
+                )
+        if len(upload_files) > 0:
+            image_kwargs["image"] = upload_files
 
         last_exception = None
 
@@ -644,39 +646,8 @@ class OpenAIClient:
             model_management.throw_exception_if_processing_interrupted()
             try:
                 # 有输入图片时优先走编辑（images.edit）；无输入图片走生成（images.generate）
-                if images and len(images) > 0:
-                    # dall-e-3 不支持 edit
-                    if model_name == "dall-e-3":
-                        raise ValueError(
-                            "dall-e-3 不支持 Images API 的 edit（请改用 dall-e-2 或 "
-                            "gpt-image-1）"
-                        )
-
-                    upload_files = []
-                    for i, img in enumerate(images):
-                        upload_files.append(
-                            _pil_to_upload_file(img, f"image_{i}.png")
-                        )
-
-                    # 参考文档：client.images.edit(
-                    #   model="gpt-image-1", image=[...], prompt=...
-                    # )
-                    edit_kwargs: Dict[str, Any] = {
-                        "model": model_name,
-                        "image": upload_files,
-                        "prompt": prompt,
-                        "size": size,
-                        "n": n,
-                        "response_format": response_format,
-                    }
-                    # gpt-image-1 quality 兼容：hd -> high；standard 则不传 quality
-                    if model_name == "gpt-image-1":
-                        if quality == "hd":
-                            edit_kwargs["quality"] = "high"
-                        elif quality != "standard" and quality:
-                            edit_kwargs["quality"] = quality
-
-                    response = client.images.edit(**edit_kwargs)
+                if len(upload_files) > 0:
+                    response = client.images.edit(**image_kwargs)
                     action = "Edited"
                 else:
                     response = client.images.generate(**image_kwargs)

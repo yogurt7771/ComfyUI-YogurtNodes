@@ -54,17 +54,32 @@ class OpenAIGenerateImage:
                     },
                 ),
                 "size": (
-                    ["256x256", "512x512", "1024x1024", "1024x1792", "1792x1024"],
+                    [
+                        "auto",
+                        "1024x1024(gpt-image-1)",
+                        "1536x1024(gpt-image-1)",
+                        "1024x1536(gpt-image-1)",
+                        "256x256(dall-e-2)",
+                        "512x512(dall-e-2)",
+                        "1024x1024(dall-e-2)",
+                        "1024x1024(dall-e-3)",
+                        "1792x1024(dall-e-3)",
+                        "1024x1792(dall-e-3)",
+                        "1k(nano banana)",
+                        "2k(nano banana)",
+                        "4k(nano banana)",
+                        "8k(nano banana)",
+                    ],
                     {
-                        "default": "1024x1024",
+                        "default": "auto",
                         "tooltip": "Size of the generated image",
                     },
                 ),
                 "quality": (
-                    ["standard", "hd"],
+                    ["auto", "high", "standard", "hd"],
                     {
-                        "default": "standard",
-                        "tooltip": "Quality of the generated image (dall-e-3 only)",
+                        "default": "auto",
+                        "tooltip": "Quality of the generated image",
                     },
                 ),
                 "style": (
@@ -140,6 +155,25 @@ class OpenAIGenerateImage:
                         "tooltip": "Random seed for generation (-1 for random)",
                     },
                 ),
+                "aspect_ratio": (
+                    [
+                        "auto",
+                        "1:1",
+                        "2:3",
+                        "3:2",
+                        "3:4",
+                        "4:3",
+                        "4:5",
+                        "5:4",
+                        "9:16",
+                        "16:9",
+                        "21:9",
+                    ],
+                    {
+                        "default": "auto",
+                        "tooltip": "Aspect ratio for generated images, for nano banana only",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -183,6 +217,7 @@ class OpenAIGenerateImage:
         proxy_url: str,
         api_type: str,
         seed: int,
+        aspect_ratio: str,
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -198,7 +233,9 @@ class OpenAIGenerateImage:
                     img = img[0]
                 img = img.permute(2, 0, 1)
                 images.append(torchvision.transforms.ToPILImage()(img))
-
+        if size != "auto":
+            if "(" in size:
+                size = size[:size.find("(")]
         client = OpenAIClient(api_key, base_url, proxy_url)
         images, text, history = client.generate_image(
             model_name=model_name,
@@ -206,6 +243,7 @@ class OpenAIGenerateImage:
             system_prompt=system_prompt,
             images=images,
             size=size,
+            aspect_ratio=aspect_ratio,
             quality=quality,
             style=style,
             n=n,
