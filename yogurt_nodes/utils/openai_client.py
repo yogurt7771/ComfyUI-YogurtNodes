@@ -616,7 +616,7 @@ class OpenAIClient:
             image_kwargs["size"] = size
         if aspect_ratio != "auto":
             image_kwargs["aspect_ratio"] = aspect_ratio
-        if quality != "standard" and quality:
+        if quality and quality != "standard" and quality != "auto":
             image_kwargs["quality"] = quality
         if style != "vivid":
             image_kwargs["style"] = style
