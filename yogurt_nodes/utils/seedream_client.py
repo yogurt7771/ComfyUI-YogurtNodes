@@ -25,9 +25,10 @@ class SeeDreamClient:
     豆包-SeeDream客户端，用于调用火山引擎豆包图像生成API
     """
 
-    def __init__(self, api_key: str = "", proxy_url: str = ""):
+    def __init__(self, api_key: str = "", proxy_url: str = "", timeout: int = 0):
         self.api_key = self._get_api_key(api_key)
         self.proxy_url = proxy_url
+        self.timeout = timeout
 
     def _get_api_key(self, api_key: str) -> str:
         """获取API密钥，按优先级顺序：参数 > 配置文件 > 环境变量"""
@@ -72,7 +73,7 @@ class SeeDreamClient:
 
     def _download_image(self, url: str) -> Image.Image:
         """从URL下载图像"""
-        response = requests.get(url, proxies=self._prepare_proxies(), timeout=30)
+        response = requests.get(url, proxies=self._prepare_proxies(), timeout=self.timeout if self.timeout > 0 else None)
         response.raise_for_status()
         return Image.open(io.BytesIO(response.content))
 
@@ -154,7 +155,7 @@ class SeeDreamClient:
                     headers=headers,
                     json=data,
                     proxies=proxies,
-                    timeout=60,
+                    timeout=self.timeout if self.timeout > 0 else None,
                 )
 
                 response.raise_for_status()

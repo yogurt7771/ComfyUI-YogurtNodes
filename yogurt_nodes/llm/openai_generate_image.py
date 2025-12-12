@@ -174,6 +174,16 @@ class OpenAIGenerateImage:
                         "tooltip": "Aspect ratio for generated images, for nano banana only",
                     },
                 ),
+                "timeout": (
+                    "INT",
+                    {
+                        "default": 0,
+                        "min": 0,
+                        "max": 2**31 - 1,
+                        "step": 1,
+                        "tooltip": "Timeout for the request in seconds, 0 means no timeout",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -218,6 +228,7 @@ class OpenAIGenerateImage:
         api_type: str,
         seed: int,
         aspect_ratio: str,
+        timeout: int,
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -236,7 +247,7 @@ class OpenAIGenerateImage:
         if size != "auto":
             if "(" in size:
                 size = size[:size.find("(")]
-        client = OpenAIClient(api_key, base_url, proxy_url)
+        client = OpenAIClient(api_key, base_url, proxy_url, timeout)
         images, text, history = client.generate_image(
             model_name=model_name,
             prompt=prompt,

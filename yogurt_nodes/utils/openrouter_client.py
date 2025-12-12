@@ -18,7 +18,7 @@ class OpenRouterClient:
     OpenRouter API 客户端封装类
     """
 
-    def __init__(self, api_key: str = "", proxy_url: str = ""):
+    def __init__(self, api_key: str = "", proxy_url: str = "", timeout: int = 0):
         """
         初始化 OpenRouter 客户端
 
@@ -60,6 +60,7 @@ class OpenRouterClient:
             }
         else:
             self.proxies = None
+        self.timeout = timeout
 
     def generate_text(
         self,
@@ -134,7 +135,7 @@ class OpenRouterClient:
                     f"{self.base_url}/chat/completions",
                     headers=self.headers,
                     json=payload,
-                    timeout=120,
+                    timeout=self.timeout if self.timeout > 0 else None,
                     proxies=self.proxies,
                 )
                 # print(response)
@@ -243,7 +244,7 @@ class OpenRouterClient:
                     f"{self.base_url}/chat/completions",
                     headers=self.headers,
                     json=payload,
-                    timeout=120,
+                    timeout=self.timeout if self.timeout > 0 else None,
                     proxies=self.proxies,
                 )
 
@@ -348,7 +349,7 @@ class OpenRouterClient:
         """获取可用模型列表"""
         try:
             response = requests.get(
-                f"{self.base_url}/models", headers=self.headers, timeout=30, proxies=self.proxies
+                f"{self.base_url}/models", headers=self.headers, timeout=self.timeout if self.timeout > 0 else None, proxies=self.proxies
             )
 
             if response.status_code == 200:
@@ -430,7 +431,7 @@ class OpenRouterClient:
             response = requests.get(
                 f"{self.base_url}/generation/{generation_id}",
                 headers=self.headers,
-                timeout=30,
+                timeout=self.timeout if self.timeout > 0 else None,
                 proxies=self.proxies,
             )
 

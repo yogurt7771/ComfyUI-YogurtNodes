@@ -155,7 +155,11 @@ class OpenAIClient:
     """
 
     def __init__(
-        self, api_key: str = "", base_url: str = "", proxy_url: str = ""
+        self,
+        api_key: str = "",
+        base_url: str = "",
+        proxy_url: str = "",
+        timeout: int = 0,
     ):
         """
         初始化 OpenAI 客户端
@@ -222,6 +226,7 @@ class OpenAIClient:
             }
         else:
             self.proxies = None
+        self.timeout = timeout
 
     def generate_text(
         self,
@@ -293,7 +298,7 @@ class OpenAIClient:
                     f"{self.base_url}/chat/completions",
                     headers=self.headers,
                     json=payload,
-                    timeout=120,
+                    timeout=self.timeout if self.timeout > 0 else None,
                     proxies=self.proxies,
                 )
                 # pprint(response.text)
@@ -385,7 +390,7 @@ class OpenAIClient:
             response = requests.get(
                 f"{self.base_url}/models",
                 headers=self.headers,
-                timeout=30,
+                timeout=self.timeout if self.timeout > 0 else None,
                 proxies=self.proxies,
             )
 
@@ -634,7 +639,7 @@ class OpenAIClient:
 
         http_client = httpx.Client(
             proxy=(self.proxy_url if self.proxy_url else None),
-            timeout=120.0,
+            timeout=self.timeout if self.timeout > 0 else None,
         )
         client = openai.Client(
             api_key=self.api_key,
@@ -664,7 +669,7 @@ class OpenAIClient:
                     ):
                         # 从URL下载图像
                         img_response = requests.get(
-                            image_data.url, timeout=60, proxies=self.proxies
+                            image_data.url, timeout=self.timeout if self.timeout > 0 else None, proxies=self.proxies
                         )
                         if img_response.status_code == 200:
                             img = Image.open(io.BytesIO(img_response.content))
@@ -723,7 +728,7 @@ class OpenAIClient:
 
         http_client = httpx.Client(
             proxy=(self.proxy_url if self.proxy_url else None),
-            timeout=120.0,
+            timeout=self.timeout if self.timeout > 0 else None,
         )
         client = openai.Client(
             api_key=self.api_key,

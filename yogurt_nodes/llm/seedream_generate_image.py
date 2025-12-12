@@ -116,6 +116,16 @@ class SeeDreamGenerateImage:
                         "tooltip": "随机种子",
                     },
                 ),
+                "timeout": (
+                    "INT",
+                    {
+                        "default": 0,
+                        "min": 0,
+                        "max": 2**31 - 1,
+                        "step": 1,
+                        "tooltip": "Timeout for the request in seconds, 0 means no timeout",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE", {"tooltip": "输入图像（用于图生图）"}),
@@ -155,6 +165,7 @@ class SeeDreamGenerateImage:
         region: str,
         proxy_url: str,
         seed: int,
+        timeout: int,
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -195,7 +206,7 @@ class SeeDreamGenerateImage:
                 input_images.append(pil_img)
 
         # 创建客户端
-        client = SeeDreamClient(api_key, proxy_url)
+        client = SeeDreamClient(api_key, proxy_url, timeout)
 
         # 调用API
         generated_images, response_text = client.generate_image(

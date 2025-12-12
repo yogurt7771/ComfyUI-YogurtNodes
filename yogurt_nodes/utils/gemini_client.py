@@ -37,6 +37,7 @@ class GeminiClient:
         vertex_ai_json=None,
         vertex_ai_region=None,
         proxy_url: str = "",
+        timeout: int = 0,
     ):
         """
         初始化 Gemini 客户端
@@ -106,7 +107,8 @@ class GeminiClient:
                 if base_url:
                     http_options.base_url = base_url
                 http_options.api_version = "v1"
-                http_options.timeout = 120_000  # timeout 120 seconds
+                if timeout > 0:
+                    http_options.timeout = timeout * 1000
                 self.client = genai.Client(http_options=http_options, vertexai=True, credentials=credentials, project=vertex_ai_project, location=vertex_ai_region)
             else:
                 print("Using Google Gemini API")
@@ -120,7 +122,8 @@ class GeminiClient:
                 http_options = types.HttpOptions()
                 if base_url:
                     http_options.base_url = base_url
-                http_options.timeout = 120_000  # timeout 120 seconds
+                if timeout > 0:
+                    http_options.timeout = timeout * 1000
                 if use_vertex_api_key:
                     self.client = genai.Client(
                         vertexai=True, api_key=api_key, http_options=http_options

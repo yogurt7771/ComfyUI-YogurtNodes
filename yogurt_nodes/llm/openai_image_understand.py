@@ -135,6 +135,16 @@ class OpenAIImageUnderstand:
                         "tooltip": "代理URL，格式: protocol://user:pass@addr:port，支持http,https,socks5,socks5h",
                     },
                 ),
+                "timeout": (
+                    "INT",
+                    {
+                        "default": 0,
+                        "min": 0,
+                        "max": 2**31 - 1,
+                        "step": 1,
+                        "tooltip": "Timeout for the request in seconds, 0 means no timeout",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -174,6 +184,7 @@ class OpenAIImageUnderstand:
         retry_count: int,
         chat_template: str,
         proxy_url: str,
+        timeout: int,
         image: torch.Tensor | None = None,
         image1: torch.Tensor | None = None,
         image2: torch.Tensor | None = None,
@@ -181,7 +192,7 @@ class OpenAIImageUnderstand:
         image4: torch.Tensor | None = None,
         history: List[tuple[str, str]] | None = None,
     ):
-        client = OpenAIClient(api_key, base_url, proxy_url)
+        client = OpenAIClient(api_key, base_url, proxy_url, timeout)
 
         # 将tensor转换为PIL图像列表
         images = []

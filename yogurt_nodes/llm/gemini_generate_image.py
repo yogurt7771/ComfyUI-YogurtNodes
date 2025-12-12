@@ -140,6 +140,16 @@ def inputs_def():
                     "tooltip": "代理URL，格式: protocol://user:pass@addr:port，支持http,https,socks5,socks5h",
                 },
             ),
+            "timeout": (
+                "INT",
+                {
+                    "default": 0,
+                    "min": 0,
+                    "max": 2**31 - 1,
+                    "step": 1,
+                    "tooltip": "Timeout for the request in seconds, 0 means no timeout",
+                },
+            ),
             "seed": (
                 "INT",
                 {
@@ -336,6 +346,7 @@ class GeminiGenerateImage:
         thinking_budget: int = 0,
         chat_template: str = "",
         proxy_url: str = "",
+        timeout: int = 0,
         seed: int = -1,
         aspect_ratio: str = "auto",
         image_size: str = "2k",
@@ -353,6 +364,7 @@ class GeminiGenerateImage:
             use_vertex_api_key=vertex,
             proxy_url=proxy_url,
             base_url=base_url,
+            timeout=timeout,
         )
         return generate_image(
             client=client,
@@ -454,6 +466,7 @@ class VertexAIGenerateImage:
         thinking_budget: int = 0,
         chat_template: str = "",
         proxy_url: str = "",
+        timeout: int = 0,
         seed: int = -1,
         aspect_ratio: str = "auto",
         image_size: str = "2k",
@@ -473,6 +486,7 @@ class VertexAIGenerateImage:
             vertex_ai_region=location,
             proxy_url=proxy_url,
             base_url=base_url,
+            timeout=timeout,
         )
         return generate_image(
             client=client,

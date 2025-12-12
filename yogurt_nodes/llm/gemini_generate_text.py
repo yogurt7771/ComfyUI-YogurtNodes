@@ -166,6 +166,16 @@ class GeminiGenerateTextBase:
                         "tooltip": "代理URL，格式: protocol://user:pass@addr:port，支持http,https,socks5,socks5h",
                     },
                 ),
+                "timeout": (
+                    "INT",
+                    {
+                        "default": 0,
+                        "min": 0,
+                        "max": 2**31 - 1,
+                        "step": 1,
+                        "tooltip": "Timeout for the request in seconds, 0 means no timeout",
+                    },
+                ),
                 "seed": (
                     "INT",
                     {
@@ -282,8 +292,13 @@ class GeminiGenerateText(GeminiGenerateTextBase):
         vertex = kwargs.get("vertex", False)
         proxy_url = kwargs.get("proxy_url", "")
         base_url = kwargs.get("base_url", "")
+        timeout = kwargs.get("timeout", 0)
         return GeminiClient(
-            api_key=api_key, use_vertex_api_key=vertex, proxy_url=proxy_url, base_url=base_url
+            api_key=api_key,
+            use_vertex_api_key=vertex,
+            proxy_url=proxy_url,
+            base_url=base_url,
+            timeout=timeout,
         )
 
 
@@ -357,6 +372,7 @@ class VertexAIGenerateText(GeminiGenerateTextBase):
         location = kwargs.get("location", "")
         proxy_url = kwargs.get("proxy_url", "")
         base_url = kwargs.get("base_url", "")
+        timeout = kwargs.get("timeout", 0)
         return GeminiClient(
             credentials_json=credentials,
             project_id=project_id,
@@ -364,6 +380,7 @@ class VertexAIGenerateText(GeminiGenerateTextBase):
             use_vertex_api_key=True,
             proxy_url=proxy_url,
             base_url=base_url,
+            timeout=timeout,
         )
 
 

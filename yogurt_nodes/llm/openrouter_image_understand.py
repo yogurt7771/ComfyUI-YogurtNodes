@@ -148,6 +148,16 @@ class OpenRouterImageUnderstand:
                         "tooltip": "Random seed for generation (-1 for random)",
                     },
                 ),
+                "timeout": (
+                    "INT",
+                    {
+                        "default": 0,
+                        "min": 0,
+                        "max": 2**31 - 1,
+                        "step": 1,
+                        "tooltip": "Timeout for the request in seconds, 0 means no timeout",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -187,6 +197,7 @@ class OpenRouterImageUnderstand:
         provider_list: str = "",
         proxy_url: str = "",
         seed: int = -1,
+        timeout: int = 0,
         image: torch.Tensor | None = None,
         image1: torch.Tensor | None = None,
         image2: torch.Tensor | None = None,
@@ -206,7 +217,7 @@ class OpenRouterImageUnderstand:
         if not images:
             raise ValueError("At least one image must be provided")
 
-        client = OpenRouterClient(api_key, proxy_url)
+        client = OpenRouterClient(api_key, proxy_url, timeout)
 
         # Parse provider list or use single infrastructure_provider
         provider_param = None

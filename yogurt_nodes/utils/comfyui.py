@@ -18,13 +18,13 @@ class ComfyUIClient(object):
         server: str,
         workflow: str | Dict[str, Any],
         poll_interval: float = 0.1,
-        timeout: Optional[float] = 120.0,
+        timeout: Optional[float] = 0,
     ):
         self.SERVER_ADDRESS = self._normalize_server(server)
         self.CLIENT_ID = str(uuid.uuid4())
         self.session: Optional[requests.Session] = None
         self.poll_interval = self._normalize_poll_interval(poll_interval)
-        self.timeout = self._normalize_timeout(timeout)
+        self.timeout = self._normalize_timeout(timeout if timeout > 0 else None)
         self.comfyui_prompt = self._load_workflow(workflow)
         self._title_map = self._build_title_map()
 

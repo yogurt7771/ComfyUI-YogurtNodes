@@ -18,7 +18,7 @@ class FreedomGPTClient:
     FreedomGPT API 客户端封装类
     """
 
-    def __init__(self, api_key: str = "", proxy_url: str = ""):
+    def __init__(self, api_key: str = "", proxy_url: str = "", timeout: int = 0):
         """
         初始化 FreedomGPT 客户端
 
@@ -49,7 +49,7 @@ class FreedomGPTClient:
             api_key = os.getenv("FREEDOMGPT_API_KEY", "")
 
         self.api_key = api_key
-
+        self.timeout = timeout
         # FreedomGPT 固定基础 URL
         self.base_url = "https://chat.freedomgpt.com/api/v1"
 
@@ -162,7 +162,7 @@ class FreedomGPTClient:
                     f"{self.base_url}/chat/completions",
                     headers=self.headers,
                     json=payload,
-                    timeout=120,
+                    timeout=self.timeout if self.timeout > 0 else None,
                     proxies=self.proxies,
                 )
 
@@ -197,7 +197,7 @@ class FreedomGPTClient:
             response = requests.get(
                 f"{self.base_url}/models",
                 headers=self.headers,
-                timeout=30,
+                timeout=self.timeout if self.timeout > 0 else None,
                 proxies=self.proxies,
             )
             response.raise_for_status()
@@ -349,7 +349,7 @@ class FreedomGPTClient:
                     f"{self.base_url}/images/generations",
                     headers=self.headers,
                     json=payload,
-                    timeout=120,
+                    timeout=self.timeout if self.timeout > 0 else None,
                     proxies=self.proxies,
                 )
 
@@ -365,7 +365,7 @@ class FreedomGPTClient:
                                     # 下载图像
                                     img_response = requests.get(
                                         image_data["url"],
-                                        timeout=60,
+                                        timeout=self.timeout if self.timeout > 0 else None,
                                         proxies=self.proxies,
                                     )
                                     if img_response.status_code == 200:
