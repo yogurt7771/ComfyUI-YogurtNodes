@@ -33,9 +33,9 @@ class OpenAIGenerateImage:
                     },
                 ),
                 "model_name": (
-                    OpenAIClient.get_image_models(),
+                    "STRING",
                     {
-                        "default": "gpt-5",
+                        "default": "gpt-image-1",
                         "tooltip": "OpenAI image generation model name",
                     },
                 ),

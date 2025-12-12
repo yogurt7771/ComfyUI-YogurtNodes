@@ -29,6 +29,14 @@ class GeminiGenerateTextBase:
                         "tooltip": "Use Vertex AI for Gemini API",
                     },
                 ),
+                "base_url": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "multiline": False,
+                        "tooltip": "Base URL for Gemini API",
+                    },
+                ),
                 "model_name": (
                     "STRING",
                     {
@@ -273,8 +281,9 @@ class GeminiGenerateText(GeminiGenerateTextBase):
         api_key = kwargs.get("api_key", "")
         vertex = kwargs.get("vertex", False)
         proxy_url = kwargs.get("proxy_url", "")
+        base_url = kwargs.get("base_url", "")
         return GeminiClient(
-            api_key=api_key, use_vertex_api_key=vertex, proxy_url=proxy_url
+            api_key=api_key, use_vertex_api_key=vertex, proxy_url=proxy_url, base_url=base_url
         )
 
 
@@ -347,12 +356,14 @@ class VertexAIGenerateText(GeminiGenerateTextBase):
         project_id = kwargs.get("project_id", "")
         location = kwargs.get("location", "")
         proxy_url = kwargs.get("proxy_url", "")
+        base_url = kwargs.get("base_url", "")
         return GeminiClient(
             credentials_json=credentials,
             project_id=project_id,
             location=location,
             use_vertex_api_key=True,
             proxy_url=proxy_url,
+            base_url=base_url,
         )
 
 

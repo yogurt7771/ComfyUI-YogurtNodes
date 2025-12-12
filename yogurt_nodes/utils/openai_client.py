@@ -24,7 +24,9 @@ def image_to_base64(image: Image.Image) -> str:
     return base64.b64encode(img_bytes).decode("utf-8")
 
 
-def add_image_contents(images: List[Image.Image], contents: List[Dict[str, Any]]):
+def add_image_contents(
+    images: List[Image.Image], contents: List[Dict[str, Any]]
+):
     for image in images:
         base64_image = image_to_base64(image)
         contents.append(
@@ -53,7 +55,9 @@ def build_messages(
     if len(chat_template) == 0:
         template_path = Path(__file__).parent / "template.txt"
         if template_path.exists():
-            template_content = template_path.read_text(encoding="utf-8").strip()
+            template_content = template_path.read_text(
+                encoding="utf-8"
+            ).strip()
         else:
             template_content = (
                 "<-system->\n"
@@ -84,7 +88,9 @@ def build_messages(
                         "{{system_instruction}}", system_prompt
                     )
                     if "{{prompt}}" in message_content:
-                        message_content = message_content.replace("{{prompt}}", prompt)
+                        message_content = message_content.replace(
+                            "{{prompt}}", prompt
+                        )
                         with_user_prompt = True
                     if role == "history":
                         for role, content in history:
@@ -103,7 +109,9 @@ def build_messages(
                                 message_role = user_role
                             elif role == "assistant":
                                 message_role = model_role
-                            messages.append({"role": message_role, "content": contents})
+                            messages.append(
+                                {"role": message_role, "content": contents}
+                            )
                     else:
                         if role == "system":
                             message_role = system_role
@@ -119,11 +127,17 @@ def build_messages(
                                     "text": message_content,
                                 }
                             )
-                        if role == "user" and with_user_prompt and not added_image:
+                        if (
+                            role == "user"
+                            and with_user_prompt
+                            and not added_image
+                        ):
                             add_image_contents(images, contents)
                             added_image = True
                         if len(contents) > 0:
-                            messages.append({"role": message_role, "content": contents})
+                            messages.append(
+                                {"role": message_role, "content": contents}
+                            )
                 content_lines = []
                 role = None  # 重置角色
             else:
@@ -140,14 +154,17 @@ class OpenAIClient:
     OpenAI API 客户端封装类
     """
 
-    def __init__(self, api_key: str = "", base_url: str = "", proxy_url: str = ""):
+    def __init__(
+        self, api_key: str = "", base_url: str = "", proxy_url: str = ""
+    ):
         """
         初始化 OpenAI 客户端
 
         Args:
             api_key (str): OpenAI API 密钥
             base_url (str): API 基础 URL，默认为官方 API
-            proxy_url (str): 代理URL，格式为 protocol://user:pass@addr:port，支持http,https,socks5,socks5h
+            proxy_url (str): 代理URL，格式为 protocol://user:pass@addr:port，
+                支持http,https,socks5,socks5h
 
         API Key 支持三种获取方式，优先级如下：
         1. 直接通过参数 api_key 传入（推荐用于编程调用）
@@ -163,7 +180,6 @@ class OpenAIClient:
         """
         api_keys = None
         if len(api_key) == 0:  # 如果 api_key 为空，则尝试从 api_key.json 文件中读取
-            current_dir = os.path.dirname(os.path.abspath(__file__))
             if api_keys is None:
                 api_keys = load_api_keys()
             if "openai" in api_keys:
@@ -284,14 +300,21 @@ class OpenAIClient:
 
                 if response.status_code == 200:
                     result = response.json()
-                    content = result["choices"][0]["message"]["content"].strip()
+                    choice0 = result["choices"][0]
+                    content = choice0["message"]["content"].strip()
                     if content:
                         history.append(("assistant", content))
                         return content, history, payload
                     raise ValueError("Empty response content from API")
                 else:
-                    error_msg = f"API request failed with status {response.status_code if response is not None else 'None'}: {response.text if response is not None else 'None'}"
-                    # pprint(f"Attempt {attempt + 1} failed: {error_msg}")
+                    if response is None:
+                        status = "None"
+                    else:
+                        status = response.status_code
+                    body = response.text if response is not None else "None"
+                    error_msg = (
+                        f"API request failed with status {status}: {body}"
+                    )
                     last_exception = Exception(error_msg)
 
             except (
@@ -299,11 +322,9 @@ class OpenAIClient:
                 TimeoutError,
                 requests.RequestException,
             ) as exception:
-                # pprint(f"Network error in attempt {attempt + 1}/{retry_count}: {exception}")
                 last_exception = exception
                 time.sleep(3)
             except Exception as exception:
-                # pprint(f"Unexpected error in attempt {attempt + 1}/{retry_count}: {exception} {response.text if response is not None else 'None'}")
                 last_exception = exception
                 time.sleep(3)
 
@@ -371,15 +392,12 @@ class OpenAIClient:
             if response.status_code == 200:
                 return response.json()["data"]
             else:
-                # pprint(
-                #     f"Error getting models: HTTP {response.status_code}: {response.text}"
-                # )
                 return []
 
-        except (ConnectionError, TimeoutError, requests.RequestException) as exception:
+        except (ConnectionError, TimeoutError, requests.RequestException):
             # print(f"Network error getting models: {exception}")
             return []
-        except Exception as exception:
+        except Exception:
             # print(f"Unexpected error getting models: {exception}")
             return []
 
@@ -396,10 +414,10 @@ class OpenAIClient:
 
             return sorted(model_ids)
 
-        except (ConnectionError, TimeoutError, requests.RequestException) as exception:
+        except (ConnectionError, TimeoutError, requests.RequestException):
             # print(f"Network error getting models: {exception}")
             return []
-        except Exception as exception:
+        except Exception:
             # print(f"Unexpected error getting models: {exception}")
             return []
 
@@ -509,13 +527,15 @@ class OpenAIClient:
         elif api_type == "response":
             use_images_api = False
         else:  # auto
-            dalle_models = ["dall-e-2", "dall-e-3"]
-            use_images_api = model_name in dalle_models
+            # OpenAI Images API: dall-e-* 与 gpt-image-1
+            images_api_models = ["dall-e-2", "dall-e-3", "gpt-image-1"]
+            use_images_api = model_name in images_api_models
 
         if use_images_api:
             return self._generate_image_with_images_api(
                 model_name=model_name,
                 prompt=final_prompt,
+                images=images,
                 size=size,
                 quality=quality,
                 style=style,
@@ -547,7 +567,7 @@ class OpenAIClient:
                 }
             return {}
 
-        except Exception as exception:
+        except Exception:
             # print(f"Error parsing usage info: {exception}")
             return {}
 
@@ -555,6 +575,7 @@ class OpenAIClient:
         self,
         model_name: str,
         prompt: str,
+        images: List[Image.Image],
         size: str,
         quality: str,
         style: str,
@@ -564,55 +585,129 @@ class OpenAIClient:
         seed: int,
         history: List[tuple[str, str]],
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
-        """使用传统Images API生成图像（适用于DALL-E模型）"""
+        """使用 OpenAI Images API 生成/编辑图像（dall-e-*、gpt-image-1）"""
 
-        # 构建参数字典
-        image_kwargs = {
+        def _pil_to_upload_file(img: Image.Image, filename: str) -> io.BytesIO:
+            """
+            将 PIL Image 转为可被 openai-python multipart 上传的类文件对象。
+            关键点：需要 name 属性（用于文件名），且 seek(0)。
+            """
+            buf = io.BytesIO()
+            # PNG 更通用，且支持透明背景
+            img.save(buf, format="PNG")
+            buf.seek(0)
+            # openai-python 会读取 file.name 作为 multipart filename
+            buf.name = filename  # type: ignore[attr-defined]
+            return buf
+
+        # 构建参数字典（不同模型支持的参数不同，避免传入无效字段）
+        image_kwargs: Dict[str, Any] = {
             "model": model_name,
             "prompt": prompt,
             "size": size,
-            "quality": quality,
             "n": n,
             "response_format": response_format,
         }
 
-        # dall-e-3 特有参数
-        if model_name == "dall-e-3":
+        if model_name == "dall-e-2":
+            # dall-e-2 不支持 quality/style
+            image_kwargs.pop("response_format", None)
+            image_kwargs.pop("size", None)
+            # 保持与旧逻辑一致：url 需要二次下载；dall-e-2 仍使用 response_format
+            image_kwargs["size"] = size
+            image_kwargs["response_format"] = response_format
+        elif model_name == "dall-e-3":
             image_kwargs["style"] = style
+            image_kwargs["quality"] = quality
             image_kwargs["n"] = 1  # dall-e-3 只支持生成1张图
-
-        # 处理seed参数
-        current_seed = random.randint(0, 2**31 - 1) if seed == -1 else seed
+        elif model_name == "gpt-image-1":
+            # gpt-image-1 常见 quality 值为 high/medium/low；
+            # 节点历史上使用 standard/hd（dall-e-3 风格），这里做兼容映射。
+            if quality == "hd":
+                image_kwargs["quality"] = "high"
+            elif quality != "standard" and quality:
+                image_kwargs["quality"] = quality
 
         last_exception = None
 
-        http_client = httpx.Client(proxy=(self.proxy_url if self.proxy_url else None), timeout=120.0)
+        http_client = httpx.Client(
+            proxy=(self.proxy_url if self.proxy_url else None),
+            timeout=120.0,
+        )
         client = openai.Client(
-            api_key=self.api_key, base_url=self.base_url, http_client=http_client
+            api_key=self.api_key,
+            base_url=self.base_url,
+            http_client=http_client,
         )
 
         for _attempt in range(retry_count):
             model_management.throw_exception_if_processing_interrupted()
             try:
-                response = client.images.generate(**image_kwargs)
+                # 有输入图片时优先走编辑（images.edit）；无输入图片走生成（images.generate）
+                if images and len(images) > 0:
+                    # dall-e-3 不支持 edit
+                    if model_name == "dall-e-3":
+                        raise ValueError(
+                            "dall-e-3 不支持 Images API 的 edit（请改用 dall-e-2 或 "
+                            "gpt-image-1）"
+                        )
 
-                images = []
+                    upload_files = []
+                    for i, img in enumerate(images):
+                        upload_files.append(
+                            _pil_to_upload_file(img, f"image_{i}.png")
+                        )
+
+                    # 参考文档：client.images.edit(
+                    #   model="gpt-image-1", image=[...], prompt=...
+                    # )
+                    edit_kwargs: Dict[str, Any] = {
+                        "model": model_name,
+                        "image": upload_files,
+                        "prompt": prompt,
+                        "size": size,
+                        "n": n,
+                        "response_format": response_format,
+                    }
+                    # gpt-image-1 quality 兼容：hd -> high；standard 则不传 quality
+                    if model_name == "gpt-image-1":
+                        if quality == "hd":
+                            edit_kwargs["quality"] = "high"
+                        elif quality != "standard" and quality:
+                            edit_kwargs["quality"] = quality
+
+                    response = client.images.edit(**edit_kwargs)
+                    action = "Edited"
+                else:
+                    response = client.images.generate(**image_kwargs)
+                    action = "Generated"
+
+                out_images: List[Image.Image] = []
                 revised_prompt = prompt
 
                 for image_data in response.data:
-                    if response_format == "url":
+                    if (
+                        response_format == "url"
+                        and hasattr(image_data, "url")
+                        and image_data.url
+                    ):
                         # 从URL下载图像
                         img_response = requests.get(
                             image_data.url, timeout=60, proxies=self.proxies
                         )
                         if img_response.status_code == 200:
                             img = Image.open(io.BytesIO(img_response.content))
-                            images.append(img)
+                            out_images.append(img)
                     else:
                         # 从base64解码图像
+                        if (
+                            not hasattr(image_data, "b64_json")
+                            or not image_data.b64_json
+                        ):
+                            continue
                         img_data = base64.b64decode(image_data.b64_json)
                         img = Image.open(io.BytesIO(img_data))
-                        images.append(img)
+                        out_images.append(img)
 
                     # 获取修订后的提示词（dall-e-3特有）
                     if (
@@ -621,15 +716,20 @@ class OpenAIClient:
                     ):
                         revised_prompt = image_data.revised_prompt
 
-                history.append(("user", prompt.split("\n\n")[-1]))  # 使用原始prompt
+                history.append(
+                    ("user", prompt.split("\n\n")[-1])
+                )  # 使用原始prompt
                 history.append(
                     (
                         "assistant",
-                        f"Generated {len(images)} image(s). Revised prompt: {revised_prompt}",
+                        (
+                            f"{action} {len(out_images)} image(s). "
+                            f"Revised: {revised_prompt}"
+                        ),
                     )
                 )
 
-                return images, revised_prompt, history
+                return out_images, revised_prompt, history
 
             except Exception as exception:
                 last_exception = exception
@@ -648,14 +748,16 @@ class OpenAIClient:
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """使用Responses API生成图像（适用于GPT模型）"""
 
-        # 处理seed参数
-        current_seed = random.randint(0, 2**31 - 1) if seed == -1 else seed
-
         last_exception = None
 
-        http_client = httpx.Client(proxy=(self.proxy_url if self.proxy_url else None), timeout=120.0)
+        http_client = httpx.Client(
+            proxy=(self.proxy_url if self.proxy_url else None),
+            timeout=120.0,
+        )
         client = openai.Client(
-            api_key=self.api_key, base_url=self.base_url, http_client=http_client
+            api_key=self.api_key,
+            base_url=self.base_url,
+            http_client=http_client,
         )
 
         for _attempt in range(retry_count):
@@ -669,11 +771,9 @@ class OpenAIClient:
                     # 添加图像输入
                     for img in images:
                         img_base64 = image_to_base64(img)
+                        image_url = f"data:image/jpeg;base64,{img_base64}"
                         content.append(
-                            {
-                                "type": "input_image",
-                                "image_url": f"data:image/jpeg;base64,{img_base64}",
-                            }
+                            {"type": "input_image", "image_url": image_url}
                         )
 
                     input_data = [{"role": "user", "content": content}]

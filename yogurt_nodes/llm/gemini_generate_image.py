@@ -183,6 +183,14 @@ def inputs_def():
                     "tooltip": "Thinking level for the model, if thinking budget is not 0, this parameter will be ignored",
                 },
             ),
+            "base_url": (
+                "STRING",
+                {
+                    "default": "",
+                    "multiline": False,
+                    "tooltip": "Base URL for Gemini API",
+                },
+            ),
         },
         "optional": {
             "image": ("IMAGE",),
@@ -332,6 +340,7 @@ class GeminiGenerateImage:
         aspect_ratio: str = "auto",
         image_size: str = "2k",
         thinking_level: str = "OFF",
+        base_url: str = "",
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -339,7 +348,12 @@ class GeminiGenerateImage:
         image4: Optional[torch.Tensor] = None,
         history: List[tuple[str, str]] | None = None,
     ):
-        client = GeminiClient(api_key=api_key, use_vertex_api_key=vertex, proxy_url=proxy_url)
+        client = GeminiClient(
+            api_key=api_key,
+            use_vertex_api_key=vertex,
+            proxy_url=proxy_url,
+            base_url=base_url,
+        )
         return generate_image(
             client=client,
             model_name=model_name,
@@ -444,6 +458,7 @@ class VertexAIGenerateImage:
         aspect_ratio: str = "auto",
         image_size: str = "2k",
         thinking_level: str = "OFF",
+        base_url: str = "",
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -457,6 +472,7 @@ class VertexAIGenerateImage:
             vertex_ai_project=project_id,
             vertex_ai_region=location,
             proxy_url=proxy_url,
+            base_url=base_url,
         )
         return generate_image(
             client=client,

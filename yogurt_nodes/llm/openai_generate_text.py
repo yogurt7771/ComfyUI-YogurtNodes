@@ -10,19 +10,6 @@ class OpenAIGenerateText:
 
     @classmethod
     def INPUT_TYPES(cls):
-        # 尝试获取动态模型列表，如果失败则使用缓存列表
-        try:
-            # 创建临时客户端获取列表（使用环境变量或缓存）
-            temp_client = OpenAIClient()
-            models = temp_client.get_all_models()
-        except Exception:
-            # 如果API调用失败，使用缓存列表
-            models = OpenAIClient.get_cached_models()
-
-        # 确保列表不为空
-        if not models:
-            models = OpenAIClient.get_cached_models()
-
         return {
             "required": {
                 "api_key": (
@@ -42,9 +29,9 @@ class OpenAIGenerateText:
                     },
                 ),
                 "model_name": (
-                    models,
+                    "STRING",
                     {
-                        "default": "gpt-4o-mini",
+                        "default": "gpt-5.1",
                         "tooltip": "OpenAI model name",
                     },
                 ),

@@ -13,9 +13,6 @@ class OpenAIImageUnderstand:
 
     @classmethod
     def INPUT_TYPES(cls):
-        # 获取支持视觉的模型列表
-        vision_models = OpenAIClient.get_vision_models()
-
         return {
             "required": {
                 "api_key": (
@@ -35,9 +32,9 @@ class OpenAIImageUnderstand:
                     },
                 ),
                 "model_name": (
-                    vision_models,
+                    "STRING",
                     {
-                        "default": "gpt-4o-mini",
+                        "default": "gpt-5.1",
                         "tooltip": "OpenAI vision model name",
                     },
                 ),
