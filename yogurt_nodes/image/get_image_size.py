@@ -1,4 +1,3 @@
-
 class GetImageSize:
 
     @classmethod
@@ -9,8 +8,8 @@ class GetImageSize:
             },
         }
 
-    RETURN_TYPES = ("IMAGE", "INT", "INT", "INT", "INT", "INT", "INT", "INT", "FLOAT", "FLOAT",)
-    RETURN_NAMES = ("images", "count", "width", "height", "channels", "longest_side", "shortest_side", "aspect_ratio", "megapixels",)
+    RETURN_TYPES = ("IMAGE", "INT", "INT", "INT", "INT", "INT", "INT", "FLOAT", "FLOAT",)
+    RETURN_NAMES = ("image", "batch_size", "width", "height", "channels", "longest_side", "shortest_side", "aspect_ratio", "megapixels",)
     FUNCTION = "execute"
 
     OUTPUT_NODE = False
@@ -32,4 +31,14 @@ class GetImageSize:
         megapixels = (width * height) / 1_000_000
 
         # Send progress text to display size on the node
-        return width, height, batch_size, channels, longest_side, shortest_side, aspect_ratio, megapixels
+        return (
+            image,
+            batch_size,
+            width,
+            height,
+            channels,
+            longest_side,
+            shortest_side,
+            aspect_ratio,
+            megapixels,
+        )
