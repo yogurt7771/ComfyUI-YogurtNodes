@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import httpx
-import openai
 import requests
 from PIL import Image
 
@@ -218,14 +217,7 @@ class OpenAIClient:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
-        self.proxy_url = proxy_url
-        if proxy_url:
-            self.proxies = {
-                "http": proxy_url,
-                "https": proxy_url,
-            }
-        else:
-            self.proxies = None
+        self.proxy_url = proxy_url if proxy_url else None
         self.timeout = timeout
 
     def generate_text(
@@ -317,9 +309,7 @@ class OpenAIClient:
                     else:
                         status = response.status_code
                     body = response.text if response is not None else "None"
-                    error_msg = (
-                        f"API request failed with status {status}: {body}"
-                    )
+                    error_msg = f"API request failed with status {status}: {body}"
                     last_exception = Exception(error_msg)
 
             except (
@@ -599,14 +589,13 @@ class OpenAIClient:
 
         def _pil_to_upload_file(img: Image.Image, filename: str) -> io.BytesIO:
             """
-            将 PIL Image 转为可被 openai-python multipart 上传的类文件对象。
+            将 PIL Image 转为可用于 multipart 上传的类文件对象。
             关键点：需要 name 属性（用于文件名），且 seek(0)。
             """
             buf = io.BytesIO()
             # PNG 更通用，且支持透明背景
             img.save(buf, format="PNG")
             buf.seek(0)
-            # openai-python 会读取 file.name 作为 multipart filename
             buf.name = filename  # type: ignore[attr-defined]
             return buf
 
@@ -629,87 +618,120 @@ class OpenAIClient:
         upload_files = []
         if images:
             for i, img in enumerate(images):
-                upload_files.append(
-                    _pil_to_upload_file(img, f"image_{i}.png")
-                )
+                upload_files.append(_pil_to_upload_file(img, f"image_{i}.png"))
         if len(upload_files) > 0:
             image_kwargs["image"] = upload_files
 
         last_exception = None
 
-        http_client = httpx.Client(
-            proxy=(self.proxy_url if self.proxy_url else None),
+        json_headers = dict(self.headers)
+        if "Authorization" not in json_headers and self.api_key:
+            json_headers["Authorization"] = f"Bearer {self.api_key}"
+
+        # multipart 由 httpx 自动设置 boundary，这里去掉固定的 Content-Type
+        multipart_headers = {
+            k: v for k, v in json_headers.items() if k.lower() != "content-type"
+        }
+
+        url = (
+            f"{self.base_url}/images/edits"
+            if len(upload_files) > 0
+            else f"{self.base_url}/images/generations"
+        )
+
+        with httpx.Client(
+            # proxy=self.proxies,
             timeout=self.timeout if self.timeout > 0 else None,
-        )
-        client = openai.Client(
-            api_key=self.api_key,
-            base_url=self.base_url,
-            http_client=http_client,
-        )
+        ) as client:
+            for _attempt in range(retry_count):
+                model_management.throw_exception_if_processing_interrupted()
+                try:
+                    if len(upload_files) > 0:
+                        # 编辑 / 变体：采用 multipart/form-data
+                        files_to_send = []
+                        for buf in upload_files:
+                            buf.seek(0)
+                            files_to_send.append(
+                                (
+                                    "image",
+                                    (
+                                        getattr(buf, "name", "image.png"),
+                                        buf,
+                                        "image/png",
+                                    ),
+                                )
+                            )
 
-        for _attempt in range(retry_count):
-            model_management.throw_exception_if_processing_interrupted()
-            try:
-                # 有输入图片时优先走编辑（images.edit）；无输入图片走生成（images.generate）
-                if len(upload_files) > 0:
-                    response = client.images.edit(**image_kwargs)
-                    action = "Edited"
-                else:
-                    response = client.images.generate(**image_kwargs)
-                    action = "Generated"
-
-                out_images: List[Image.Image] = []
-                revised_prompt = prompt
-
-                for image_data in response.data:
-                    if (
-                        response_format == "url"
-                        and hasattr(image_data, "url")
-                        and image_data.url
-                    ):
-                        # 从URL下载图像
-                        img_response = requests.get(
-                            image_data.url, timeout=self.timeout if self.timeout > 0 else None, proxies=self.proxies
+                        data_fields = dict(image_kwargs)
+                        data_fields.pop("image", None)
+                        # multipart 只接受字符串，转换一下
+                        for key, value in list(data_fields.items()):
+                            if isinstance(value, (int, float)):
+                                data_fields[key] = str(value)
+                        response = client.post(
+                            url,
+                            headers=multipart_headers,
+                            data=data_fields,
+                            files=files_to_send,
                         )
-                        if img_response.status_code == 200:
-                            img = Image.open(io.BytesIO(img_response.content))
-                            out_images.append(img)
+                        action = "Edited"
                     else:
-                        # 从base64解码图像
+                        # 纯生成：使用 application/json
+                        response = client.post(
+                            url, headers=json_headers, json=image_kwargs
+                        )
+                        action = "Generated"
+
+                    if response.status_code not in (200, 201):
+                        raise Exception(
+                            f"Images API failed: {response.status_code} {response.text}"
+                        )
+
+                    result = response.json()
+                    out_images: List[Image.Image] = []
+                    revised_prompt = prompt
+
+                    for image_data in result.get("data", []):
+                        img = None
                         if (
-                            not hasattr(image_data, "b64_json")
-                            or not image_data.b64_json
+                            response_format == "url"
+                            and isinstance(image_data, dict)
+                            and image_data.get("url")
                         ):
-                            continue
-                        img_data = base64.b64decode(image_data.b64_json)
-                        img = Image.open(io.BytesIO(img_data))
-                        out_images.append(img)
+                            img_response = client.get(image_data["url"])
+                            if img_response.status_code == 200:
+                                img = Image.open(io.BytesIO(img_response.content))
+                        elif isinstance(image_data, dict) and image_data.get(
+                            "b64_json"
+                        ):
+                            img_bytes = base64.b64decode(image_data["b64_json"])
+                            img = Image.open(io.BytesIO(img_bytes))
 
-                    # 获取修订后的提示词（dall-e-3特有）
-                    if (
-                        hasattr(image_data, "revised_prompt")
-                        and image_data.revised_prompt
-                    ):
-                        revised_prompt = image_data.revised_prompt
+                        if img is not None:
+                            img.load()  # 防止关闭前数据丢失
+                            out_images.append(img)
 
-                history.append(
-                    ("user", prompt.split("\n\n")[-1])
-                )  # 使用原始prompt
-                history.append(
-                    (
-                        "assistant",
+                        if isinstance(image_data, dict) and image_data.get(
+                            "revised_prompt"
+                        ):
+                            revised_prompt = image_data["revised_prompt"]
+
+                    history.append(("user", prompt.split("\n\n")[-1]))
+                    history.append(
                         (
-                            f"{action} {len(out_images)} image(s). "
-                            f"Revised: {revised_prompt}"
-                        ),
+                            "assistant",
+                            (
+                                f"{action} {len(out_images)} image(s). "
+                                f"Revised: {revised_prompt}"
+                            ),
+                        )
                     )
-                )
 
-                return out_images, revised_prompt, history
+                    return out_images, revised_prompt, history
 
-            except Exception as exception:
-                last_exception = exception
-                time.sleep(3)
+                except Exception as exception:
+                    last_exception = exception
+                    time.sleep(3)
 
         raise last_exception or Exception("All retry attempts failed")
 
@@ -723,88 +745,114 @@ class OpenAIClient:
         history: List[tuple[str, str]],
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """使用Responses API生成图像（适用于GPT模型）"""
-
         last_exception = None
 
-        http_client = httpx.Client(
-            proxy=(self.proxy_url if self.proxy_url else None),
+        headers = dict(self.headers)
+        if "Authorization" not in headers and self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
+        url = f"{self.base_url}/responses"
+
+        with httpx.Client(
+            proxy=self.proxy_url,
             timeout=self.timeout if self.timeout > 0 else None,
-        )
-        client = openai.Client(
-            api_key=self.api_key,
-            base_url=self.base_url,
-            http_client=http_client,
-        )
+        ) as client:
+            for _attempt in range(retry_count):
+                model_management.throw_exception_if_processing_interrupted()
+                try:
+                    # 构建输入内容
+                    if images:
+                        content = [{"type": "input_text", "text": prompt}]
+                        for img in images:
+                            img_base64 = image_to_base64(img)
+                            image_url = f"data:image/jpeg;base64,{img_base64}"
+                            content.append(
+                                {"type": "input_image", "image_url": image_url}
+                            )
+                        input_data = [{"role": "user", "content": content}]
+                    else:
+                        input_data = prompt
 
-        for _attempt in range(retry_count):
-            model_management.throw_exception_if_processing_interrupted()
-            try:
-                # 构建输入内容
-                if images:
-                    # 有图像输入时使用结构化输入
-                    content = [{"type": "input_text", "text": prompt}]
+                    payload = {
+                        "model": model_name,
+                        "input": input_data,
+                        "tools": [{"type": "image_generation"}],
+                        "stream": False,
+                    }
 
-                    # 添加图像输入
-                    for img in images:
-                        img_base64 = image_to_base64(img)
-                        image_url = f"data:image/jpeg;base64,{img_base64}"
-                        content.append(
-                            {"type": "input_image", "image_url": image_url}
+                    response = client.post(url, headers=headers, json=payload)
+
+                    if response.status_code not in (200, 201):
+                        raise Exception(
+                            f"Responses API failed: {response.status_code} {response.text}"
                         )
 
-                    input_data = [{"role": "user", "content": content}]
-                else:
-                    # 仅文本输入时使用简单字符串
-                    input_data = prompt
+                    result = response.json()
+                    output = result.get("output", []) or []
 
-                # 使用Responses API生成图像
-                response = client.responses.create(
-                    model=model_name,
-                    input=input_data,
-                    tools=[{"type": "image_generation"}],
-                    # 注意：Responses API可能不直接支持seed，但我们记录它
-                )
+                    out_images: List[Image.Image] = []
+                    response_text = ""
 
-                # 提取图像数据
-                image_data = [
-                    output.result
-                    for output in response.output
-                    if output.type == "image_generation_call"
-                ]
+                    def _try_add_image(data_str: str, out_list=out_images):
+                        if not data_str:
+                            return
+                        try:
+                            if data_str.startswith("data:image"):
+                                base64_part = data_str.split(",", 1)[-1]
+                            else:
+                                base64_part = data_str
+                            img_bytes = base64.b64decode(base64_part)
+                            img = Image.open(io.BytesIO(img_bytes))
+                            img.load()
+                            out_list.append(img)
+                        except Exception as exc:  # noqa: BLE001
+                            print(f"Failed to decode image: {exc}")
 
-                images = []
-                response_text = ""
+                    for item in output:
+                        if not isinstance(item, dict):
+                            continue
+                        item_type = item.get("type", "")
+                        if item_type in {"image_generation_call", "image"}:
+                            _try_add_image(item.get("result", ""))
+                        elif item_type == "text":
+                            response_text = item.get("result", "") or response_text
+                        elif "content" in item and isinstance(
+                            item.get("content"), list
+                        ):
+                            for piece in item["content"]:
+                                if not isinstance(piece, dict):
+                                    continue
+                                p_type = piece.get("type", "")
+                                if p_type in {
+                                    "output_image",
+                                    "image",
+                                    "image_generation_call",
+                                }:
+                                    _try_add_image(
+                                        piece.get("image_base64")
+                                        or piece.get("result")
+                                        or piece.get("image_url", "")
+                                    )
+                                elif p_type in {"output_text", "text"}:
+                                    response_text = (
+                                        piece.get("text", "")
+                                        or piece.get("result", "")
+                                        or response_text
+                                    )
 
-                # 处理生成的图像
-                for img_base64 in image_data:
-                    try:
-                        img_data = base64.b64decode(img_base64)
-                        img = Image.open(io.BytesIO(img_data))
-                        images.append(img)
-                    except Exception as e:
-                        print(f"Failed to decode image: {e}")
-                        continue
+                    if not response_text:
+                        response_text = (
+                            result.get("output_text", "")
+                            or f"Generated {len(out_images)} image(s)"
+                        )
 
-                # 获取文本输出
-                text_outputs = [
-                    output.result
-                    for output in response.output
-                    if hasattr(output, "type") and output.type == "text"
-                ]
-                if text_outputs:
-                    response_text = text_outputs[0]
-                elif hasattr(response, "output_text"):
-                    response_text = response.output_text
-                else:
-                    response_text = f"Generated {len(images)} image(s)"
+                    history.append(("user", prompt))
+                    history.append(("assistant", response_text))
 
-                history.append(("user", prompt))
-                history.append(("assistant", response_text))
+                    return out_images, response_text, history
 
-                return images, response_text, history
-
-            except Exception as exception:
-                last_exception = exception
-                time.sleep(3)
+                except Exception as exception:
+                    last_exception = exception
+                    time.sleep(3)
 
         raise last_exception or Exception("All retry attempts failed")
