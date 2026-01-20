@@ -173,6 +173,7 @@ class OpenRouterClient:
         chat_template: str = "",
         seed: int = -1,
         aspect_ratio: str = "auto",
+        image_size: str = "1k",
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """
         使用OpenRouter API生成图像
@@ -229,6 +230,9 @@ class OpenRouterClient:
         # 如果指定了aspect_ratio参数，添加到payload
         if aspect_ratio != "auto":
             payload.setdefault("image_config", {})["aspect_ratio"] = aspect_ratio
+
+        if image_size not in ["auto", "1k"]:
+            payload.setdefault("image_config", {})["image_size"] = image_size
 
         # 处理seed参数
         current_seed = random.randint(0, 2**31 - 1) if seed < 0 else seed

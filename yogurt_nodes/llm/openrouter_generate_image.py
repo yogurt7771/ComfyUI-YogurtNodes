@@ -161,6 +161,13 @@ class OpenRouterGenerateImage:
                         "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                     },
                 ),
+                "image_size": (
+                    ["1k", "2k", "4k"],
+                    {
+                        "default": "1k",
+                        "tooltip": "Image size for the generated image (gemini only for now)",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -202,6 +209,7 @@ class OpenRouterGenerateImage:
         seed: int,
         timeout: int,
         aspect_ratio: str,
+        image_size: str,
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -243,6 +251,7 @@ class OpenRouterGenerateImage:
             chat_template=chat_template,
             seed=seed,
             aspect_ratio=aspect_ratio,
+            image_size=image_size,
             history=history,
         )
 
