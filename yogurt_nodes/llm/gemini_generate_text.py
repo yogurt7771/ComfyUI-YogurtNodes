@@ -215,14 +215,15 @@ class GeminiGenerateTextBase:
 
     def generate_text(
         self,
+        image = None,
+        image1 = None,
+        image2 = None,
+        image3 = None,
+        image4 = None,
+        history = None,
         **kwargs,
     ):
         client = self.create_client(**kwargs)
-        image = kwargs.get("image", None),
-        image1 = kwargs.get("image1", None),
-        image2 = kwargs.get("image2", None),
-        image3 = kwargs.get("image3", None),
-        image4 = kwargs.get("image4", None),
         images = []
         for img in [image, image1, image2, image3, image4]:
             if img is not None:
@@ -245,7 +246,7 @@ class GeminiGenerateTextBase:
             thinking_budget=kwargs.get("thinking_budget", 0),
             thinking_level=kwargs.get("thinking_level", "OFF"),
             chat_template=kwargs.get("chat_template", ""),
-            history=kwargs.get("history", ""),
+            history=history,
             seed=kwargs.get("seed", -1),
             images=images,
         )
@@ -311,11 +312,11 @@ class GeminiImageUnderstand(GeminiGenerateText):
                 **input_types["required"],
             },
             "optional": {
-                "image": ("IMAGE",),
-                "image1": ("IMAGE",),
-                "image2": ("IMAGE",),
-                "image3": ("IMAGE",),
-                "image4": ("IMAGE",),
+                "image": ("IMAGE", {}),
+                "image1": ("IMAGE", {}),
+                "image2": ("IMAGE", {}),
+                "image3": ("IMAGE", {}),
+                "image4": ("IMAGE", {}),
                 **input_types["optional"],
             },
         }
