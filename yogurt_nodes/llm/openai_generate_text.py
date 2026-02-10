@@ -1,3 +1,4 @@
+import json
 from typing import List
 
 from ..utils import OpenAIClient
@@ -142,6 +143,14 @@ class OpenAIGenerateText:
                         "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                     },
                 ),
+                "extra": (
+                    "STRING",
+                    {
+                        "default": "{}",
+                        "multiline": True,
+                        "tooltip": "Extra parameters for the request, in JSON format",
+                    },
+                ),
             },
             "optional": {
                 "history": ("HISTORY",),
@@ -177,9 +186,15 @@ class OpenAIGenerateText:
         chat_template: str,
         proxy_url: str,
         timeout: int,
+        extra: str = "{}",
         history: List[tuple[str, str]] | None = None,
     ):
         client = OpenAIClient(api_key, base_url, proxy_url, timeout)
+
+        try:
+            extra_dict = json.loads(extra)
+        except (json.JSONDecodeError, TypeError):
+            extra_dict = {}
 
         text, history, payload = client.generate_text(
             model_name=model_name,
@@ -193,5 +208,6 @@ class OpenAIGenerateText:
             presence_penalty=presence_penalty,
             chat_template=chat_template,
             history=history,
+            extra=extra_dict,
         )
         return (text, history, payload)

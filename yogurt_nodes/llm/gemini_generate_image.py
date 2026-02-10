@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 from typing_extensions import List
 
@@ -201,6 +202,14 @@ def inputs_def():
                     "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                 },
             ),
+            "extra": (
+                "STRING",
+                {
+                    "default": "{}",
+                    "multiline": True,
+                    "tooltip": "Extra parameters for the request, in JSON format",
+                },
+            ),
         },
         "optional": {
             "image": ("IMAGE",),
@@ -232,6 +241,7 @@ def generate_image(
     aspect_ratio: str | None = None,
     image_size: str | None = None,
     thinking_level: str | None = None,
+    extra: dict | None = None,
     image: Optional[torch.Tensor] = None,
     image1: Optional[torch.Tensor] = None,
     image2: Optional[torch.Tensor] = None,
@@ -267,6 +277,7 @@ def generate_image(
         seed=seed,
         aspect_ratio=aspect_ratio,
         image_size=image_size,
+        extra=extra,
     )
     tensor_imgs = []
     for image in images:  # type: ignore
@@ -352,6 +363,7 @@ class GeminiGenerateImage:
         image_size: str = "2k",
         thinking_level: str = "OFF",
         base_url: str = "",
+        extra: str = "{}",
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -359,6 +371,11 @@ class GeminiGenerateImage:
         image4: Optional[torch.Tensor] = None,
         history: List[tuple[str, str]] | None = None,
     ):
+        try:
+            extra_dict = json.loads(extra)
+        except (json.JSONDecodeError, TypeError):
+            extra_dict = {}
+
         client = GeminiClient(
             api_key=api_key,
             use_vertex_api_key=vertex,
@@ -385,6 +402,7 @@ class GeminiGenerateImage:
             seed=seed,
             aspect_ratio=None if aspect_ratio == "auto" else aspect_ratio,
             image_size=image_size,
+            extra=extra_dict,
             image=image,
             image1=image1,
             image2=image2,
@@ -472,6 +490,7 @@ class VertexAIGenerateImage:
         image_size: str = "2k",
         thinking_level: str = "OFF",
         base_url: str = "",
+        extra: str = "{}",
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -479,6 +498,11 @@ class VertexAIGenerateImage:
         image4: Optional[torch.Tensor] = None,
         history: List[tuple[str, str]] | None = None,
     ):
+        try:
+            extra_dict = json.loads(extra)
+        except (json.JSONDecodeError, TypeError):
+            extra_dict = {}
+
         client = GeminiClient(
             use_vertex_ai=True,
             vertex_ai_json=credentials,
@@ -507,6 +531,7 @@ class VertexAIGenerateImage:
             seed=seed,
             aspect_ratio=None if aspect_ratio == "auto" else aspect_ratio,
             image_size=image_size,
+            extra=extra_dict,
             image=image,
             image1=image1,
             image2=image2,

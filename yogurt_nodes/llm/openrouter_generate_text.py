@@ -1,3 +1,4 @@
+import json
 from typing import List
 
 from ..utils import OpenRouterClient
@@ -155,6 +156,14 @@ class OpenRouterGenerateText:
                         "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                     },
                 ),
+                "extra": (
+                    "STRING",
+                    {
+                        "default": "{}",
+                        "multiline": True,
+                        "tooltip": "Extra parameters for the request, in JSON format",
+                    },
+                ),
             },
             "optional": {
                 "history": ("HISTORY",),
@@ -190,9 +199,15 @@ class OpenRouterGenerateText:
         proxy_url: str = "",
         seed: int = -1,
         timeout: int = 0,
+        extra: str = "{}",
         history: List[tuple[str, str]] | None = None,
     ):
         client = OpenRouterClient(api_key, proxy_url, timeout)
+
+        try:
+            extra_dict = json.loads(extra)
+        except (json.JSONDecodeError, TypeError):
+            extra_dict = {}
 
         # Parse provider list or use single infrastructure_provider
         provider_param = None
@@ -216,5 +231,6 @@ class OpenRouterGenerateText:
             chat_template=chat_template,
             seed=seed,
             history=history,
+            extra=extra_dict,
         )
         return (text, history, payload)

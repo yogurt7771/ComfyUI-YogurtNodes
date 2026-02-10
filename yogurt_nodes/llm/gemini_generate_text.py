@@ -1,3 +1,4 @@
+import json
 from typing import List
 
 import torchvision
@@ -193,6 +194,14 @@ class GeminiGenerateTextBase:
                         "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                     },
                 ),
+                "extra": (
+                    "STRING",
+                    {
+                        "default": "{}",
+                        "multiline": True,
+                        "tooltip": "Extra parameters for the request, in JSON format",
+                    },
+                ),
             },
             "optional": {
                 "history": ("HISTORY",),
@@ -231,6 +240,12 @@ class GeminiGenerateTextBase:
                     img = img[0]
                 img = img.permute(2, 0, 1)
                 images.append(torchvision.transforms.ToPILImage()(img))
+        extra_str = kwargs.get("extra", "{}")
+        try:
+            extra = json.loads(extra_str)
+        except (json.JSONDecodeError, TypeError):
+            raise ValueError(f"Invalid JSON of extra parameters: {extra_str}")
+
         text, thought, history = client.generate_text(
             model_name=kwargs.get("model_name", ""),
             system_prompt=kwargs.get("system_prompt", ""),
@@ -249,6 +264,7 @@ class GeminiGenerateTextBase:
             history=history,
             seed=kwargs.get("seed", -1),
             images=images,
+            extra=extra,
         )
         return (text, history, thought)
 

@@ -128,6 +128,7 @@ class FreedomGPTClient:
         chat_template: str = "",
         top_k: int = 40,
         seed: int = -1,
+        extra: dict | None = None,
     ) -> tuple[str, List[tuple[str, str]], Any]:
         """
         生成文本 - 扩展支持FreedomGPT特有参数
@@ -151,6 +152,10 @@ class FreedomGPTClient:
             top_k=top_k,
             seed=seed,
         )
+
+        # 合并额外参数
+        if extra:
+            payload.update(extra)
 
         # 重用父类的请求逻辑，只是payload有所不同
         last_exception = None
@@ -243,6 +248,7 @@ class FreedomGPTClient:
         chat_template: str = "",
         top_k: int = 40,
         seed: int = -1,
+        extra: dict | None = None,
     ) -> tuple[str, List[tuple[str, str]], Any]:
         """
         理解图像内容
@@ -279,6 +285,7 @@ class FreedomGPTClient:
             chat_template=chat_template,
             top_k=top_k,
             seed=seed,
+            extra=extra,
         )
 
     def generate_image(
@@ -291,6 +298,7 @@ class FreedomGPTClient:
         history: List[tuple[str, str]] | None = None,
         seed: int = -1,
         input_images: Optional[List[Image.Image]] = None,
+        extra: dict | None = None,
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """
         使用FreedomGPT API生成图像
@@ -339,6 +347,10 @@ class FreedomGPTClient:
             # 添加到payload，具体字段名需要根据FreedomGPT API文档确定
             # 常见的可能是 "images", "input_images", 或 "reference_images"
             payload["images"] = image_data
+
+        # 合并额外参数
+        if extra:
+            payload.update(extra)
 
         last_exception = None
 

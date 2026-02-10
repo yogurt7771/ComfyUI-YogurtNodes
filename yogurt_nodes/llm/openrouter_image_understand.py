@@ -1,3 +1,4 @@
+import json
 from typing import List
 
 import torch
@@ -158,6 +159,14 @@ class OpenRouterImageUnderstand:
                         "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                     },
                 ),
+                "extra": (
+                    "STRING",
+                    {
+                        "default": "{}",
+                        "multiline": True,
+                        "tooltip": "Extra parameters for the request, in JSON format",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -198,6 +207,7 @@ class OpenRouterImageUnderstand:
         proxy_url: str = "",
         seed: int = -1,
         timeout: int = 0,
+        extra: str = "{}",
         image: torch.Tensor | None = None,
         image1: torch.Tensor | None = None,
         image2: torch.Tensor | None = None,
@@ -216,6 +226,11 @@ class OpenRouterImageUnderstand:
 
         if not images:
             raise ValueError("At least one image must be provided")
+
+        try:
+            extra_dict = json.loads(extra)
+        except (json.JSONDecodeError, TypeError):
+            extra_dict = {}
 
         client = OpenRouterClient(api_key, proxy_url, timeout)
 
@@ -242,5 +257,6 @@ class OpenRouterImageUnderstand:
             chat_template=chat_template,
             seed=seed,
             history=history,
+            extra=extra_dict,
         )
         return (text, history, payload)

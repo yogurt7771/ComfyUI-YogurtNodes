@@ -284,6 +284,7 @@ class GeminiClient:
         is_image_generation: bool = False,
         aspect_ratio: str | None = None,
         image_size: str | None = None,
+        extra: dict | None = None,
     ):
         config_params = {
             "temperature": temperature,
@@ -297,6 +298,10 @@ class GeminiClient:
             config_params["response_modalities"] = ["TEXT", "IMAGE"]
         else:
             config_params["response_mime_type"] = "text/plain"
+
+        # 合并额外参数（extra 可以覆盖默认配置）
+        if extra:
+            config_params.update(extra)
 
         config = types.GenerateContentConfig(**config_params)
 
@@ -349,6 +354,7 @@ class GeminiClient:
         thinking_level: str = "OFF",
         chat_template: str = "",
         seed: int = -1,
+        extra: dict | None = None,
     ) -> tuple[str, List[tuple[str, str]]]:
         """
         生成文本
@@ -367,6 +373,7 @@ class GeminiClient:
             safety_level (str): 安全等级
             thinking_budget (int): 思考预算
             chat_template (str): 聊天模板
+            extra (dict): 额外参数，将合并到 GenerateContentConfig 中
 
         Returns:
             str: 生成的文本
@@ -387,6 +394,7 @@ class GeminiClient:
             thinking_budget=thinking_budget,
             thinking_level=thinking_level,
             chat_template=chat_template,
+            extra=extra,
         )
         # pprint(f"Generating text with model {model_name}...")
         # pprint(contents)
@@ -458,6 +466,7 @@ class GeminiClient:
         seed: int = -1,
         aspect_ratio: str | None = None,
         image_size: str | None = None,
+        extra: dict | None = None,
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """
         生成图片
@@ -482,6 +491,7 @@ class GeminiClient:
             is_image_generation=True,
             aspect_ratio=aspect_ratio,
             image_size=image_size,
+            extra=extra,
         )
 
         images = []

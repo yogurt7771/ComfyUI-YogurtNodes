@@ -1,3 +1,4 @@
+import json
 from typing import List
 
 from ..utils import FreedomGPTClient
@@ -134,6 +135,14 @@ class FreedomGPTGenerateText:
                         "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                     },
                 ),
+                "extra": (
+                    "STRING",
+                    {
+                        "default": "{}",
+                        "multiline": True,
+                        "tooltip": "Extra parameters for the request, in JSON format",
+                    },
+                ),
             },
             "optional": {
                 "history": ("HISTORY",),
@@ -168,9 +177,15 @@ class FreedomGPTGenerateText:
         seed: int,
         proxy_url: str,
         timeout: int,
+        extra: str = "{}",
         history: List[tuple[str, str]] | None = None,
     ):
         client = FreedomGPTClient(api_key, proxy_url, timeout)
+
+        try:
+            extra_dict = json.loads(extra)
+        except (json.JSONDecodeError, TypeError):
+            extra_dict = {}
 
         text, history, payload = client.generate_text(
             model_name=model_name,
@@ -184,5 +199,6 @@ class FreedomGPTGenerateText:
             top_k=top_k,
             seed=seed,
             history=history,
+            extra=extra_dict,
         )
         return (text, history, payload)

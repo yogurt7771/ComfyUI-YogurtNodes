@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 from typing_extensions import List
 
@@ -184,6 +185,14 @@ class OpenAIGenerateImage:
                         "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                     },
                 ),
+                "extra": (
+                    "STRING",
+                    {
+                        "default": "{}",
+                        "multiline": True,
+                        "tooltip": "Extra parameters for the request, in JSON format",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -229,6 +238,7 @@ class OpenAIGenerateImage:
         seed: int,
         aspect_ratio: str,
         timeout: int,
+        extra: str = "{}",
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -247,6 +257,12 @@ class OpenAIGenerateImage:
         if size != "auto":
             if "(" in size:
                 size = size[:size.find("(")]
+
+        try:
+            extra_dict = json.loads(extra)
+        except (json.JSONDecodeError, TypeError):
+            extra_dict = {}
+
         client = OpenAIClient(api_key, base_url, proxy_url, timeout)
         images, text, history = client.generate_image(
             model_name=model_name,
@@ -264,6 +280,7 @@ class OpenAIGenerateImage:
             seed=seed,
             history=history,
             api_type=api_type,
+            extra=extra_dict,
         )
 
         tensor_imgs = []

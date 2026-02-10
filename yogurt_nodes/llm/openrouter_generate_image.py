@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 from typing_extensions import List
 
@@ -168,6 +169,14 @@ class OpenRouterGenerateImage:
                         "tooltip": "Image size for the generated image (gemini only for now)",
                     },
                 ),
+                "extra": (
+                    "STRING",
+                    {
+                        "default": "{}",
+                        "multiline": True,
+                        "tooltip": "Extra parameters for the request, in JSON format",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -210,6 +219,7 @@ class OpenRouterGenerateImage:
         timeout: int,
         aspect_ratio: str,
         image_size: str,
+        extra: str = "{}",
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -225,6 +235,11 @@ class OpenRouterGenerateImage:
                     img = img[0]
                 img = img.permute(2, 0, 1)
                 images.append(torchvision.transforms.ToPILImage()(img))
+
+        try:
+            extra_dict = json.loads(extra)
+        except (json.JSONDecodeError, TypeError):
+            extra_dict = {}
 
         client = OpenRouterClient(api_key, proxy_url, timeout)
 
@@ -253,6 +268,7 @@ class OpenRouterGenerateImage:
             aspect_ratio=aspect_ratio,
             image_size=image_size,
             history=history,
+            extra=extra_dict,
         )
 
         tensor_imgs = []

@@ -1,3 +1,4 @@
+import json
 from typing import List
 
 import torch
@@ -145,6 +146,14 @@ class OpenAIImageUnderstand:
                         "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                     },
                 ),
+                "extra": (
+                    "STRING",
+                    {
+                        "default": "{}",
+                        "multiline": True,
+                        "tooltip": "Extra parameters for the request, in JSON format",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -185,6 +194,7 @@ class OpenAIImageUnderstand:
         chat_template: str,
         proxy_url: str,
         timeout: int,
+        extra: str = "{}",
         image: torch.Tensor | None = None,
         image1: torch.Tensor | None = None,
         image2: torch.Tensor | None = None,
@@ -193,6 +203,11 @@ class OpenAIImageUnderstand:
         history: List[tuple[str, str]] | None = None,
     ):
         client = OpenAIClient(api_key, base_url, proxy_url, timeout)
+
+        try:
+            extra_dict = json.loads(extra)
+        except (json.JSONDecodeError, TypeError):
+            extra_dict = {}
 
         # 将tensor转换为PIL图像列表
         images = []
@@ -216,5 +231,6 @@ class OpenAIImageUnderstand:
             presence_penalty=presence_penalty,
             chat_template=chat_template,
             history=history,
+            extra=extra_dict,
         )
         return (text, history, payload)

@@ -234,6 +234,7 @@ class OpenAIClient:
         frequency_penalty: float = 0.0,
         presence_penalty: float = 0.0,
         chat_template: str = "",
+        extra: dict | None = None,
     ) -> tuple[str, List[tuple[str, str]], Any]:
         """
         生成文本
@@ -275,6 +276,10 @@ class OpenAIClient:
             payload["frequency_penalty"] = frequency_penalty
         if presence_penalty > 0:
             payload["presence_penalty"] = presence_penalty
+
+        # 合并额外参数
+        if extra:
+            payload.update(extra)
 
         # pprint(f"Generating text with model {model_name}...")
         # pprint(f"Base URL: {self.base_url}")
@@ -339,6 +344,7 @@ class OpenAIClient:
         frequency_penalty: float = 0.0,
         presence_penalty: float = 0.0,
         chat_template: str = "",
+        extra: dict | None = None,
     ) -> tuple[str, List[tuple[str, str]], Any]:
         """
         理解图像内容
@@ -355,6 +361,7 @@ class OpenAIClient:
             frequency_penalty (float): 频率惩罚
             presence_penalty (float): 存在惩罚
             chat_template (str): 聊天模板
+            extra (dict): 额外参数
 
         Returns:
             str: 图像理解结果
@@ -372,6 +379,7 @@ class OpenAIClient:
             frequency_penalty=frequency_penalty,
             presence_penalty=presence_penalty,
             chat_template=chat_template,
+            extra=extra,
         )
 
     def get_models(self) -> List[Dict[str, Any]]:
@@ -475,6 +483,7 @@ class OpenAIClient:
         seed: int = -1,
         history: List[tuple[str, str]] | None = None,
         api_type: str = "auto",
+        extra: dict | None = None,
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """
         使用OpenAI API生成图像
@@ -541,6 +550,7 @@ class OpenAIClient:
                 retry_count=retry_count,
                 seed=seed,
                 history=history,
+                extra=extra,
             )
         else:
             return self._generate_image_with_responses_api(
@@ -552,6 +562,7 @@ class OpenAIClient:
                 retry_count=retry_count,
                 seed=seed,
                 history=history,
+                extra=extra,
             )
 
     def get_usage_info(self, usage_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -584,6 +595,7 @@ class OpenAIClient:
         retry_count: int,
         seed: int,
         history: List[tuple[str, str]],
+        extra: dict | None = None,
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """使用 OpenAI Images API 生成/编辑图像（dall-e-*、gpt-image-1）"""
 
@@ -621,6 +633,10 @@ class OpenAIClient:
                 upload_files.append(_pil_to_upload_file(img, f"image_{i}.png"))
         if len(upload_files) > 0:
             image_kwargs["image"] = upload_files
+
+        # 合并额外参数
+        if extra:
+            image_kwargs.update(extra)
 
         last_exception = None
 
@@ -743,6 +759,8 @@ class OpenAIClient:
         retry_count: int,
         seed: int,
         history: List[tuple[str, str]],
+        extra: dict | None = None,
+        **kwargs,
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """使用Responses API生成图像（适用于GPT模型）"""
         last_exception = None
@@ -779,6 +797,10 @@ class OpenAIClient:
                         "tools": [{"type": "image_generation"}],
                         "stream": False,
                     }
+
+                    # 合并额外参数
+                    if extra:
+                        payload.update(extra)
 
                     response = client.post(url, headers=headers, json=payload)
 

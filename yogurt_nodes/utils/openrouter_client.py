@@ -76,6 +76,7 @@ class OpenRouterClient:
         provider: Optional[str | List[str]] = None,
         chat_template: str = "",
         seed: int = -1,
+        extra: dict | None = None,
     ) -> tuple[str, List[tuple[str, str]], Any]:
         """
         生成文本
@@ -120,6 +121,10 @@ class OpenRouterClient:
                 payload["provider"] = {"order": provider}
             else:
                 payload["provider"] = {"allow_fallbacks": False, "order": [provider]}
+
+        # 合并额外参数
+        if extra:
+            payload.update(extra)
 
         current_seed = random.randint(0, 2**31 - 1) if seed < 0 else seed
 
@@ -174,6 +179,7 @@ class OpenRouterClient:
         seed: int = -1,
         aspect_ratio: str = "auto",
         image_size: str = "1k",
+        extra: dict | None = None,
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """
         使用OpenRouter API生成图像
@@ -233,6 +239,10 @@ class OpenRouterClient:
 
         if image_size not in ["auto", "1k"]:
             payload.setdefault("image_config", {})["image_size"] = image_size
+
+        # 合并额外参数
+        if extra:
+            payload.update(extra)
 
         # 处理seed参数
         current_seed = random.randint(0, 2**31 - 1) if seed < 0 else seed
@@ -315,6 +325,7 @@ class OpenRouterClient:
         provider: Optional[str | List[str]] = None,
         chat_template: str = "",
         seed: int = -1,
+        extra: dict | None = None,
     ) -> tuple[str, List[tuple[str, str]], Any]:
         """
         理解图像内容
@@ -330,6 +341,7 @@ class OpenRouterClient:
             retry_count (int): 重试次数
             provider (str): 基础设施提供商（可选，如azure, aws等）
             chat_template (str): 聊天模板
+            extra (dict): 额外参数
 
         Returns:
             str: 图像理解结果
@@ -347,6 +359,7 @@ class OpenRouterClient:
             provider=provider,
             chat_template=chat_template,
             seed=seed,
+            extra=extra,
         )
 
     def get_models(self) -> List[Dict[str, Any]]:

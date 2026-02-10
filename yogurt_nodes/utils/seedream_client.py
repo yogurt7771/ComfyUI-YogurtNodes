@@ -91,6 +91,7 @@ class SeeDreamClient:
         region: str = "cn-beijing",
         retry_count: int = 3,
         seed: int = -1,
+        extra: dict | None = None,
     ) -> Tuple[List[Image.Image], str]:
         """
         生成图像
@@ -136,6 +137,10 @@ class SeeDreamClient:
         # 处理序列图像生成选项
         if sequential_image_generation == "auto" and max_images > 1:
             data["sequential_image_generation_options"] = {"max_images": max_images}
+
+        # 合并额外参数
+        if extra:
+            data.update(extra)
 
         # 执行请求，支持重试
         last_error = None

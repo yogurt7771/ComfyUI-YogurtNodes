@@ -1,3 +1,4 @@
+import json
 from typing import List
 
 import torch
@@ -138,6 +139,14 @@ class FreedomGPTImageUnderstand:
                         "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                     },
                 ),
+                "extra": (
+                    "STRING",
+                    {
+                        "default": "{}",
+                        "multiline": True,
+                        "tooltip": "Extra parameters for the request, in JSON format",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -177,6 +186,7 @@ class FreedomGPTImageUnderstand:
         seed: int,
         proxy_url: str,
         timeout: int,
+        extra: str = "{}",
         image: torch.Tensor | None = None,
         image1: torch.Tensor | None = None,
         image2: torch.Tensor | None = None,
@@ -185,6 +195,11 @@ class FreedomGPTImageUnderstand:
         history: List[tuple[str, str]] | None = None,
     ):
         client = FreedomGPTClient(api_key, proxy_url, timeout)
+
+        try:
+            extra_dict = json.loads(extra)
+        except (json.JSONDecodeError, TypeError):
+            extra_dict = {}
 
         # 将tensor转换为PIL图像列表
         images = []
@@ -208,5 +223,6 @@ class FreedomGPTImageUnderstand:
             top_k=top_k,
             seed=seed,
             history=history,
+            extra=extra_dict,
         )
         return (text, history, payload)

@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 
 import torch
@@ -126,6 +127,14 @@ class SeeDreamGenerateImage:
                         "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                     },
                 ),
+                "extra": (
+                    "STRING",
+                    {
+                        "default": "{}",
+                        "multiline": True,
+                        "tooltip": "Extra parameters for the request, in JSON format",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE", {"tooltip": "输入图像（用于图生图）"}),
@@ -166,6 +175,7 @@ class SeeDreamGenerateImage:
         proxy_url: str,
         seed: int,
         timeout: int,
+        extra: str = "{}",
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -205,6 +215,11 @@ class SeeDreamGenerateImage:
                 pil_img = torchvision.transforms.ToPILImage()(img)
                 input_images.append(pil_img)
 
+        try:
+            extra_dict = json.loads(extra)
+        except (json.JSONDecodeError, TypeError):
+            extra_dict = {}
+
         # 创建客户端
         client = SeeDreamClient(api_key, proxy_url, timeout)
 
@@ -222,6 +237,7 @@ class SeeDreamGenerateImage:
             region=region,
             retry_count=retry_count,
             seed=seed,
+            extra=extra_dict,
         )
 
         # 转换PIL图像回ComfyUI格式
