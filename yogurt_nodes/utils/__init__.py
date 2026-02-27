@@ -7,3 +7,4 @@ from .openai_client import OpenAIClient  # noqa: F401
 from .openrouter_client import OpenRouterClient  # noqa: F401
 from .freedomgpt_client import FreedomGPTClient  # noqa: F401
 from .gemini_client import GeminiClient  # noqa: F401
+from .grok_client import GrokClient  # noqa: F401

@@ -1,4 +1,5 @@
 import base64
+from copy import deepcopy
 import io
 import os
 import random
@@ -471,16 +472,6 @@ class OpenAIClient:
             "gpt-4-turbo-preview",
         ]
 
-    @staticmethod
-    def get_image_models() -> List[str]:
-        """获取支持图像生成的模型列表"""
-        return [
-            "gpt-5",
-            "gpt-image-1",
-            "dall-e-2",
-            "dall-e-3",
-        ]
-
     def generate_image(
         self,
         model_name: str = "gpt-5",
@@ -549,9 +540,7 @@ class OpenAIClient:
         elif api_type == "response":
             use_images_api = False
         else:  # auto
-            # OpenAI Images API: dall-e-* 与 gpt-image-1
-            images_api_models = ["dall-e-2", "dall-e-3", "gpt-image-1"]
-            use_images_api = model_name in images_api_models
+            use_images_api = True
 
         if use_images_api:
             return self._generate_image_with_images_api(
@@ -661,11 +650,7 @@ class OpenAIClient:
                             "url": f"data:image/jpeg;base64,{base64_image}",
                         }
                     )
-                image_kwargs["image"] = (
-                    image_payload[0]
-                    if len(image_payload) == 1
-                    else image_payload
-                )
+                image_kwargs["image"] = image_payload
             else:
                 for i, img in enumerate(images):
                     upload_files.append(
@@ -704,13 +689,13 @@ class OpenAIClient:
                     if len(upload_files) > 0:
                         # 编辑 / 变体：采用 multipart/form-data
                         files_to_send = []
-                        for buf in upload_files:
+                        for i, buf in enumerate(upload_files):
                             buf.seek(0)
                             files_to_send.append(
                                 (
                                     "image",
                                     (
-                                        getattr(buf, "name", "image.png"),
+                                        getattr(buf, "name", f"image_{i}.png"),
                                         buf,
                                         "image/png",
                                     ),
@@ -723,6 +708,7 @@ class OpenAIClient:
                         for key, value in list(data_fields.items()):
                             if isinstance(value, (int, float)):
                                 data_fields[key] = str(value)
+                        print(f"Yogurt: OpenAI Images API - body: {data_fields}, files: {len(files_to_send)}")
                         response = client.post(
                             url,
                             headers=multipart_headers,
@@ -731,6 +717,13 @@ class OpenAIClient:
                         )
                         action = "Edited"
                     else:
+                        image_kwargs_print = deepcopy(image_kwargs)
+                        if "image" in image_kwargs_print:
+                            for image_info in image_kwargs_print["image"]:
+                                if isinstance(image_info, dict) and "url" in image_info and image_info["url"].startswith("data:image"):
+                                    url = image_info["url"]
+                                    image_info["url"] = f"{url[:10]}...{url[-10:]}"  # 只显示前后部分，隐藏中间的base64数据
+                        print(f"Yogurt: OpenAI Images API - body: {image_kwargs_print}")
                         # 纯生成或base64图像编辑：使用 application/json
                         response = client.post(
                             url, headers=json_headers, json=image_kwargs
