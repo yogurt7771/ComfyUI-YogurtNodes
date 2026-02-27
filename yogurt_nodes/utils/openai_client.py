@@ -24,16 +24,21 @@ def image_to_base64(image: Image.Image) -> str:
 
 
 def add_image_contents(
-    images: List[Image.Image], contents: List[Dict[str, Any]]
+    images: List[Image.Image],
+    contents: List[Dict[str, Any]],
+    image_send_mode: str = "openai",
 ):
     for image in images:
         base64_image = image_to_base64(image)
-        contents.append(
-            {
-                "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
-            }
-        )
+        image_url = f"data:image/jpeg;base64,{base64_image}"
+        if image_send_mode == "base64":
+            # x.ai 兼容格式：{"type":"image_url","url":"data:image/..."}
+            contents.append({"type": "image_url", "url": image_url})
+        else:
+            # OpenAI 标准格式：{"type":"image_url","image_url":{"url":"..."}}
+            contents.append(
+                {"type": "image_url", "image_url": {"url": image_url}}
+            )
 
 
 def build_messages(
@@ -45,6 +50,7 @@ def build_messages(
     system_role: str = "system",
     user_role: str = "user",
     model_role: str = "assistant",
+    image_send_mode: str = "openai",
 ) -> tuple[List[Dict[str, Any]], List[tuple[str, str]]]:
     """构建消息列表，防止上下文长度超过限制"""
     if images is None:
@@ -100,7 +106,9 @@ def build_messages(
                                 }
                             ]
                             if role == "user" and not added_image:
-                                add_image_contents(images, contents)
+                                add_image_contents(
+                                    images, contents, image_send_mode
+                                )
                                 added_image = True
                             if role == "system":
                                 message_role = system_role
@@ -131,7 +139,9 @@ def build_messages(
                             and with_user_prompt
                             and not added_image
                         ):
-                            add_image_contents(images, contents)
+                            add_image_contents(
+                                images, contents, image_send_mode
+                            )
                             added_image = True
                         if len(contents) > 0:
                             messages.append(
@@ -234,6 +244,7 @@ class OpenAIClient:
         frequency_penalty: float = 0.0,
         presence_penalty: float = 0.0,
         chat_template: str = "",
+        image_send_mode: str = "openai",
         extra: dict | None = None,
     ) -> tuple[str, List[tuple[str, str]], Any]:
         """
@@ -251,6 +262,7 @@ class OpenAIClient:
             frequency_penalty (float): 频率惩罚
             presence_penalty (float): 存在惩罚
             chat_template (str): 聊天模板
+            image_send_mode (str): 图片发送方式（openai/base64）
 
         Returns:
             str: 生成的文本
@@ -261,6 +273,7 @@ class OpenAIClient:
             images=images,
             history=history,
             chat_template=chat_template,
+            image_send_mode=image_send_mode,
         )
 
         payload = {
@@ -344,6 +357,7 @@ class OpenAIClient:
         frequency_penalty: float = 0.0,
         presence_penalty: float = 0.0,
         chat_template: str = "",
+        image_send_mode: str = "openai",
         extra: dict | None = None,
     ) -> tuple[str, List[tuple[str, str]], Any]:
         """
@@ -379,6 +393,7 @@ class OpenAIClient:
             frequency_penalty=frequency_penalty,
             presence_penalty=presence_penalty,
             chat_template=chat_template,
+            image_send_mode=image_send_mode,
             extra=extra,
         )
 
@@ -483,6 +498,7 @@ class OpenAIClient:
         seed: int = -1,
         history: List[tuple[str, str]] | None = None,
         api_type: str = "auto",
+        image_send_mode: str = "upload",
         extra: dict | None = None,
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """
@@ -503,6 +519,7 @@ class OpenAIClient:
             seed (int): 随机种子，-1为随机值
             history (List[tuple[str, str]]): 对话历史
             api_type (str): API类型选择: auto/response/image
+            image_send_mode (str): 图像发送方式: upload/base64
 
         Returns:
             tuple: (图像列表, 响应文本, 对话历史)
@@ -550,6 +567,7 @@ class OpenAIClient:
                 retry_count=retry_count,
                 seed=seed,
                 history=history,
+                image_send_mode=image_send_mode,
                 extra=extra,
             )
         else:
@@ -595,6 +613,7 @@ class OpenAIClient:
         retry_count: int,
         seed: int,
         history: List[tuple[str, str]],
+        image_send_mode: str = "upload",
         extra: dict | None = None,
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """使用 OpenAI Images API 生成/编辑图像（dall-e-*、gpt-image-1）"""
@@ -627,12 +646,32 @@ class OpenAIClient:
         if style != "vivid":
             image_kwargs["style"] = style
 
+        has_input_images = len(images) > 0
+        use_base64_image = has_input_images and image_send_mode == "base64"
+
         upload_files = []
-        if images:
-            for i, img in enumerate(images):
-                upload_files.append(_pil_to_upload_file(img, f"image_{i}.png"))
-        if len(upload_files) > 0:
-            image_kwargs["image"] = upload_files
+        if has_input_images:
+            if use_base64_image:
+                image_payload = []
+                for img in images:
+                    base64_image = image_to_base64(img)
+                    image_payload.append(
+                        {
+                            "type": "image_url",
+                            "url": f"data:image/jpeg;base64,{base64_image}",
+                        }
+                    )
+                image_kwargs["image"] = (
+                    image_payload[0]
+                    if len(image_payload) == 1
+                    else image_payload
+                )
+            else:
+                for i, img in enumerate(images):
+                    upload_files.append(
+                        _pil_to_upload_file(img, f"image_{i}.png")
+                    )
+                image_kwargs["image"] = upload_files
 
         # 合并额外参数
         if extra:
@@ -651,7 +690,7 @@ class OpenAIClient:
 
         url = (
             f"{self.base_url}/images/edits"
-            if len(upload_files) > 0
+            if has_input_images
             else f"{self.base_url}/images/generations"
         )
 
@@ -692,11 +731,11 @@ class OpenAIClient:
                         )
                         action = "Edited"
                     else:
-                        # 纯生成：使用 application/json
+                        # 纯生成或base64图像编辑：使用 application/json
                         response = client.post(
                             url, headers=json_headers, json=image_kwargs
                         )
-                        action = "Generated"
+                        action = "Edited" if has_input_images else "Generated"
 
                     if response.status_code not in (200, 201):
                         raise Exception(

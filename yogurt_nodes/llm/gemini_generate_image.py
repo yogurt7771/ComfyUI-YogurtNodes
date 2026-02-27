@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import Optional
 from typing_extensions import List
@@ -222,7 +223,7 @@ def inputs_def():
     }
 
 
-def generate_image(
+async def generate_image(
     client: GeminiClient,
     model_name: str = "",
     system_prompt: str = "",
@@ -257,7 +258,8 @@ def generate_image(
                 img = img[0]
             img = img.permute(2, 0, 1)
             images.append(torchvision.transforms.ToPILImage()(img))
-    images, text, thought, history = client.generate_image(
+    images, text, thought, history = await asyncio.to_thread(
+        client.generate_image,
         model_name=model_name,
         prompt=prompt,
         system_prompt=system_prompt,
@@ -339,7 +341,7 @@ class GeminiGenerateImage:
     )
     CATEGORY = "YogurtNodes/LLM"
 
-    def generate_image(
+    async def generate_image(
         self,
         api_key: str = "",
         vertex: bool = False,
@@ -383,7 +385,7 @@ class GeminiGenerateImage:
             base_url=base_url,
             timeout=timeout,
         )
-        return generate_image(
+        return await generate_image(
             client=client,
             model_name=model_name,
             system_prompt=system_prompt,
@@ -465,7 +467,7 @@ class VertexAIGenerateImage:
     )
     CATEGORY = "YogurtNodes/LLM"
 
-    def generate_image(
+    async def generate_image(
         self,
         credentials: str = "",
         project_id: str = "",
@@ -512,7 +514,7 @@ class VertexAIGenerateImage:
             base_url=base_url,
             timeout=timeout,
         )
-        return generate_image(
+        return await generate_image(
             client=client,
             model_name=model_name,
             system_prompt=system_prompt,

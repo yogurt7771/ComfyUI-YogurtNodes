@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import List
 
@@ -26,7 +27,7 @@ class FreedomGPTImageUnderstand:
                     },
                 ),
                 "model_name": (
-                    FreedomGPTClient().get_all_text_models(),
+                    "STRING",
                     {
                         "default": "liberty",
                         "tooltip": "FreedomGPT vision model name",
@@ -171,7 +172,7 @@ class FreedomGPTImageUnderstand:
     DESCRIPTION = "Understand image content using FreedomGPT vision models"
     CATEGORY = "YogurtNodes/LLM"
 
-    def understand_image(
+    async def understand_image(
         self,
         api_key: str,
         model_name: str,
@@ -210,7 +211,8 @@ class FreedomGPTImageUnderstand:
                 img = img.permute(2, 0, 1)
                 images.append(torchvision.transforms.ToPILImage()(img))
 
-        text, history, payload = client.understand_image(
+        text, history, payload = await asyncio.to_thread(
+            client.understand_image,
             model_name=model_name,
             prompt=prompt,
             images=images,

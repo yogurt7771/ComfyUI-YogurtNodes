@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import Optional
 from typing_extensions import List
@@ -26,7 +27,7 @@ class FreedomGPTGenerateImage:
                     },
                 ),
                 "model_name": (
-                    FreedomGPTClient().get_all_image_models(),
+                    "STRING",
                     {
                         "default": "liberty",
                         "tooltip": "FreedomGPT image generation model name",
@@ -126,7 +127,7 @@ class FreedomGPTGenerateImage:
     DESCRIPTION = "Generate images using FreedomGPT API"
     CATEGORY = "YogurtNodes/LLM"
 
-    def generate_image(
+    async def generate_image(
         self,
         api_key: str,
         model_name: str,
@@ -161,7 +162,8 @@ class FreedomGPTGenerateImage:
                 img = img.permute(2, 0, 1)
                 input_images.append(torchvision.transforms.ToPILImage()(img))
 
-        pil_images, response_text, history = client.generate_image(
+        pil_images, response_text, history = await asyncio.to_thread(
+            client.generate_image,
             model_name=model_name,
             prompt=prompt,
             number_of_images=number_of_images,

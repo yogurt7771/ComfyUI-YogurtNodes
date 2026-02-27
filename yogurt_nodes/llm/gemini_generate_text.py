@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import List
 
@@ -222,7 +223,7 @@ class GeminiGenerateTextBase:
     def create_client(self, /, **kwargs) -> GeminiClient:
         raise NotImplementedError()
 
-    def generate_text(
+    async def generate_text(
         self,
         image = None,
         image1 = None,
@@ -246,7 +247,8 @@ class GeminiGenerateTextBase:
         except (json.JSONDecodeError, TypeError):
             raise ValueError(f"Invalid JSON of extra parameters: {extra_str}")
 
-        text, thought, history = client.generate_text(
+        text, thought, history = await asyncio.to_thread(
+            client.generate_text,
             model_name=kwargs.get("model_name", ""),
             system_prompt=kwargs.get("system_prompt", ""),
             prompt=kwargs.get("prompt", ""),

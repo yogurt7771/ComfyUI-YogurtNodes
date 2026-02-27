@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import List
 
@@ -170,7 +171,7 @@ class OpenAIGenerateText:
     DESCRIPTION = "Generate text using OpenAI API"
     CATEGORY = "YogurtNodes/LLM"
 
-    def generate_text(
+    async def generate_text(
         self,
         api_key: str,
         base_url: str,
@@ -196,7 +197,8 @@ class OpenAIGenerateText:
         except (json.JSONDecodeError, TypeError):
             extra_dict = {}
 
-        text, history, payload = client.generate_text(
+        text, history, payload = await asyncio.to_thread(
+            client.generate_text,
             model_name=model_name,
             system_prompt=system_prompt,
             prompt=prompt,

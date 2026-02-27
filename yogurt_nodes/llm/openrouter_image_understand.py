@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import List
 
@@ -14,19 +15,6 @@ class OpenRouterImageUnderstand:
 
     @classmethod
     def INPUT_TYPES(cls):
-        # 尝试获取动态模型列表，如果失败则使用缓存列表
-        try:
-            # 创建临时客户端获取列表（使用环境变量或缓存）
-            temp_client = OpenRouterClient()
-            models = temp_client.get_all_models()
-        except Exception:
-            # 如果API调用失败，使用缓存列表
-            models = OpenRouterClient.get_cached_models()
-
-        # 确保列表不为空
-        if not models:
-            models = OpenRouterClient.get_cached_models()
-
         # 获取基础设施提供商列表
         infrastructure_providers = OpenRouterClient.get_infrastructure_providers()
 
@@ -41,7 +29,7 @@ class OpenRouterImageUnderstand:
                     },
                 ),
                 "model_name": (
-                    models,
+                    "STRING",
                     {
                         "default": "anthropic/claude-3.5-sonnet",
                         "tooltip": "OpenRouter vision model name",
@@ -191,7 +179,7 @@ class OpenRouterImageUnderstand:
     DESCRIPTION = "Understand image content using OpenRouter API"
     CATEGORY = "YogurtNodes/LLM"
 
-    def understand_image(
+    async def understand_image(
         self,
         api_key: str = "",
         model_name: str = "",
@@ -244,7 +232,8 @@ class OpenRouterImageUnderstand:
         elif infrastructure_provider != "auto":
             provider_param = infrastructure_provider
 
-        text, history, payload = client.understand_image(
+        text, history, payload = await asyncio.to_thread(
+            client.understand_image,
             model_name=model_name,
             prompt=prompt,
             images=images,

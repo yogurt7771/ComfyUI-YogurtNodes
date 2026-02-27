@@ -179,6 +179,7 @@ class OpenRouterClient:
         seed: int = -1,
         aspect_ratio: str = "auto",
         image_size: str = "1k",
+        return_text: bool = True,
         extra: dict | None = None,
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """
@@ -197,7 +198,8 @@ class OpenRouterClient:
             provider (str): 基础设施提供商（可选）
             chat_template (str): 聊天模板
             seed (int): 随机种子，-1为随机值
-            
+            return_text (bool): 是否请求并返回文本
+
         Returns:
             tuple: (图像列表, 响应文本, 对话历史)
         """
@@ -214,11 +216,12 @@ class OpenRouterClient:
             chat_template=chat_template,
         )
 
+        modalities = ["image", "text"] if return_text else ["image"]
         payload = {
             "model": model_name,
             "messages": messages,
             "temperature": temperature,
-            "modalities": ["image", "text"]  # 关键：启用图像生成
+            "modalities": modalities,  # 关键：启用图像生成，可选文本输出
         }
 
         if top_p > 0:
@@ -268,7 +271,12 @@ class OpenRouterClient:
                     message = choice["message"]
 
                     # 提取文本内容
-                    text_content = message.get("content", "").strip() if message.get("content") else ""
+                    raw_text_content = (
+                        message.get("content", "").strip()
+                        if message.get("content")
+                        else ""
+                    )
+                    text_content = raw_text_content if return_text else ""
 
                     # 提取图像数据（base64格式）
                     generated_images = []
@@ -409,37 +417,6 @@ class OpenRouterClient:
             "google-vertex",
             "openai",
             "anthropic",
-        ]
-
-    @staticmethod
-    def get_cached_models() -> List[str]:
-        """获取缓存的模型列表（离线备用）"""
-        return [
-            "anthropic/claude-3.5-sonnet",
-            "anthropic/claude-3.5-haiku",
-            "anthropic/claude-3-opus",
-            "openai/gpt-4o",
-            "openai/gpt-4o-mini",
-            "openai/gpt-4-turbo",
-            "google/gemini-2.0-flash",
-            "google/gemini-pro-1.5",
-            "meta-llama/llama-3.2-70b-instruct",
-            "meta-llama/llama-3.1-405b-instruct",
-            "mistralai/mistral-large",
-            "mistralai/mistral-medium",
-            "deepseek/deepseek-r1",
-            "qwen/qwen-2.5-72b-instruct",
-        ]
-
-    @staticmethod
-    def get_image_models() -> List[str]:
-        """获取支持图像生成的模型列表"""
-        return [
-            "google/gemini-2.5-flash-image-preview",
-            "google/gemini-2.0-flash-exp",
-            "anthropic/claude-3.5-sonnet",
-            "openai/gpt-4o",
-            "openai/gpt-4o-mini",
         ]
 
     def get_generation_info(self, generation_id: str) -> Dict[str, Any]:

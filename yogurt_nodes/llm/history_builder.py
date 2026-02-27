@@ -47,7 +47,7 @@ class HistoryBuilder:
     DESCRIPTION = "构建与 LLM 节点兼容的会话历史"
     CATEGORY = "YogurtNodes/LLM"
 
-    def build_history(
+    async def build_history(
         self,
         previous_history: Optional[List[Tuple[str, str]]] = None,
         user_message: str = "",

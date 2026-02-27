@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import List
 
@@ -22,7 +23,7 @@ class FreedomGPTGenerateText:
                     },
                 ),
                 "model_name": (
-                    FreedomGPTClient().get_all_text_models(),
+                    "STRING",
                     {
                         "default": "liberty",
                         "tooltip": "FreedomGPT model name",
@@ -162,7 +163,7 @@ class FreedomGPTGenerateText:
     DESCRIPTION = "Generate text using FreedomGPT API"
     CATEGORY = "YogurtNodes/LLM"
 
-    def generate_text(
+    async def generate_text(
         self,
         api_key: str,
         model_name: str,
@@ -187,7 +188,8 @@ class FreedomGPTGenerateText:
         except (json.JSONDecodeError, TypeError):
             extra_dict = {}
 
-        text, history, payload = client.generate_text(
+        text, history, payload = await asyncio.to_thread(
+            client.generate_text,
             model_name=model_name,
             system_prompt=system_prompt,
             prompt=prompt,

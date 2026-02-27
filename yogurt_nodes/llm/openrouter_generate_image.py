@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import Optional
 from typing_extensions import List
@@ -26,7 +27,7 @@ class OpenRouterGenerateImage:
                     },
                 ),
                 "model_name": (
-                    OpenRouterClient.get_image_models(),
+                    "STRING",
                     {
                         "default": "google/gemini-2.5-flash-image-preview",
                         "tooltip": "OpenRouter model name for image generation",
@@ -177,6 +178,13 @@ class OpenRouterGenerateImage:
                         "tooltip": "Extra parameters for the request, in JSON format",
                     },
                 ),
+                "return_text": (
+                    "BOOLEAN",
+                    {
+                        "default": True,
+                        "tooltip": "Whether to request/return text output (controls modalities: image+text vs image only)",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -201,7 +209,7 @@ class OpenRouterGenerateImage:
     DESCRIPTION = "Generate image using OpenRouter API and return as torch.Tensor (h,w,c) and text"
     CATEGORY = "YogurtNodes/LLM"
 
-    def generate_image(
+    async def generate_image(
         self,
         api_key: str,
         model_name: str,
@@ -210,6 +218,7 @@ class OpenRouterGenerateImage:
         temperature: float,
         top_p: float,
         max_tokens: int,
+        return_text: bool,
         retry_count: int,
         provider: str,
         provider_list: str,
@@ -253,7 +262,8 @@ class OpenRouterGenerateImage:
         elif provider != "auto":
             provider_param = provider
 
-        images, text, history = client.generate_image(
+        images, text, history = await asyncio.to_thread(
+            client.generate_image,
             model_name=model_name,
             prompt=prompt,
             system_prompt=system_prompt,
@@ -267,6 +277,7 @@ class OpenRouterGenerateImage:
             seed=seed,
             aspect_ratio=aspect_ratio,
             image_size=image_size,
+            return_text=return_text,
             history=history,
             extra=extra_dict,
         )

@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import Optional
 
@@ -160,7 +161,7 @@ class SeeDreamGenerateImage:
     )
     CATEGORY = "YogurtNodes/LLM"
 
-    def generate_image(
+    async def generate_image(
         self,
         api_key: str,
         model: str,
@@ -224,7 +225,8 @@ class SeeDreamGenerateImage:
         client = SeeDreamClient(api_key, proxy_url, timeout)
 
         # 调用API
-        generated_images, response_text = client.generate_image(
+        generated_images, response_text = await asyncio.to_thread(
+            client.generate_image,
             model=model,
             prompt=prompt,
             images=input_images if input_images else None,

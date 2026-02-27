@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import List
 
@@ -154,6 +155,13 @@ class OpenAIImageUnderstand:
                         "tooltip": "Extra parameters for the request, in JSON format",
                     },
                 ),
+                "image_send_mode": (
+                    ["openai", "base64"],
+                    {
+                        "default": "openai",
+                        "tooltip": "图片发送方式: openai(标准image_url对象), base64(x.ai兼容url字段)",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -178,7 +186,7 @@ class OpenAIImageUnderstand:
     DESCRIPTION = "Understand image content using OpenAI vision models"
     CATEGORY = "YogurtNodes/LLM"
 
-    def understand_image(
+    async def understand_image(
         self,
         api_key: str,
         base_url: str,
@@ -195,6 +203,7 @@ class OpenAIImageUnderstand:
         proxy_url: str,
         timeout: int,
         extra: str = "{}",
+        image_send_mode: str = "openai",
         image: torch.Tensor | None = None,
         image1: torch.Tensor | None = None,
         image2: torch.Tensor | None = None,
@@ -218,7 +227,8 @@ class OpenAIImageUnderstand:
                 img = img.permute(2, 0, 1)
                 images.append(torchvision.transforms.ToPILImage()(img))
 
-        text, history, payload = client.understand_image(
+        text, history, payload = await asyncio.to_thread(
+            client.understand_image,
             model_name=model_name,
             prompt=prompt,
             images=images,
@@ -230,6 +240,7 @@ class OpenAIImageUnderstand:
             frequency_penalty=frequency_penalty,
             presence_penalty=presence_penalty,
             chat_template=chat_template,
+            image_send_mode=image_send_mode,
             history=history,
             extra=extra_dict,
         )

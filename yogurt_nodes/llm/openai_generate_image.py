@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import Optional
 from typing_extensions import List
@@ -193,6 +194,13 @@ class OpenAIGenerateImage:
                         "tooltip": "Extra parameters for the request, in JSON format",
                     },
                 ),
+                "image_send_mode": (
+                    ["upload", "base64"],
+                    {
+                        "default": "upload",
+                        "tooltip": "输入图像发送方式: upload(文件上传, OpenAI官方兼容), base64(JSON中data URL, x.ai兼容)",
+                    },
+                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -219,7 +227,7 @@ class OpenAIGenerateImage:
     )
     CATEGORY = "YogurtNodes/LLM"
 
-    def generate_image(
+    async def generate_image(
         self,
         api_key: str,
         base_url: str,
@@ -239,6 +247,7 @@ class OpenAIGenerateImage:
         aspect_ratio: str,
         timeout: int,
         extra: str = "{}",
+        image_send_mode: str = "upload",
         image: Optional[torch.Tensor] = None,
         image1: Optional[torch.Tensor] = None,
         image2: Optional[torch.Tensor] = None,
@@ -264,7 +273,8 @@ class OpenAIGenerateImage:
             extra_dict = {}
 
         client = OpenAIClient(api_key, base_url, proxy_url, timeout)
-        images, text, history = client.generate_image(
+        images, text, history = await asyncio.to_thread(
+            client.generate_image,
             model_name=model_name,
             prompt=prompt,
             system_prompt=system_prompt,
@@ -280,6 +290,7 @@ class OpenAIGenerateImage:
             seed=seed,
             history=history,
             api_type=api_type,
+            image_send_mode=image_send_mode,
             extra=extra_dict,
         )
 
