@@ -103,6 +103,75 @@ def _make_rect_mask_pattern(
     return torch.clamp(blurred, 0.0, 1.0)
 
 
+def _cosine_ramp(length: int, device, dtype) -> torch.Tensor:
+    """
+    Smooth 0->1 ramp using a half-cosine window (Hann-like).
+    length <= 0 returns an empty tensor (caller should guard).
+    """
+    length = int(length)
+    if length <= 0:
+        return torch.empty((0,), device=device, dtype=dtype)
+    if length == 1:
+        return torch.zeros((1,), device=device, dtype=dtype)
+
+    t = torch.linspace(0.0, 1.0, steps=length, device=device, dtype=torch.float32)
+    ramp = 0.5 - 0.5 * torch.cos(torch.pi * t)
+    return torch.clamp(ramp, 0.0, 1.0).to(dtype)
+
+
+def _make_seam_blend_pattern(
+    *,
+    tile_size: int,
+    left_overlap: int,
+    right_overlap: int,
+    top_overlap: int,
+    bottom_overlap: int,
+    device,
+    dtype,
+) -> torch.Tensor:
+    """
+    Build a seam feather pattern for untile:
+    - 1 in the tile center
+    - Smooth ramps on overlapped edges (left/right/top/bottom)
+    - This forms a soft window so neighboring tiles can be averaged seamlessly
+
+    Used together with weighted accumulation + normalization in untile.
+    """
+    tile_size = int(tile_size)
+    left_overlap = max(int(left_overlap), 0)
+    right_overlap = max(int(right_overlap), 0)
+    top_overlap = max(int(top_overlap), 0)
+    bottom_overlap = max(int(bottom_overlap), 0)
+
+    if left_overlap == 0 and right_overlap == 0 and top_overlap == 0 and bottom_overlap == 0:
+        return torch.ones((tile_size, tile_size), device=device, dtype=dtype)
+
+    w_x = torch.ones((tile_size,), device=device, dtype=dtype)
+    w_y = torch.ones((tile_size,), device=device, dtype=dtype)
+
+    if left_overlap > 0:
+        left_overlap = min(left_overlap, tile_size)
+        w_x[:left_overlap] = _cosine_ramp(left_overlap, device=device, dtype=dtype)
+
+    if right_overlap > 0:
+        right_overlap = min(right_overlap, tile_size)
+        w_x[-right_overlap:] = torch.flip(
+            _cosine_ramp(right_overlap, device=device, dtype=dtype), dims=(0,)
+        )
+
+    if top_overlap > 0:
+        top_overlap = min(top_overlap, tile_size)
+        w_y[:top_overlap] = _cosine_ramp(top_overlap, device=device, dtype=dtype)
+
+    if bottom_overlap > 0:
+        bottom_overlap = min(bottom_overlap, tile_size)
+        w_y[-bottom_overlap:] = torch.flip(
+            _cosine_ramp(bottom_overlap, device=device, dtype=dtype), dims=(0,)
+        )
+
+    return (w_y[:, None] * w_x[None, :]).to(dtype)
+
+
 class ImageTileWithSeamMask:
     @classmethod
     def INPUT_TYPES(cls):
@@ -278,7 +347,7 @@ class ImageUntileWithSeamMask:
 
     _NODE_NAME = "Image Untile (Seam Mask)"
     CATEGORY = "YogurtNodes/Image"
-    DESCRIPTION = "Merge overlapped tiles back to one image using the mask as blend weight (white=tile, black=existing)."
+    DESCRIPTION = "Merge overlapped tiles back to one image with seam feathering (mask + overlap-based smooth transition)."
 
     @staticmethod
     def _normalize_mask(mask: torch.Tensor, target_batch: int, target_h: int, target_w: int, device, dtype):
@@ -379,10 +448,13 @@ class ImageUntileWithSeamMask:
             target_h=tile_size,
             target_w=tile_size,
             device=tiles.device,
-            dtype=tiles.dtype,
+            dtype=torch.float32,
         )
 
-        canvas = torch.zeros((n, crop_h, crop_w, c), device=tiles.device, dtype=tiles.dtype)
+        accum = torch.zeros((n, crop_h, crop_w, c), device=tiles.device, dtype=torch.float32)
+        weight_sum = torch.zeros((n, crop_h, crop_w, 1), device=tiles.device, dtype=torch.float32)
+
+        seam_cache: dict[tuple[int, int, int, int], torch.Tensor] = {}
 
         tile_index = 0
         for row, y0_abs in enumerate(y_positions):
@@ -395,11 +467,102 @@ class ImageUntileWithSeamMask:
                 tile_batch = tiles[start:end, :, :, :]
                 mask_batch = masks[start:end, :, :].unsqueeze(-1)
 
-                region = canvas[:, y0 : y0 + tile_size, x0 : x0 + tile_size, :]
-                canvas[:, y0 : y0 + tile_size, x0 : x0 + tile_size, :] = (
-                    tile_batch * mask_batch + region * (1.0 - mask_batch)
-                )
+                left_overlap = int((x_positions[col - 1] + tile_size) - x0_abs) if col > 0 else 0
+                right_overlap = int((x0_abs + tile_size) - x_positions[col + 1]) if col < (cols - 1) else 0
+                top_overlap = int((y_positions[row - 1] + tile_size) - y0_abs) if row > 0 else 0
+                bottom_overlap = int((y0_abs + tile_size) - y_positions[row + 1]) if row < (rows - 1) else 0
+                key = (left_overlap, right_overlap, top_overlap, bottom_overlap)
+
+                seam_pattern = seam_cache.get(key)
+                if seam_pattern is None:
+                    seam_pattern = _make_seam_blend_pattern(
+                        tile_size=tile_size,
+                        left_overlap=left_overlap,
+                        right_overlap=right_overlap,
+                        top_overlap=top_overlap,
+                        bottom_overlap=bottom_overlap,
+                        device=tiles.device,
+                        dtype=torch.float32,
+                    )
+                    seam_cache[key] = seam_pattern
+
+                seam_alpha = seam_pattern.unsqueeze(0).unsqueeze(-1).expand(n, -1, -1, 1)
+                # Keep seam feather always effective; mask only increases tile priority.
+                alpha = torch.clamp(seam_alpha * (0.5 + 0.5 * mask_batch), 0.0, 1.0)
+
+                accum[:, y0 : y0 + tile_size, x0 : x0 + tile_size, :] += tile_batch.to(torch.float32) * alpha
+                weight_sum[:, y0 : y0 + tile_size, x0 : x0 + tile_size, :] += alpha
 
                 tile_index += 1
 
-        return (canvas,)
+        canvas = accum / torch.clamp(weight_sum, min=1e-6)
+        return (canvas.to(tiles.dtype),)
+
+
+class TileInfoToTTPImageAssyArgs:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "tile_info": ("DICT", {"tooltip": "tile_info dict from Image Tile (Seam Mask)."}),
+            }
+        }
+
+    RETURN_TYPES = ("LIST", "TUPLE", "TUPLE", "INT")
+    RETURN_NAMES = ("POSITIONS", "ORIGINAL_SIZE", "GRID_SIZE", "PADDING")
+    FUNCTION = "execute"
+
+    OUTPUT_NODE = False
+
+    _NODE_NAME = "Tile Info To TTP Image Assy Args"
+    CATEGORY = "YogurtNodes/Image"
+    DESCRIPTION = "Convert tile_info to TTP_Image_Assy inputs: positions/original_size/grid_size/padding."
+
+    def execute(self, tile_info: dict):
+        if not isinstance(tile_info, dict):
+            raise ValueError("tile_info must be a dict.")
+
+        tile_size = int(tile_info.get("tile_size"))
+        seam = int(tile_info.get("seam", 0))
+        crop_x = int(tile_info.get("crop_x", 0))
+        crop_y = int(tile_info.get("crop_y", 0))
+
+        crop_w_raw = tile_info.get("crop_width", tile_info.get("orig_width"))
+        crop_h_raw = tile_info.get("crop_height", tile_info.get("orig_height"))
+        if crop_w_raw is None or crop_h_raw is None:
+            raise ValueError("tile_info must contain crop_width/crop_height or orig_width/orig_height.")
+        crop_w = int(crop_w_raw)
+        crop_h = int(crop_h_raw)
+
+        x_positions = tile_info.get("x_positions")
+        y_positions = tile_info.get("y_positions")
+        if not isinstance(x_positions, (list, tuple)) or not isinstance(y_positions, (list, tuple)):
+            raise ValueError("tile_info.x_positions and tile_info.y_positions must be lists.")
+        if len(x_positions) == 0 or len(y_positions) == 0:
+            raise ValueError("tile_info.x_positions and tile_info.y_positions must not be empty.")
+
+        if tile_size <= 0:
+            raise ValueError(f"tile_size must be > 0, got: {tile_size}")
+        if crop_w <= 0 or crop_h <= 0:
+            raise ValueError(f"crop_width/crop_height must be > 0, got: {crop_w}x{crop_h}")
+
+        x_positions = [int(x) for x in x_positions]
+        y_positions = [int(y) for y in y_positions]
+
+        cols = len(x_positions)
+        rows = len(y_positions)
+
+        positions: list[tuple[int, int, int, int]] = []
+        for y_abs in y_positions:
+            upper = max(0, min(int(y_abs - crop_y), crop_h))
+            lower = max(upper, min(upper + tile_size, crop_h))
+
+            for x_abs in x_positions:
+                left = max(0, min(int(x_abs - crop_x), crop_w))
+                right = max(left, min(left + tile_size, crop_w))
+                positions.append((left, upper, right, lower))
+
+        original_size = (crop_w, crop_h)
+        grid_size = (cols, rows)
+        padding = max(int(seam), 0)
+        return (positions, original_size, grid_size, padding)

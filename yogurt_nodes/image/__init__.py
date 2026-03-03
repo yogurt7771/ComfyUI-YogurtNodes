@@ -6,4 +6,5 @@ from .scale_image import ImageScaleToTotalPixelsAdvanced  # noqa: F401
 from .get_image_size import GetImageSize  # noqa: F401
 from .tile_image import ImageTileWithSeamMask  # noqa: F401
 from .tile_image import ImageUntileWithSeamMask  # noqa: F401
+from .tile_image import TileInfoToTTPImageAssyArgs  # noqa: F401
 from .replace_image_in_batch import ReplaceImageInBatch  # noqa: F401
