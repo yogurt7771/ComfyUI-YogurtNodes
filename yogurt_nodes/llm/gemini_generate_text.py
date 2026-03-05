@@ -195,6 +195,9 @@ class GeminiGenerateTextBase:
                         "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                     },
                 ),
+            },
+            "optional": {
+                "history": ("HISTORY",),
                 "extra": (
                     "STRING",
                     {
@@ -203,9 +206,6 @@ class GeminiGenerateTextBase:
                         "tooltip": "Extra parameters for the request, in JSON format",
                     },
                 ),
-            },
-            "optional": {
-                "history": ("HISTORY",),
             },
         }
 

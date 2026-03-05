@@ -147,6 +147,14 @@ class OpenAIImageUnderstand:
                         "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                     },
                 ),
+            },
+            "optional": {
+                "image": ("IMAGE",),
+                "image1": ("IMAGE",),
+                "image2": ("IMAGE",),
+                "image3": ("IMAGE",),
+                "image4": ("IMAGE",),
+                "history": ("HISTORY",),
                 "extra": (
                     "STRING",
                     {
@@ -162,14 +170,6 @@ class OpenAIImageUnderstand:
                         "tooltip": "图片发送方式: openai(标准image_url对象), base64(x.ai兼容url字段)",
                     },
                 ),
-            },
-            "optional": {
-                "image": ("IMAGE",),
-                "image1": ("IMAGE",),
-                "image2": ("IMAGE",),
-                "image3": ("IMAGE",),
-                "image4": ("IMAGE",),
-                "history": ("HISTORY",),
             },
         }
 

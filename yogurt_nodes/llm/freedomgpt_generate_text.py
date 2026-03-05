@@ -136,6 +136,9 @@ class FreedomGPTGenerateText:
                         "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                     },
                 ),
+            },
+            "optional": {
+                "history": ("HISTORY",),
                 "extra": (
                     "STRING",
                     {
@@ -144,9 +147,6 @@ class FreedomGPTGenerateText:
                         "tooltip": "Extra parameters for the request, in JSON format",
                     },
                 ),
-            },
-            "optional": {
-                "history": ("HISTORY",),
             },
         }
 

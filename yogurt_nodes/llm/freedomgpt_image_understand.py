@@ -140,14 +140,6 @@ class FreedomGPTImageUnderstand:
                         "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                     },
                 ),
-                "extra": (
-                    "STRING",
-                    {
-                        "default": "{}",
-                        "multiline": True,
-                        "tooltip": "Extra parameters for the request, in JSON format",
-                    },
-                ),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -156,6 +148,14 @@ class FreedomGPTImageUnderstand:
                 "image3": ("IMAGE",),
                 "image4": ("IMAGE",),
                 "history": ("HISTORY",),
+                "extra": (
+                    "STRING",
+                    {
+                        "default": "{}",
+                        "multiline": True,
+                        "tooltip": "Extra parameters for the request, in JSON format",
+                    },
+                ),
             },
         }
 

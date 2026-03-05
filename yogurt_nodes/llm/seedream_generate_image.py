@@ -128,6 +128,13 @@ class SeeDreamGenerateImage:
                         "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                     },
                 ),
+            },
+            "optional": {
+                "image": ("IMAGE", {"tooltip": "输入图像（用于图生图）"}),
+                "image1": ("IMAGE", {"tooltip": "输入图像1（用于多图生图）"}),
+                "image2": ("IMAGE", {"tooltip": "输入图像2（用于多图生图）"}),
+                "image3": ("IMAGE", {"tooltip": "输入图像3（用于多图生图）"}),
+                "image4": ("IMAGE", {"tooltip": "输入图像4（用于多图生图）"}),
                 "extra": (
                     "STRING",
                     {
@@ -136,13 +143,6 @@ class SeeDreamGenerateImage:
                         "tooltip": "Extra parameters for the request, in JSON format",
                     },
                 ),
-            },
-            "optional": {
-                "image": ("IMAGE", {"tooltip": "输入图像（用于图生图）"}),
-                "image1": ("IMAGE", {"tooltip": "输入图像1（用于多图生图）"}),
-                "image2": ("IMAGE", {"tooltip": "输入图像2（用于多图生图）"}),
-                "image3": ("IMAGE", {"tooltip": "输入图像3（用于多图生图）"}),
-                "image4": ("IMAGE", {"tooltip": "输入图像4（用于多图生图）"}),
             },
         }
 

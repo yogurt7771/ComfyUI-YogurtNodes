@@ -157,6 +157,14 @@ class GrokImageUnderstand:
                         "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                     },
                 ),
+            },
+            "optional": {
+                "image": ("IMAGE",),
+                "image1": ("IMAGE",),
+                "image2": ("IMAGE",),
+                "image3": ("IMAGE",),
+                "image4": ("IMAGE",),
+                "history": ("HISTORY",),
                 "extra": (
                     "STRING",
                     {
@@ -179,14 +187,6 @@ class GrokImageUnderstand:
                         "tooltip": "Image detail level for vision understanding",
                     },
                 ),
-            },
-            "optional": {
-                "image": ("IMAGE",),
-                "image1": ("IMAGE",),
-                "image2": ("IMAGE",),
-                "image3": ("IMAGE",),
-                "image4": ("IMAGE",),
-                "history": ("HISTORY",),
             },
         }
 

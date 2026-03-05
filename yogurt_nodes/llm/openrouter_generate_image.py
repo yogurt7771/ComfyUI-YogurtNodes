@@ -170,6 +170,14 @@ class OpenRouterGenerateImage:
                         "tooltip": "Image size for the generated image (gemini only for now)",
                     },
                 ),
+            },
+            "optional": {
+                "image": ("IMAGE",),
+                "image1": ("IMAGE",),
+                "image2": ("IMAGE",),
+                "image3": ("IMAGE",),
+                "image4": ("IMAGE",),
+                "history": ("HISTORY",),
                 "extra": (
                     "STRING",
                     {
@@ -185,14 +193,6 @@ class OpenRouterGenerateImage:
                         "tooltip": "Whether to request/return text output (controls modalities: image+text vs image only)",
                     },
                 ),
-            },
-            "optional": {
-                "image": ("IMAGE",),
-                "image1": ("IMAGE",),
-                "image2": ("IMAGE",),
-                "image3": ("IMAGE",),
-                "image4": ("IMAGE",),
-                "history": ("HISTORY",),
             },
         }
 

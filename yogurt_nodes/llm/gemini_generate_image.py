@@ -203,14 +203,6 @@ def inputs_def():
                     "tooltip": "Timeout for the request in seconds, 0 means no timeout",
                 },
             ),
-            "extra": (
-                "STRING",
-                {
-                    "default": "{}",
-                    "multiline": True,
-                    "tooltip": "Extra parameters for the request, in JSON format",
-                },
-            ),
         },
         "optional": {
             "image": ("IMAGE",),
@@ -219,6 +211,14 @@ def inputs_def():
             "image3": ("IMAGE",),
             "image4": ("IMAGE",),
             "history": ("HISTORY",),
+            "extra": (
+                "STRING",
+                {
+                    "default": "{}",
+                    "multiline": True,
+                    "tooltip": "Extra parameters for the request, in JSON format",
+                },
+            ),
         },
     }
 
