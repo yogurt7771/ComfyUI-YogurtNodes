@@ -409,6 +409,16 @@ All nodes are marked with "YogurtNodes" prefix for easy identification in the Co
   - History support for conversation continuity
   - Automatic retry mechanism
 
+#### GRSAI Nano Banana
+- **Category:** YogurtNodes/LLM
+- **Description:** Generate or edit images using the GRSAI Nano Banana API
+- **Features:**
+  - Includes all Nano Banana model options listed in the official documentation
+  - Supports text-to-image, single-reference-image, and multi-reference-image workflows
+  - Supports aspect ratio, image size, polling interval, and timeout controls
+  - Accepts remote image URLs or data URLs as reference images
+  - Automatically polls `/v1/draw/result` to fetch the final images
+
 #### History Builder
 - **Category:** YogurtNodes/LLM
 - **Description:** Build and manage conversation history compatible with all LLM nodes

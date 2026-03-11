@@ -445,6 +445,17 @@ pip install -r requirements.txt
   - 历史记录支持对话连续性
   - 自动重试机制
 
+#### GRSAI Nano Banana
+
+- **类别：** YogurtNodes/LLM
+- **描述：** 使用 GRSAI Nano Banana API 生成或编辑图像
+- **特点：**
+  - 内置文档列出的全部 Nano Banana 模型选项
+  - 支持文生图、单图参考和多图参考
+  - 支持比例、分辨率、轮询间隔和超时控制
+  - 支持远程图片 URL 或 data URL 作为参考图输入
+  - 自动轮询 `/v1/draw/result` 获取最终结果
+
 #### History Builder
 
 - **类别：** YogurtNodes/LLM

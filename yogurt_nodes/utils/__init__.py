@@ -8,3 +8,4 @@ from .openrouter_client import OpenRouterClient  # noqa: F401
 from .freedomgpt_client import FreedomGPTClient  # noqa: F401
 from .gemini_client import GeminiClient  # noqa: F401
 from .grok_client import GrokClient  # noqa: F401
+from .grsai_client import GRSAIClient  # noqa: F401

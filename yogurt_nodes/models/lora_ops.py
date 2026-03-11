@@ -3,6 +3,7 @@ import os
 import re
 from typing import Dict, List, Optional, Set
 
+import comfy.lora_convert
 import comfy.sd
 import comfy.utils
 import folder_paths
@@ -51,6 +52,132 @@ def _extract_layer_id(match: re.Match) -> Optional[int]:
     if number:
         return int(number.group(0))
     return None
+
+
+_LORA_PAIR_SUFFIXES = (
+    (".lora_up.weight", ".lora_down.weight", ".lora_mid.weight"),
+    ("_lora.up.weight", "_lora.down.weight", None),
+    (".lora_B.weight", ".lora_A.weight", None),
+    (".lora.up.weight", ".lora.down.weight", None),
+    (".lora_B", ".lora_A", None),
+    (".lora_linear_layer.up.weight", ".lora_linear_layer.down.weight", None),
+    (".lora_B.default.weight", ".lora_A.default.weight", None),
+)
+
+
+def _make_rank_tensor(value: object, rank: int, ref: torch.Tensor) -> torch.Tensor:
+    if isinstance(value, torch.Tensor):
+        return torch.tensor(float(rank), dtype=value.dtype, device=value.device)
+    return torch.tensor(float(rank), dtype=ref.dtype, device=ref.device)
+
+
+def _make_scalar_tensor(value: object, scalar: float, ref: torch.Tensor) -> torch.Tensor:
+    if isinstance(value, torch.Tensor):
+        return torch.tensor(float(scalar), dtype=value.dtype, device=value.device)
+    return torch.tensor(float(scalar), dtype=ref.dtype, device=ref.device)
+
+
+def _extract_lora_alpha(lora_sd: Dict[str, object], alpha_key: str, down_tensor: torch.Tensor) -> float:
+    alpha = lora_sd.get(alpha_key)
+    if alpha is None:
+        return float(down_tensor.shape[0])
+    if isinstance(alpha, torch.Tensor):
+        return float(alpha.item())
+    return float(alpha)
+
+
+def _resolve_compute_device(device_name: str) -> torch.device:
+    name = (device_name or "auto").strip().lower()
+    if name == "auto":
+        if torch.cuda.is_available():
+            return torch.device("cuda")
+        return torch.device("cpu")
+    if name == "cuda":
+        if not torch.cuda.is_available():
+            raise ValueError("compute_device='cuda' but CUDA is not available")
+        return torch.device("cuda")
+    if name == "cpu":
+        return torch.device("cpu")
+    raise ValueError(f"unsupported compute_device '{device_name}'")
+
+
+def _scan_mergeable_lora_pairs(lora_sd: Dict[str, object]) -> Dict[str, Dict[str, object]]:
+    pairs: Dict[str, Dict[str, object]] = {}
+    recognized_tensor_keys: Set[str] = set()
+
+    for up_suffix, down_suffix, mid_suffix in _LORA_PAIR_SUFFIXES:
+        for key in lora_sd:
+            if not key.endswith(up_suffix):
+                continue
+
+            base = key[: -len(up_suffix)]
+            down_key = f"{base}{down_suffix}"
+            if down_key not in lora_sd:
+                continue
+
+            if base in pairs:
+                existing = pairs[base]
+                if existing["up_key"] != key or existing["down_key"] != down_key:
+                    raise ValueError(f"ambiguous LoRA format for base '{base}'")
+                continue
+
+            up_tensor = lora_sd[key]
+            down_tensor = lora_sd[down_key]
+            if not isinstance(up_tensor, torch.Tensor) or not isinstance(down_tensor, torch.Tensor):
+                raise ValueError(f"LoRA pair '{base}' has non-tensor up/down weights")
+            if up_tensor.ndim != 2 or down_tensor.ndim != 2:
+                raise ValueError(
+                    f"LoRA pair '{base}' is not a standard 2D LoRA pair "
+                    f"(got up.ndim={up_tensor.ndim}, down.ndim={down_tensor.ndim})"
+                )
+
+            alpha_key = f"{base}.alpha"
+            dora_key = f"{base}.dora_scale"
+            reshape_key = f"{base}.reshape_weight"
+            mid_key = f"{base}{mid_suffix}" if mid_suffix is not None else None
+
+            if dora_key in lora_sd:
+                raise ValueError(
+                    f"DoRA is not supported for offline merge without a base model reference: '{dora_key}'"
+                )
+            if reshape_key in lora_sd:
+                raise ValueError(
+                    f"reshape_weight is not supported by this merge node: '{reshape_key}'"
+                )
+            if mid_key is not None and mid_key in lora_sd:
+                raise ValueError(
+                    f"LoCon/LoRA mid weights are not supported by this merge node: '{mid_key}'"
+                )
+
+            pair_info = {
+                "base": base,
+                "up_key": key,
+                "down_key": down_key,
+                "alpha_key": alpha_key,
+                "up": up_tensor,
+                "down": down_tensor,
+            }
+            pairs[base] = pair_info
+            recognized_tensor_keys.add(key)
+            recognized_tensor_keys.add(down_key)
+            if isinstance(lora_sd.get(alpha_key), torch.Tensor):
+                recognized_tensor_keys.add(alpha_key)
+
+    unsupported_tensor_keys = sorted(
+        key
+        for key, value in lora_sd.items()
+        if isinstance(value, torch.Tensor) and key not in recognized_tensor_keys
+    )
+    if unsupported_tensor_keys:
+        preview = ", ".join(unsupported_tensor_keys[:8])
+        if len(unsupported_tensor_keys) > 8:
+            preview += ", ..."
+        raise ValueError(
+            "merge node only supports standard LoRA up/down pairs right now; "
+            f"unsupported tensor keys: {preview}"
+        )
+
+    return pairs
 
 
 class LoadLoraOnly:
@@ -565,7 +692,13 @@ class LoraSimpleAdd:
         alpha_a: float = 1.0,
         alpha_b: float = 1.0,
     ):
-        combined = _clone_lora_state(loraA)
+        combined: Dict[str, object] = {}
+        for key, value in loraA.items():
+            if isinstance(value, torch.Tensor):
+                combined[key] = alpha_a * value.clone()
+            else:
+                combined[key] = value
+
         for key, value in loraB.items():
             if not isinstance(value, torch.Tensor):
                 if key not in combined:
@@ -573,7 +706,7 @@ class LoraSimpleAdd:
                 continue
 
             if key in combined and isinstance(combined[key], torch.Tensor):
-                combined[key] = alpha_a * combined[key] + alpha_b * value
+                combined[key] = combined[key] + alpha_b * value
             else:
                 combined[key] = alpha_b * value
         return (combined,)
@@ -717,6 +850,209 @@ class LoraAdd:
         return (lora_a,)
 
 
+class LoraMerge:
+    """
+    Merge up to five standard LoRAs exactly by concatenating rank dimensions.
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "lora1": ("LORA", {"tooltip": "First LoRA."}),
+                "strength1": (
+                    "FLOAT",
+                    {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01},
+                ),
+            },
+            "optional": {
+                "lora2": ("LORA", {"tooltip": "Second LoRA."}),
+                "strength2": (
+                    "FLOAT",
+                    {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01},
+                ),
+                "lora3": ("LORA", {"tooltip": "Third LoRA."}),
+                "strength3": (
+                    "FLOAT",
+                    {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01},
+                ),
+                "lora4": ("LORA", {"tooltip": "Fourth LoRA."}),
+                "strength4": (
+                    "FLOAT",
+                    {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01},
+                ),
+                "lora5": ("LORA", {"tooltip": "Fifth LoRA."}),
+                "strength5": (
+                    "FLOAT",
+                    {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01},
+                ),
+            },
+        }
+
+    RETURN_TYPES = ("LORA", "INT", "STRING")
+    RETURN_NAMES = ("merged_lora", "merged_pairs_count", "report")
+    FUNCTION = "merge_lora_full_rank"
+
+    _NODE_NAME = "LoRA Merge Full Rank"
+    DESCRIPTION = (
+        "Merge up to five standard LoRAs exactly by concatenating rank dimensions. "
+        "Fast and preserves the summed model-side effect exactly, but output rank/file "
+        "size grow. Does not support DoRA or LoCon/reshape variants."
+    )
+    CATEGORY = "YogurtNodes/Models/LoRA"
+
+    @staticmethod
+    def _copy_scaled_single_pair(
+        merged: Dict[str, object],
+        pair: Dict[str, object],
+        lora_sd: Dict[str, object],
+        strength: float,
+    ) -> bool:
+        if strength == 0:
+            return False
+
+        down = pair["down"]
+        up = pair["up"]
+        if not isinstance(down, torch.Tensor) or not isinstance(up, torch.Tensor):
+            raise ValueError(f"invalid LoRA pair '{pair['base']}'")
+
+        rank = int(down.shape[0])
+        alpha = _extract_lora_alpha(lora_sd, str(pair["alpha_key"]), down)
+        scale = strength * (alpha / float(rank))
+        base = str(pair["base"])
+
+        merged[f"{base}.lora_down.weight"] = (down.clone() * scale).contiguous()
+        merged[f"{base}.lora_up.weight"] = up.clone().contiguous()
+        merged[f"{base}.alpha"] = _make_rank_tensor(lora_sd.get(str(pair["alpha_key"])), rank, down)
+        return True
+
+    @staticmethod
+    def _concat_pairs_for_base(base: str, sources: List[tuple[Dict[str, object], Dict[str, object], float]]):
+        first_sd, first_pair, _ = sources[0]
+        ref_down = first_pair["down"]
+        ref_up = first_pair["up"]
+        if not isinstance(ref_down, torch.Tensor) or not isinstance(ref_up, torch.Tensor):
+            raise ValueError(f"invalid LoRA pair '{base}'")
+
+        up_parts: List[torch.Tensor] = []
+        down_parts: List[torch.Tensor] = []
+        total_rank = 0
+
+        for lora_sd, pair, strength in sources:
+            down = pair["down"]
+            up = pair["up"]
+            if not isinstance(down, torch.Tensor) or not isinstance(up, torch.Tensor):
+                raise ValueError(f"invalid LoRA pair '{base}'")
+            if up.shape[0] != ref_up.shape[0] or down.shape[1] != ref_down.shape[1]:
+                raise ValueError(
+                    f"shape mismatch while merging '{base}': "
+                    f"expected up[0]={ref_up.shape[0]}, down[1]={ref_down.shape[1]}, "
+                    f"got up={tuple(up.shape)}, down={tuple(down.shape)}"
+                )
+
+            rank = int(down.shape[0])
+            alpha = _extract_lora_alpha(lora_sd, str(pair["alpha_key"]), down)
+            scale = strength * (alpha / float(rank))
+            up_parts.append(up.to(dtype=ref_up.dtype, device=ref_up.device))
+            down_parts.append((down.to(dtype=ref_down.dtype, device=ref_down.device) * scale))
+            total_rank += rank
+
+        merged_up = torch.cat(up_parts, dim=1).contiguous()
+        merged_down = torch.cat(down_parts, dim=0).contiguous()
+        alpha_tensor = _make_rank_tensor(first_sd.get(str(first_pair["alpha_key"])), total_rank, ref_down)
+        return merged_up, merged_down, alpha_tensor, total_rank
+
+    def merge_lora_full_rank(
+        self,
+        lora1: Dict[str, object],
+        strength1: float = 1.0,
+        lora2: Optional[Dict[str, object]] = None,
+        strength2: float = 1.0,
+        lora3: Optional[Dict[str, object]] = None,
+        strength3: float = 1.0,
+        lora4: Optional[Dict[str, object]] = None,
+        strength4: float = 1.0,
+        lora5: Optional[Dict[str, object]] = None,
+        strength5: float = 1.0,
+    ):
+        raw_sources = [
+            (lora1, strength1),
+            (lora2, strength2),
+            (lora3, strength3),
+            (lora4, strength4),
+            (lora5, strength5),
+        ]
+        prepared_sources: List[tuple[Dict[str, object], Dict[str, Dict[str, object]], float]] = []
+        for lora, strength in raw_sources:
+            if lora is None:
+                continue
+            converted = comfy.lora_convert.convert_lora(_clone_lora_state(lora))
+            pairs = _scan_mergeable_lora_pairs(converted)
+            prepared_sources.append((converted, pairs, strength))
+
+        if not prepared_sources:
+            raise ValueError("at least one LoRA is required")
+
+        all_bases = sorted(
+            {
+                base
+                for _, pairs, _ in prepared_sources
+                for base in pairs.keys()
+            }
+        )
+        if not all_bases:
+            raise ValueError("no mergeable standard LoRA pairs found")
+
+        merged: Dict[str, object] = {}
+        merged_count = 0
+        progress = comfy.utils.ProgressBar(len(all_bases))
+        progress.update_absolute(0)
+        report_lines: List[str] = []
+        report_lines.append("=== LoRA Merge Full Rank Report ===")
+        report_lines.append(f"source_loras={len(prepared_sources)}")
+
+        for index, base in enumerate(all_bases, start=1):
+            base_sources: List[tuple[Dict[str, object], Dict[str, object], float]] = []
+            for lora_sd, pairs, strength in prepared_sources:
+                pair = pairs.get(base)
+                if pair is None or strength == 0:
+                    continue
+                base_sources.append((lora_sd, pair, strength))
+
+            if not base_sources:
+                report_lines.append(f"- {base}: skipped because all strengths are 0")
+                progress.update_absolute(index)
+                continue
+
+            if len(base_sources) == 1:
+                lora_sd, pair, strength = base_sources[0]
+                copied = self._copy_scaled_single_pair(merged, pair, lora_sd, strength)
+                if copied:
+                    merged_count += 1
+                    report_lines.append(
+                        f"- {base}: copied single pair with strength {strength}"
+                    )
+                else:
+                    report_lines.append(f"- {base}: skipped single pair because strength is 0")
+                progress.update_absolute(index)
+                continue
+
+            merged_up, merged_down, alpha_tensor, merged_rank = self._concat_pairs_for_base(base, base_sources)
+            merged[f"{base}.lora_up.weight"] = merged_up
+            merged[f"{base}.lora_down.weight"] = merged_down
+            merged[f"{base}.alpha"] = alpha_tensor
+            merged_count += 1
+            report_lines.append(
+                f"- {base}: merged {len(base_sources)} LoRAs -> rank {merged_rank}"
+            )
+            progress.update_absolute(index)
+
+        report_lines.append(f"merged_pairs={merged_count}")
+        report = "\n".join(report_lines)
+        print(f"[Yogurt LoRA] full-rank merged pairs: {merged_count}/{len(all_bases)}")
+        return (merged, merged_count, report)
+
+
 class LoraRankCompress:
     """
     Compress standard LoRA down/up pairs with SVD rank reduction.
@@ -769,7 +1105,14 @@ class LoraRankCompress:
                     "BOOLEAN",
                     {
                         "default": True,
-                        "tooltip": "When .alpha exists, set it to compressed rank.",
+                        "tooltip": "Rewrite alpha after compression so saved LoRA keeps the expected scale.",
+                    },
+                ),
+                "absorb_alpha": (
+                    "BOOLEAN",
+                    {
+                        "default": True,
+                        "tooltip": "When true, reconstruct full LoRA effect using alpha/rank before SVD compression.",
                     },
                 ),
             }
@@ -779,10 +1122,10 @@ class LoraRankCompress:
     RETURN_NAMES = ("compressed_lora", "compressed_layers_count", "report")
     FUNCTION = "compress_rank"
 
-    _NODE_NAME = "LoRA Rank Compress (SVD)"
+    _NODE_NAME = "LoRA Compress"
     DESCRIPTION = (
         "Compress LoRA rank with SVD for standard .lora_down/.lora_up pairs. "
-        "Useful for reducing size and making strength behavior easier to control."
+        "Optionally absorb alpha/rank first to preserve the actual LoRA effect before compression."
     )
     CATEGORY = "YogurtNodes/Models/LoRA"
 
@@ -809,9 +1152,21 @@ class LoraRankCompress:
 
     @staticmethod
     def _make_rank_tensor(value: object, rank: int, ref: torch.Tensor) -> torch.Tensor:
-        if isinstance(value, torch.Tensor):
-            return torch.tensor(float(rank), dtype=value.dtype, device=value.device)
-        return torch.tensor(float(rank), dtype=ref.dtype, device=ref.device)
+        return _make_rank_tensor(value, rank, ref)
+
+    @staticmethod
+    def _reconstruct_delta(
+        up: torch.Tensor,
+        down: torch.Tensor,
+        alpha: float,
+        absorb_alpha: bool,
+    ) -> torch.Tensor:
+        up_f32 = up.to(dtype=torch.float32)
+        down_f32 = down.to(dtype=torch.float32)
+        if absorb_alpha:
+            scale = alpha / float(down.shape[0])
+            return up_f32 @ (down_f32 * scale)
+        return up_f32 @ down_f32
 
     def compress_rank(
         self,
@@ -821,6 +1176,7 @@ class LoraRankCompress:
         min_rank: int = 1,
         key_pattern: str = r".*",
         update_alpha: bool = True,
+        absorb_alpha: bool = True,
     ):
         if target_rank != -1 and target_rank < 1:
             raise ValueError("target_rank must be -1 or >= 1")
@@ -828,7 +1184,9 @@ class LoraRankCompress:
             raise ValueError("min_rank must be >= 1")
 
         pattern = re.compile(key_pattern)
-        compressed = _clone_lora_state(lora)
+        converted = comfy.lora_convert.convert_lora(_clone_lora_state(lora))
+        pairs = _scan_mergeable_lora_pairs(converted)
+        compressed: Dict[str, object] = {}
 
         changed = 0
         scanned_pairs = 0
@@ -837,36 +1195,37 @@ class LoraRankCompress:
         report_lines.append(
             f"mode={'target_rank' if target_rank != -1 else 'auto_energy'} | "
             f"target_rank={target_rank} | energy_keep_ratio={energy_keep_ratio} | "
-            f"min_rank={min_rank} | pattern={key_pattern}"
+            f"min_rank={min_rank} | pattern={key_pattern} | absorb_alpha={absorb_alpha}"
         )
 
-        down_keys = [
-            key
-            for key in compressed
-            if key.endswith(".weight") and ".lora_down." in key and pattern.search(key)
-        ]
-        down_keys.sort()
+        all_bases = sorted(base for base in pairs.keys() if pattern.search(f"{base}.lora_down.weight"))
+        progress = comfy.utils.ProgressBar(len(all_bases))
+        progress.update_absolute(0)
 
-        for down_key in down_keys:
-            up_key = down_key.replace(".lora_down.", ".lora_up.")
-            if up_key not in compressed:
-                continue
-
-            down = compressed[down_key]
-            up = compressed[up_key]
+        for index, base in enumerate(all_bases, start=1):
+            pair = pairs[base]
+            down_key = f"{base}.lora_down.weight"
+            up_key = f"{base}.lora_up.weight"
+            alpha_key = f"{base}.alpha"
+            down = pair["down"]
+            up = pair["up"]
             if not isinstance(down, torch.Tensor) or not isinstance(up, torch.Tensor):
+                progress.update_absolute(index)
                 continue
             if down.ndim != 2 or up.ndim != 2:
+                progress.update_absolute(index)
                 continue
 
             scanned_pairs += 1
             original_rank = int(down.shape[0])
             max_rank = int(min(original_rank, down.shape[1], up.shape[0]))
             if max_rank < 1:
+                progress.update_absolute(index)
                 continue
 
-            # SVD on deltaW in float32 for stability and broad backend compatibility.
-            delta_w = up.to(dtype=torch.float32) @ down.to(dtype=torch.float32)
+            alpha = _extract_lora_alpha(converted, alpha_key, down)
+            # SVD on reconstructed deltaW in float32 for stability.
+            delta_w = self._reconstruct_delta(up, down, alpha, absorb_alpha)
             u, s, vt = torch.linalg.svd(delta_w, full_matrices=False)
 
             if target_rank == -1:
@@ -880,24 +1239,47 @@ class LoraRankCompress:
                 rank = max(min_rank, min(int(target_rank), max_rank))
 
             if rank >= original_rank:
+                compressed[down_key] = down.clone().contiguous()
+                compressed[up_key] = up.clone().contiguous()
+                if alpha_key in converted:
+                    alpha_value = converted[alpha_key]
+                    compressed[alpha_key] = (
+                        alpha_value.clone() if isinstance(alpha_value, torch.Tensor) else alpha_value
+                    )
+                progress.update_absolute(index)
                 continue
 
             sqrt_s = torch.sqrt(s[:rank]).unsqueeze(1)
-            up_new = (u[:, :rank] * sqrt_s.T).to(dtype=up.dtype, device=up.device)
-            down_new = (sqrt_s * vt[:rank, :]).to(dtype=down.dtype, device=down.device)
+            up_new = (
+                u[:, :rank] * sqrt_s.T
+            ).to(dtype=up.dtype, device=up.device).contiguous()
+            down_new = (
+                sqrt_s * vt[:rank, :]
+            ).to(dtype=down.dtype, device=down.device).contiguous()
 
             compressed[down_key] = down_new
             compressed[up_key] = up_new
 
-            if update_alpha:
-                alpha_key = re.sub(r"\.lora_down\.weight$", ".alpha", down_key)
-                if alpha_key in compressed:
-                    compressed[alpha_key] = self._make_rank_tensor(
-                        compressed[alpha_key], rank, down_new
-                    )
+            if update_alpha or absorb_alpha:
+                if absorb_alpha:
+                    alpha_out = float(rank)
+                else:
+                    alpha_out = float(rank) * float(alpha) / float(original_rank)
+                compressed[alpha_key] = _make_scalar_tensor(
+                    converted.get(alpha_key), alpha_out, down_new
+                )
+            elif alpha_key in converted:
+                alpha_value = converted[alpha_key]
+                compressed[alpha_key] = (
+                    alpha_value.clone() if isinstance(alpha_value, torch.Tensor) else alpha_value
+                )
 
             changed += 1
-            report_lines.append(f"- {down_key}: {original_rank} -> {rank}")
+            report_lines.append(
+                f"- {down_key}: {original_rank} -> {rank} "
+                f"(alpha={alpha:.4f}, absorb_alpha={absorb_alpha})"
+            )
+            progress.update_absolute(index)
 
         report_lines.append(f"scanned_pairs={scanned_pairs}")
         report_lines.append(f"compressed_pairs={changed}")
@@ -965,6 +1347,16 @@ class SaveLora:
                 filtered[key] = value
         return filtered
 
+    @staticmethod
+    def _make_tensors_contiguous(lora: Dict[str, object]) -> Dict[str, object]:
+        packed: Dict[str, object] = {}
+        for key, value in lora.items():
+            if isinstance(value, torch.Tensor):
+                packed[key] = value.contiguous().clone()
+            else:
+                packed[key] = value
+        return packed
+
     def save_lora(
         self,
         lora: Dict[str, object],
@@ -980,7 +1372,8 @@ class SaveLora:
             output_path = f"{output_path}.safetensors"
 
         filtered_lora = self._remove_zero_layers(lora) if remove_zero_layers else lora
-        save_file(filtered_lora, output_path)
+        packed_lora = self._make_tensors_contiguous(filtered_lora)
+        save_file(packed_lora, output_path)
         print(
             f"[Yogurt LoRA] saved to: {output_path} "
             f"({len(lora)} -> {len(filtered_lora)} keys)"
