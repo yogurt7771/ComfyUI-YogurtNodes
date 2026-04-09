@@ -20,3 +20,7 @@ from .bytes_bridge import SaveBytesBridge, SaveBytesBridgeNonOutput, LoadBytes  
 
 from .load_image import LoadImage  # noqa
 from .load_image_path import LoadImagePath  # noqa
+from .load_video import LoadVideo  # noqa
+from .load_video_path import LoadVideoPath  # noqa
+from .load_audio import LoadAudio  # noqa
+from .load_audio_path import LoadAudioPath  # noqa
