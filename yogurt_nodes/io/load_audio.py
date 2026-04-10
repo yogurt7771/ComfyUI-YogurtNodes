@@ -41,6 +41,63 @@ def load(filepath: str) -> tuple[torch.Tensor, int]:
         return f32_pcm(waveform), sample_rate
 
 
+def time_range_inputs():
+    return {
+        "start_time": (
+            "FLOAT,INT",
+            {
+                "default": 0.0,
+                "min": 0.0,
+                "step": 0.01,
+                "widgetType": "FLOAT",
+                "tooltip": "Start time in seconds. 0 means from the beginning.",
+            },
+        ),
+        "end_time": (
+            "FLOAT,INT",
+            {
+                "default": 0.0,
+                "min": 0.0,
+                "step": 0.01,
+                "widgetType": "FLOAT",
+                "tooltip": "End time in seconds. 0 means no end limit.",
+            },
+        ),
+    }
+
+
+def normalize_time_value(value) -> float:
+    if value is None or value == "":
+        return 0.0
+    return float(value)
+
+
+def normalize_time_range(start_time=0.0, end_time=0.0) -> tuple[float, float]:
+    start_time = normalize_time_value(start_time)
+    end_time = normalize_time_value(end_time)
+
+    if start_time < 0:
+        raise ValueError("start_time must be greater than or equal to 0.")
+    if end_time < 0:
+        raise ValueError("end_time must be greater than or equal to 0.")
+    if end_time > 0 and end_time <= start_time:
+        raise ValueError("end_time must be greater than start_time, or 0 to disable the end limit.")
+
+    return start_time, end_time
+
+
+def trim_waveform(
+    waveform: torch.Tensor, sample_rate: int, start_time=0.0, end_time=0.0
+) -> torch.Tensor:
+    start_time, end_time = normalize_time_range(start_time, end_time)
+
+    start_frame = min(int(start_time * sample_rate), waveform.shape[-1])
+    end_frame = int(end_time * sample_rate) if end_time > 0 else waveform.shape[-1]
+    end_frame = min(end_frame, waveform.shape[-1])
+
+    return waveform[..., start_frame:end_frame]
+
+
 def list_input_files(content_types):
     input_dir = Path(folder_paths.get_input_directory())
     files = [
@@ -51,12 +108,13 @@ def list_input_files(content_types):
     return sorted(folder_paths.filter_files_content_types(files, content_types))
 
 
-class LoadAudio:
+class LoadAudio__V3:
     @classmethod
     def INPUT_TYPES(s):
         return {
             "required": {
                 "audio": (list_input_files(["audio", "video"]), {"audio_upload": True}),
+                **time_range_inputs(),
             },
         }
 
@@ -69,22 +127,31 @@ class LoadAudio:
     CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Load audio."
 
-    def load_audio(self, audio):
+    def load_audio(self, audio, start_time=0.0, end_time=0.0):
         audio_path = folder_paths.get_annotated_filepath(audio)
         waveform, sample_rate = load(audio_path)
+        waveform = trim_waveform(waveform, sample_rate, start_time, end_time)
         return ({"waveform": waveform.unsqueeze(0), "sample_rate": sample_rate},)
 
     @classmethod
-    def IS_CHANGED(s, audio):
+    def IS_CHANGED(s, audio, start_time=0.0, end_time=0.0):
         audio_path = folder_paths.get_annotated_filepath(audio)
         hasher = hashlib.sha256()
         with open(audio_path, "rb") as audio_file:
             hasher.update(audio_file.read())
+        hasher.update(str(normalize_time_range(start_time, end_time)).encode("utf-8"))
         return hasher.digest().hex()
 
     @classmethod
-    def VALIDATE_INPUTS(s, audio):
+    def VALIDATE_INPUTS(s, audio, start_time=0.0, end_time=0.0):
         if not folder_paths.exists_annotated_filepath(audio):
             return "Invalid audio file: {}".format(audio)
+        try:
+            normalize_time_range(start_time, end_time)
+        except ValueError as exc:
+            return str(exc)
 
         return True
+
+
+LoadAudio = LoadAudio__V3
