@@ -14,4 +14,6 @@ from .freedomgpt_image_understand import FreedomGPTImageUnderstand  # noqa
 from .freedomgpt_generate_image import FreedomGPTGenerateImage  # noqa
 from .grsai_generate_image import GRSAINanoBananaGenerateImage  # noqa
 from .seedream_generate_image import SeeDreamGenerateImage  # noqa
+from .qwen_generate_image import QwenGenerateImage  # noqa
+from .wan_generate_image import WanGenerateImage  # noqa
 from .history_builder import HistoryBuilder  # noqa
