@@ -7,6 +7,7 @@ import torch
 import torchvision
 
 from ..utils import GeminiClient
+from .image_output_utils import build_image_outputs
 
 
 def inputs_def():
@@ -281,17 +282,8 @@ async def generate_image(
         image_size=image_size,
         extra=extra,
     )
-    tensor_imgs = []
-    for image in images:  # type: ignore
-        tensor_img = torchvision.transforms.ToTensor()(image)
-        tensor_img = tensor_img.permute(1, 2, 0).unsqueeze(0)
-        tensor_imgs.append(tensor_img)
-    if len(tensor_imgs) == 1:
-        return (tensor_imgs[0], text, 1, history, thought)
-    elif len(tensor_imgs) > 1:
-        return (torch.cat(tensor_imgs, dim=0), text, len(tensor_imgs), history, thought)
-    else:
-        return (torch.zeros(1, 3, 1, 1, dtype=torch.float32), text, 0, history, thought)
+    image_output, image_list, num_images = build_image_outputs(images)  # type: ignore[arg-type]
+    return (image_output, image_list, num_images, text, history, thought)
 
 
 class GeminiGenerateImage:
@@ -330,8 +322,9 @@ class GeminiGenerateImage:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("IMAGE", "STRING", "INT", "HISTORY", "STRING")
-    RETURN_NAMES = ("image", "text", "num_images", "history", "thought")
+    RETURN_TYPES = ("IMAGE", "IMAGE", "INT", "STRING", "HISTORY", "STRING")
+    RETURN_NAMES = ("image", "images", "num_images", "text", "history", "thought")
+    OUTPUT_IS_LIST = (False, True, False, False, False, False)
 
     FUNCTION = "generate_image"
 
@@ -456,8 +449,9 @@ class VertexAIGenerateImage:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("IMAGE", "STRING", "INT", "HISTORY", "STRING")
-    RETURN_NAMES = ("image", "text", "num_images", "history", "thought")
+    RETURN_TYPES = ("IMAGE", "IMAGE", "INT", "STRING", "HISTORY", "STRING")
+    RETURN_NAMES = ("image", "images", "num_images", "text", "history", "thought")
+    OUTPUT_IS_LIST = (False, True, False, False, False, False)
 
     FUNCTION = "generate_image"
 

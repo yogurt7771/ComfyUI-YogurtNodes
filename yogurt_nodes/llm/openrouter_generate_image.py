@@ -7,6 +7,7 @@ import torch
 import torchvision
 
 from ..utils import OpenRouterClient
+from .image_output_utils import build_image_outputs
 
 
 class OpenRouterGenerateImage:
@@ -200,8 +201,9 @@ class OpenRouterGenerateImage:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("IMAGE", "STRING", "HISTORY")
-    RETURN_NAMES = ("image", "text", "history")
+    RETURN_TYPES = ("IMAGE", "IMAGE", "INT", "STRING", "HISTORY")
+    RETURN_NAMES = ("image", "images", "num_images", "text", "history")
+    OUTPUT_IS_LIST = (False, True, False, False, False)
 
     FUNCTION = "generate_image"
 
@@ -282,15 +284,5 @@ class OpenRouterGenerateImage:
             extra=extra_dict,
         )
 
-        tensor_imgs = []
-        for image in images:
-            tensor_img = torchvision.transforms.ToTensor()(image)
-            tensor_img = tensor_img.permute(1, 2, 0).unsqueeze(0)
-            tensor_imgs.append(tensor_img)
-
-        if len(tensor_imgs) == 1:
-            return (tensor_imgs[0], text, history)
-        elif len(tensor_imgs) > 1:
-            return (torch.cat(tensor_imgs, dim=0), text, history)
-        else:
-            return (torch.zeros(1, 3, 1, 1, dtype=torch.float32), text, history)
+        image_output, image_list, num_images = build_image_outputs(images)
+        return (image_output, image_list, num_images, text, history)

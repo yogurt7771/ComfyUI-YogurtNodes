@@ -7,6 +7,7 @@ import torch
 import torchvision
 
 from ..utils import QwenClient
+from .image_output_utils import build_image_outputs
 
 
 def collect_input_images(*images: Optional[torch.Tensor]):
@@ -19,20 +20,6 @@ def collect_input_images(*images: Optional[torch.Tensor]):
         pil_image = torchvision.transforms.ToPILImage()(img.permute(2, 0, 1))
         input_images.append(pil_image)
     return input_images
-
-
-def pil_images_to_tensor(images):
-    tensor_imgs = []
-    for image in images:
-        tensor_img = torchvision.transforms.ToTensor()(image)
-        tensor_img = tensor_img.permute(1, 2, 0).unsqueeze(0)
-        tensor_imgs.append(tensor_img)
-
-    if len(tensor_imgs) == 1:
-        return tensor_imgs[0]
-    if len(tensor_imgs) > 1:
-        return torch.cat(tensor_imgs, dim=0)
-    return torch.zeros(1, 1, 1, 3, dtype=torch.float32)
 
 
 class QwenGenerateImage:
@@ -183,8 +170,9 @@ class QwenGenerateImage:
     def VALIDATE_INPUTS(cls, input_types):
         return True
 
-    RETURN_TYPES = ("IMAGE", "STRING", "HISTORY")
-    RETURN_NAMES = ("image", "text", "history")
+    RETURN_TYPES = ("IMAGE", "IMAGE", "INT", "STRING", "HISTORY")
+    RETURN_NAMES = ("image", "images", "num_images", "text", "history")
+    OUTPUT_IS_LIST = (False, True, False, False, False)
 
     FUNCTION = "generate_image"
 
@@ -247,4 +235,5 @@ class QwenGenerateImage:
             history=history,
             extra=extra_dict,
         )
-        return (pil_images_to_tensor(output_images), text, history)
+        image_output, image_list, num_images = build_image_outputs(output_images)
+        return (image_output, image_list, num_images, text, history)

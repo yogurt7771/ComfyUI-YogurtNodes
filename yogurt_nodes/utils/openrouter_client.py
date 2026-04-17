@@ -13,6 +13,15 @@ from .api_keys import load_api_keys
 from .openai_client import build_messages
 
 
+def normalize_image_size(image_size: str) -> str | None:
+    if not image_size or image_size == "auto":
+        return None
+    size = str(image_size).strip().upper()
+    if size in {"0.5K", "1K", "2K", "4K"}:
+        return size
+    return str(image_size)
+
+
 class OpenRouterClient:
     """
     OpenRouter API 客户端封装类
@@ -240,8 +249,9 @@ class OpenRouterClient:
         if aspect_ratio != "auto":
             payload.setdefault("image_config", {})["aspect_ratio"] = aspect_ratio
 
-        if image_size not in ["auto", "1k"]:
-            payload.setdefault("image_config", {})["image_size"] = image_size
+        normalized_image_size = normalize_image_size(image_size)
+        if normalized_image_size:
+            payload.setdefault("image_config", {})["image_size"] = normalized_image_size
 
         # 合并额外参数
         if extra:
