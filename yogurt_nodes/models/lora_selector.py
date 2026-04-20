@@ -43,6 +43,7 @@ class LoraSelector:
         "FLOAT",
         "FLOAT",
         "STRING",
+        "STRING",
     )
     RETURN_NAMES = (
         "lora",
@@ -51,6 +52,7 @@ class LoraSelector:
         "model_strength",
         "clip_strength",
         "trigger_word",
+        "absolute_path",
     )
     OUTPUT_NODE = False
 
@@ -60,10 +62,39 @@ class LoraSelector:
     DESCRIPTION = "Select Lora"
     CATEGORY = "YogurtNodes/Models"
 
+    @staticmethod
+    def _resolve_absolute_path(lora: str) -> str:
+        if not lora or lora == "None":
+            return ""
+
+        get_full_path = getattr(folder_paths, "get_full_path", None)
+        if callable(get_full_path):
+            resolved = get_full_path("loras", lora)
+            if resolved:
+                return str(Path(resolved))
+
+        get_full_path_or_raise = getattr(folder_paths, "get_full_path_or_raise", None)
+        if callable(get_full_path_or_raise):
+            try:
+                return str(Path(get_full_path_or_raise("loras", lora)))
+            except Exception:
+                return ""
+
+        return ""
+
     def lora_selector(
         self, lora: str, model_strength: float, clip_strength: float, trigger_word: str
     ):
         lora_path = Path(lora)
         name = lora_path.name
         stem = lora_path.stem
-        return (lora, str(name), str(stem), model_strength, clip_strength, trigger_word)
+        absolute_path = self._resolve_absolute_path(lora)
+        return (
+            lora,
+            str(name),
+            str(stem),
+            model_strength,
+            clip_strength,
+            trigger_word,
+            absolute_path,
+        )
