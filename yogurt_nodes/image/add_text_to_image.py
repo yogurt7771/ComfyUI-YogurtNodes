@@ -33,6 +33,7 @@ def wraptext(font: ImageFont.FreeTypeFont, text: str, width: int):
 
 
 class AddTextToImage:
+    """Add Text To Image node."""
     @classmethod
     def INPUT_TYPES(cls):
         return {

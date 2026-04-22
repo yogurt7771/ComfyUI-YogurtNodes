@@ -10,8 +10,9 @@ from ..utils import FreedomGPTClient
 
 
 class FreedomGPTGenerateImage:
-    """
-    FreedomGPT Generate Image
+    """FreedomGPT Generate Image node.
+
+    Generate images using FreedomGPT API
     """
 
     @classmethod

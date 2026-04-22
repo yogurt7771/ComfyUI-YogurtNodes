@@ -6,6 +6,7 @@ from ..utils import ANY_TYPE
 
 
 class PreviewAnyBridge:
+    """Preview Any Bridge node."""
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -48,5 +49,6 @@ class PreviewAnyBridge:
 
 
 class PreviewAnyBridgeOutput(PreviewAnyBridge):
+    """Preview Any Bridge (Output) node."""
     OUTPUT_NODE = True
     _NODE_NAME = "Preview Any Bridge (Output)"

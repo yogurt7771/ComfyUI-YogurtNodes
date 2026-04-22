@@ -7,6 +7,7 @@ SWITCH_CASE_NUM = 8
 
 
 class Switch:
+    """Switch node."""
     def __init__(self):
         pass
 

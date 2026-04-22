@@ -11,6 +11,7 @@ import node_helpers
 
 
 class LoadImage:
+    """Load Image node."""
     @classmethod
     def INPUT_TYPES(s):
         input_dir = folder_paths.get_input_directory()

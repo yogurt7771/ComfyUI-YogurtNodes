@@ -3,6 +3,10 @@ from ..utils import ANY_TYPE
 
 class NoneNode:
 
+    """None node.
+
+    Return None.
+    """
     @classmethod
     def INPUT_TYPES(s):
         return {}

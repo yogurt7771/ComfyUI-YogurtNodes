@@ -6,8 +6,9 @@ from ..utils import OpenAIClient
 
 
 class OpenAIGenerateText:
-    """
-    OpenAI Generate Text
+    """OpenAI Generate Text node.
+
+    Generate text using OpenAI API
     """
 
     @classmethod

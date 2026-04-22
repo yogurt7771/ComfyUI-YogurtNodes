@@ -57,8 +57,9 @@ def _pil_to_tensor(image: Image.Image) -> torch.Tensor:
 
 
 class ComfyUIClientLoad:
-    """
-    初始化 ComfyUI Client，设定服务器、初始工作流与轮询配置
+    """ComfyUI Client Load node.
+
+    配置 ComfyUI 客户端实例，供后续节点复用
     """
 
     @classmethod
@@ -140,8 +141,9 @@ class ComfyUIClientLoad:
 
 
 class ComfyUIClientSetString:
-    """
-    为指定节点/输入口设置字符串值
+    """ComfyUI Client Set String node.
+
+    向工作流节点输入设置字符串
     """
 
     @classmethod
@@ -170,8 +172,9 @@ class ComfyUIClientSetString:
 
 
 class ComfyUIClientSetFloat:
-    """
-    为指定节点/输入口设置浮点值
+    """ComfyUI Client Set Float node.
+
+    向工作流节点输入设置浮点数
     """
 
     @classmethod
@@ -206,8 +209,9 @@ class ComfyUIClientSetFloat:
 
 
 class ComfyUIClientSetInt:
-    """
-    为指定节点/输入口设置整数值
+    """ComfyUI Client Set Int node.
+
+    向工作流节点输入设置整数
     """
 
     @classmethod
@@ -242,8 +246,9 @@ class ComfyUIClientSetInt:
 
 
 class ComfyUIClientSetSeed:
-    """
-    批量设置工作流内所有 seed/seeds 输入口
+    """ComfyUI Client Set Seed node.
+
+    为工作流中的节点设置随机种子
     """
 
     @classmethod
@@ -281,8 +286,9 @@ class ComfyUIClientSetSeed:
 
 
 class ComfyUIClientSetImage:
-    """
-    上传并设置图片输入
+    """ComfyUI Client Set Image node.
+
+    上传图片并写入工作流节点输入
     """
 
     @classmethod
@@ -312,8 +318,9 @@ class ComfyUIClientSetImage:
 
 
 class ComfyUIClientRun:
-    """
-    queue 并等待 ComfyUI 输出，返回结果包
+    """ComfyUI Client Run node.
+
+    提交工作流并等待结果返回
     """
 
     @classmethod
@@ -382,8 +389,9 @@ class ComfyUIClientRun:
 
 
 class ComfyUIClientGetOutput:
-    """
-    从 results 中按节点 ID/名称提取该节点的全部输出列表
+    """ComfyUI Client Get Output node.
+
+    根据节点 ID/名称，从结果包中取出该节点的全部输出列表
     """
 
     @classmethod

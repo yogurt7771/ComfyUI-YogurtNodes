@@ -1,5 +1,6 @@
 class StringToValue:
-    """
+    """String To Value node.
+
     Get value from string
     """
 

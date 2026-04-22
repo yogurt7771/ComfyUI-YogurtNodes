@@ -2,6 +2,10 @@ import torch
 
 
 class ImageCropByMask:
+    """Image Crop By Mask node.
+
+    Crop image to the minimum bounding box of the mask above threshold.
+    """
     @classmethod
     def INPUT_TYPES(cls):
         return {

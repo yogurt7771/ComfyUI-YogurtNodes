@@ -65,6 +65,10 @@ def save_bytes(bytes_data, path):
 
 
 class SaveBytesBridge:
+    """Save Bytes Bridge node.
+
+    Saves the input bytes data to your ComfyUI output directory.
+    """
     def __init__(self):
         self.output_dir = folder_paths.get_output_directory()
         self.temp_dir = folder_paths.get_temp_directory()
@@ -164,6 +168,10 @@ class SaveBytesBridge:
 
 
 class LoadBytes:
+    """Load Bytes node.
+
+    Load bytes data from a file
+    """
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -203,5 +211,6 @@ class LoadBytes:
 
 
 class SaveBytesBridgeNonOutput(SaveBytesBridge):
+    """Save Bytes Bridge (Non Output) node."""
     OUTPUT_NODE = False
     _NODE_NAME = "Save Bytes Bridge (Non Output)"

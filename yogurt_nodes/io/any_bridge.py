@@ -5,6 +5,7 @@ BLACKHOLE_NUM = 8
 
 
 class AnyBridge:
+    """Any Bridge node."""
     @classmethod
     def INPUT_TYPES(cls):
         blackholes = {

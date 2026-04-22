@@ -3,8 +3,9 @@ from pathlib import Path
 
 
 class PathOperator:
-    """
-    Apply basic binary path operations to two inputs.
+    """Path Operator node.
+
+    Execute join, relative, or common path operations.
     """
 
     OPERATORS = [

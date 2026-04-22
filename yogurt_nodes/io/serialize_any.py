@@ -3,6 +3,10 @@ from ..utils import ANY_TYPE
 
 
 class SerializeAny:
+    """Serialize Any node.
+
+    Serialize any Python object to bytes using pickle
+    """
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -36,6 +40,10 @@ class SerializeAny:
 
 
 class DeserializeAny:
+    """Deserialize Any node.
+
+    Deserialize bytes data to Python object using pickle
+    """
     @classmethod
     def INPUT_TYPES(cls):
         return {

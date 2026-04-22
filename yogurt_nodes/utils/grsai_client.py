@@ -13,20 +13,29 @@ from .api_keys import load_api_keys
 
 
 class GRSAIClient:
-    """GRSAI Nano Banana image generation client."""
+    """GRSAI image generation client."""
 
     DEFAULT_BASE_URL = "https://grsaiapi.com"
+    DEFAULT_DRAW_TYPE = "nano-banana"
 
     _MODELS = [
-        "nano-banana-2",
-        "nano-banana-fast",
+        "gpt-image-2",
+        "gpt-image-1.5",
+        "sora-image",
         "nano-banana",
+        "nano-banana-fast",
         "nano-banana-pro",
         "nano-banana-pro-vt",
         "nano-banana-pro-cl",
         "nano-banana-pro-vip",
         "nano-banana-pro-4k-vip",
+        "nano-banana-2",
+        "nano-banana-2-4k-cl",
+        "nano-banana-2-cl",
     ]
+    _DRAW_TYPES = ["auto", "nano-banana", "completions"]
+    _COMPLETIONS_MODEL_PREFIXES = ("gpt-image", "sora-image")
+    _NANO_BANANA_MODEL_PREFIXES = ("nano-banana",)
 
     _ASPECT_RATIOS = [
         "auto",
@@ -102,6 +111,10 @@ class GRSAIClient:
     def get_image_sizes(cls) -> List[str]:
         return list(cls._IMAGE_SIZES)
 
+    @classmethod
+    def get_draw_types(cls) -> List[str]:
+        return list(cls._DRAW_TYPES)
+
     @staticmethod
     def _strip_template_tags(text: str) -> str:
         text = re.sub(r"<-\w+->", "", text)
@@ -155,12 +168,26 @@ class GRSAIClient:
                 return msg
         return str(body)
 
+    def _resolve_draw_type(self, model_name: str, draw_type: str = "") -> str:
+        if isinstance(draw_type, str):
+            normalized_draw_type = draw_type.strip().strip("/").lower()
+            if normalized_draw_type and normalized_draw_type != "auto":
+                return normalized_draw_type
+
+        normalized_model_name = model_name.strip().lower() if model_name else ""
+        if normalized_model_name.startswith(self._COMPLETIONS_MODEL_PREFIXES):
+            return "completions"
+        if normalized_model_name.startswith(self._NANO_BANANA_MODEL_PREFIXES):
+            return "nano-banana"
+        return self.DEFAULT_DRAW_TYPE
+
     def _submit_task(
         self,
         payload: Dict[str, Any],
+        draw_type: str,
     ) -> Dict[str, Any]:
         response = requests.post(
-            f"{self.base_url}/v1/draw/nano-banana",
+            f"{self.base_url}/v1/draw/{draw_type}",
             headers=self.headers,
             json=payload,
             timeout=self.timeout if self.timeout > 0 else None,
@@ -314,6 +341,7 @@ class GRSAIClient:
         chat_template: str = "",
         history: List[tuple[str, str]] | None = None,
         extra: dict | None = None,
+        draw_type: str = "",
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         if history is None:
             history = []
@@ -353,11 +381,12 @@ class GRSAIClient:
         if merged_urls:
             payload["urls"] = merged_urls
 
+        resolved_draw_type = self._resolve_draw_type(model_name, draw_type)
         last_exception = None
         for attempt in range(retry_count):
             model_management.throw_exception_if_processing_interrupted()
             try:
-                submit_body = self._submit_task(payload)
+                submit_body = self._submit_task(payload, draw_type=resolved_draw_type)
                 result_payload = self._resolve_result_payload(
                     submit_body=submit_body,
                     poll_interval_ms=poll_interval_ms,

@@ -2,58 +2,9 @@ import re
 
 
 class RegexNode:
-    R"""
-    Regex Node Toolkit
-    ========================
+    """Regex Node node.
 
-    This node provides powerful regex-based string extraction and replacement for multiline text.
-
-    Parameters:
-    -----------
-    - text (STRING, multiline):
-        The input text to process. Supports multiline content.
-    - pattern (STRING, multiline):
-        The regular expression pattern. Supports Python regex syntax, including flags like (?s) for DOTALL.
-        Use parentheses () to define capture groups for use in format_or_replacement.
-    - mode (CHOICE):
-        The operation mode:
-            - 'extract': extract matches by count (see count param)
-            - 'replace': replace matches by count (see count param, count=0 means replace all)
-    - format_or_replacement (STRING, multiline):
-        In 'extract' mode, this is the output format for each match (supports group refs like \g<1>).
-        In 'replace' mode, this is the replacement string (supports group refs).
-    - count (INT):
-        In 'extract' or 'replace' mode:
-            - If positive, operate on the first count matches
-            - If negative, operate on the last abs(count) matches
-            - If zero or abs(count) exceeds total matches, operate on all
-    - joiner (STRING):
-        Only used in 'extract' mode. The string used to join multiple extracted results. Default is '\n'.
-
-    Modes:
-    ------
-    1. extract: Returns selected matches, formatted by format_or_replacement, joined by joiner.
-    2. replace: Returns text with the first/last count matches replaced by format_or_replacement. If count=0 or abs(count)>=matches, replaces all.
-
-    Group Reference Examples:
-    ------------------------
-    - \g<0>: The entire match
-    - \g<1>: The first capture group
-    - \g<2>: The second capture group
-      (Use parentheses in pattern to define groups)
-
-    Typical Use Cases:
-    ------------------
-    - Extracting JSON blocks, numbers, or custom patterns from text
-    - Replacing or removing sensitive information
-    - Formatting extracted data using group references
-    - Cleaning up logs or markdown content
-
-    Tips:
-    -----
-    - Use [\s\S] instead of . in pattern to match across lines (or rely on DOTALL mode)
-    - For advanced regex, refer to Python's re module documentation
-
+    Regex-based extraction and replacement for multiline text.
     """
 
     @classmethod

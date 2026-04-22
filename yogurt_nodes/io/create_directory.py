@@ -2,7 +2,8 @@ from pathlib import Path
 
 
 class CreateDirectory:
-    """
+    """Create Directory node.
+
     Create a directory
     """
     @classmethod
@@ -28,7 +29,8 @@ class CreateDirectory:
 
 
 class CreateParentDirectory:
-    """
+    """Create Parent Directory node.
+
     Create a parent directory
     """
     @classmethod

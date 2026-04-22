@@ -6,6 +6,10 @@ PACK_NUM = 8
 
 class PackAny:
 
+    """PackAny node.
+
+    Pack any
+    """
     @classmethod
     def INPUT_TYPES(cls):
         items = {
@@ -44,6 +48,10 @@ class PackAny:
 
 class UnpackAny:
 
+    """UnpackAny node.
+
+    Unpack any
+    """
     @classmethod
     def INPUT_TYPES(cls):
         return {

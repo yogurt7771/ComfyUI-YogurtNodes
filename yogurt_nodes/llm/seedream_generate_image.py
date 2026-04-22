@@ -9,9 +9,9 @@ from ..utils import SeeDreamClient
 
 
 class SeeDreamGenerateImage:
-    """
-    SeeDream Generate Image - 豆包SeeDream图像生成节点
-    支持文生图、图生图、多图生图和序列图像生成
+    """SeeDream Generate Image node.
+
+    使用豆包SeeDream API生成图像，支持文生图、图生图、多图生图和序列图像生成
     """
 
     @classmethod

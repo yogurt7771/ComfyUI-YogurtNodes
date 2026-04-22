@@ -6,8 +6,9 @@ from folder_paths import get_filename_list
 
 
 class CheckpointSelector:
-    """
-    Select Checkpoint from a list of Checkpoints
+    """Checkpoint Selector node.
+
+    Select Checkpoint
     """
 
     initial_list = get_filename_list("checkpoints")

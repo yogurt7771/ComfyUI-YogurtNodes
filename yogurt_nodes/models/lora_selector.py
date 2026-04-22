@@ -5,8 +5,9 @@ import folder_paths
 
 
 class LoraSelector:
-    """
-    Select Lora from a list of LoRAs
+    """Lora Selector node.
+
+    Select Lora
     """
 
     initial_list = get_filename_list("loras")

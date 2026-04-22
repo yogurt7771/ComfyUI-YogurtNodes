@@ -2,6 +2,10 @@ from .save_mask_bridge_ex import SaveMaskBridgeEx
 
 
 class SaveMaskBridgeSimple(SaveMaskBridgeEx):
+    """Save Mask Bridge node.
+
+    Saves the input masks to your ComfyUI output directory.
+    """
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -35,5 +39,6 @@ class SaveMaskBridgeSimple(SaveMaskBridgeEx):
 
 
 class SaveMaskBridgeSimpleNonOutput(SaveMaskBridgeSimple):
+    """Save Mask Bridge Simple (Non Output) node."""
     OUTPUT_NODE = False
     _NODE_NAME = "Save Mask Bridge Simple (Non Output)"

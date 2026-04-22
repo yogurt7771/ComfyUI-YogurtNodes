@@ -6,6 +6,10 @@ from .save_mask_bridge_ex import SaveMaskBridgeEx
 
 
 class PreviewMaskBridge(SaveMaskBridgeEx):
+    """Preview Mask Bridge node.
+
+    Preview the input masks.
+    """
     def __init__(self):
         self.output_dir = folder_paths.get_temp_directory()
         self.type = "temp"
@@ -38,5 +42,6 @@ class PreviewMaskBridge(SaveMaskBridgeEx):
 
 
 class PreviewMaskBridgeOutput(PreviewMaskBridge):
+    """Preview Mask Bridge (Output) node."""
     OUTPUT_NODE = False
     _NODE_NAME = "Preview Mask Bridge (Output)"

@@ -5,8 +5,9 @@ from folder_paths import get_filename_list
 
 
 class DiffusionModelSelector:
-    """
-    Select Diffusion Model from a list of Diffusion Models
+    """Diffusion Model Selector node.
+
+    Select Diffusion Model
     """
 
     initial_list = get_filename_list("diffusion_models")

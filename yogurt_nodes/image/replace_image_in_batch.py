@@ -2,6 +2,10 @@ import torch
 
 
 class ReplaceImageInBatch:
+    """Replace Image In Batch node.
+
+    Replace one image inside an image batch at the given index.
+    """
     @classmethod
     def INPUT_TYPES(cls):
         return {

@@ -6,6 +6,7 @@ import comfy.utils
 
 
 class ImageScaleToTotalPixelsAdvanced:
+    """Image Scale To Total Pixels Advanced node."""
     @classmethod
     def INPUT_TYPES(cls):
         return {

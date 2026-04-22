@@ -7,7 +7,8 @@ INPUT_COUNT = 10
 
 
 class StringFormat:
-    """
+    """String Format node.
+
     Format strings
     """
 

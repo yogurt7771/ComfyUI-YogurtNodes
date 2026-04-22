@@ -1,5 +1,9 @@
 class GetImageSize:
 
+    """Get Image Size node.
+
+    Get image size information.
+    """
     @classmethod
     def INPUT_TYPES(s):
         return {

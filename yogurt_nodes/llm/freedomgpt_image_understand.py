@@ -9,8 +9,9 @@ from ..utils import FreedomGPTClient
 
 
 class FreedomGPTImageUnderstand:
-    """
-    FreedomGPT Image Understand
+    """FreedomGPT Image Understand node.
+
+    Understand image content using FreedomGPT vision models
     """
 
     @classmethod

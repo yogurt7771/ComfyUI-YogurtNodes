@@ -109,6 +109,7 @@ def resize_image(image, width, height, method="stretch", interpolation="nearest"
 
 
 class BatchImages:
+    """Batch Images node."""
     @classmethod
     def INPUT_TYPES(cls):
         images = {f"images{i}": ("IMAGE", {"tooltip": "The images to batch."}) for i in range(1, IMAGE_COUNT + 1)}

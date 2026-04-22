@@ -9,8 +9,9 @@ from ..utils import OpenAIClient
 
 
 class OpenAIImageUnderstand:
-    """
-    OpenAI Image Understand
+    """OpenAI Image Understand node.
+
+    Understand image content using OpenAI vision models
     """
 
     @classmethod

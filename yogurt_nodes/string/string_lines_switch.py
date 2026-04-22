@@ -4,7 +4,8 @@ TEXT_COUNT = 8
 
 
 class StringLinesSwitch:
-    """
+    """String Lines Switch node.
+
     Get line from multiline string by index
     """
 

@@ -23,18 +23,9 @@ def append_any_as_str_(lists: List[str], data: Any):
 
 
 class StringJoin:
-    """
-    String Join Node
-    ================
+    """String Join node.
 
-    字符串连接节点，将多个字符串使用指定的连接符连接成一个字符串。
-
-    输入:
-        string1~string8: 8个字符串输入，可以为空
-        separator: 连接符，用于连接各个字符串
-
-    输出:
-        result: 连接后的字符串
+    将多个字符串使用指定连接符连接
     """
 
     @classmethod

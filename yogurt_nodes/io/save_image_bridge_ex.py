@@ -144,6 +144,10 @@ def save_image(
 
 
 class SaveImageBridgeEx:
+    """Save Image Bridge Ex node.
+
+    Saves the input images to your ComfyUI output directory.
+    """
     def __init__(self):
         self.output_dir = folder_paths.get_output_directory()
         self.temp_dir = folder_paths.get_temp_directory()
@@ -337,5 +341,6 @@ class SaveImageBridgeEx:
 
 
 class SaveImageBridgeExNonOutput(SaveImageBridgeEx):
+    """Save Image Bridge Ex (Non Output) node."""
     OUTPUT_NODE = False
     _NODE_NAME = "Save Image Bridge Ex (Non Output)"

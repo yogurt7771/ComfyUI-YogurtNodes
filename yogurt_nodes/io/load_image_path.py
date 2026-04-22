@@ -6,6 +6,10 @@ import node_helpers
 
 
 class LoadImagePath:
+    """Load Image Path node.
+
+    Load image from path.
+    """
     @classmethod
     def INPUT_TYPES(s):
         return {

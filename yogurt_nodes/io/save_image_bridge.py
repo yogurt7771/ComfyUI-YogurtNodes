@@ -2,6 +2,10 @@ from .save_image_bridge_ex import SaveImageBridgeEx
 
 
 class SaveImageBridge(SaveImageBridgeEx):
+    """Save Image Bridge node.
+
+    Saves the input images to your ComfyUI output directory.
+    """
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -67,5 +71,6 @@ class SaveImageBridge(SaveImageBridgeEx):
 
 
 class SaveImageBridgeNonOutput(SaveImageBridge):
+    """Save Image Bridge (Non Output) node."""
     OUTPUT_NODE = False
     _NODE_NAME = "Save Image Bridge (Non Output)"

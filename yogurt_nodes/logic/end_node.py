@@ -5,6 +5,10 @@ DATA_NUM = 8
 
 
 class EndNode:
+    """EndNode node.
+
+    End
+    """
     @classmethod
     def INPUT_TYPES(cls):
         items = {

@@ -58,414 +58,213 @@ pip install -r requirements.txt
 
 ## 🔧 可用节点
 
-所有节点都标有"YogurtNodes"前缀，便于在ComfyUI界面中识别。
+这里列出当前全部导出节点。ComfyUI 运行时的显示名会自动附加 " (Yogurt Nodes)" 后缀。
+
+这一节由导出节点类及其文档注释自动生成。执行 `python tools/generate_readme.py` 可重新生成。
+
+当前导出节点总数：**144**。
+
+| 分组 | 数量 |
+| --- | ---: |
+| 图像处理节点 | 10 |
+| 数字处理节点 | 2 |
+| 字符串处理节点 | 9 |
+| 逻辑处理节点 | 41 |
+| 模型节点 | 16 |
+| 输入/输出操作节点 | 35 |
+| 语言模型节点 | 23 |
+| 网络节点 | 8 |
 
 ### 图像处理节点
 
-#### Batch Images
+| 节点 | Class ID | 分类 | 说明 |
+| --- | --- | --- | --- |
+| Add Text To Image | `YogurtAddTextToImage` | `YogurtNodes/Image` | Add text to image. |
+| Batch Images | `YogurtBatchImages` | `YogurtNodes/Image` | Batch images. |
+| Get Image Size | `YogurtGetImageSize` | `YogurtNodes/Image` | Get image size information. |
+| Image Crop By Mask | `YogurtImageCropByMask` | `YogurtNodes/Image` | Crop image to the minimum bounding box of the mask above threshold. |
+| Image Scale To Total Pixels Advanced | `YogurtImageScaleToTotalPixelsAdvanced` | `YogurtNodes/Image` | Image Scale To Total Pixels Advanced. |
+| Image Tile (Seam Mask) | `YogurtImageTileWithSeamMask` | `YogurtNodes/Image` | Split image into overlapped tiles and generate inpaint masks (white=inpaint, black=reference). |
+| Image Untile (Seam Mask) | `YogurtImageUntileWithSeamMask` | `YogurtNodes/Image` | Merge overlapped tiles back to one image with seam feathering (mask + overlap-based smooth transition). |
+| Poisson Blend | `YogurtPoissonBlend` | `YogurtNodes/Image` | 使用OpenCV泊松融合(seamlessClone)将前景融合到背景。 |
+| Replace Image In Batch | `YogurtReplaceImageInBatch` | `YogurtNodes/Image` | Replace one image inside an image batch at the given index. |
+| Tile Info To TTP Image Assy Args | `YogurtTileInfoToTTPImageAssyArgs` | `YogurtNodes/Image` | Convert tile_info to TTP_Image_Assy inputs: positions/original_size/grid_size/padding. |
 
-- **类别：** YogurtNodes/Image
-- **描述：** 将多个图像合并成一个批次，具有可自定义设置
-- **特点：**
-  - 支持多达16个输入图像
-  - 多种插值方法（最近邻、双线性、双三次等）
-  - 各种调整大小方法（拉伸、填充/裁剪、填充）
-  - 可自定义填充值
-  - 灵活的批处理切片，具有起始、结束和步长参数
-
-#### Add Text To Image
-
-- **类别：** YogurtNodes/Image
-- **描述：** 为图像添加文本覆盖，具有广泛的自定义选项
-- **特点：**
-  - 文本可放置在顶部或底部
-  - 中心对齐选项
-  - 多种字体支持
-  - 可自定义字体大小
-  - 文本和背景颜色配置
-  - 支持多行文本，自动换行
-
-#### Poisson Blend
-
-- **类别：** YogurtNodes/Image
-- **描述：** 使用OpenCV泊松融合(seamlessClone)将前景融合到背景
-- **特点：**
-  - 使用OpenCV泊松编辑的无缝融合
-  - 可自定义融合位置和大小
-  - 自动掩码处理和调整大小
-  - 支持多种图像格式
 
 ### 数字处理节点
 
-#### Range
-- **类别：** YogurtNodes/Number
-- **描述：** 生成指定区间的数字序列
-- **特点：**
-  - 支持自定义起始、结束、步长或数量
-  - 输出torch张量、步数和步长
+| 节点 | Class ID | 分类 | 说明 |
+| --- | --- | --- | --- |
+| Range | `YogurtRange` | `YogurtNodes/Number` | get a number from a range |
+| RangeItem | `YogurtRangeItem` | `YogurtNodes/Number` | get a value from a range |
 
-#### RangeItem
-- **类别：** YogurtNodes/Number
-- **描述：** 从区间序列中提取指定索引的数值
-- **特点：**
-  - 支持负索引
-  - 输出字符串、整数和浮点数
 
 ### 字符串处理节点
 
-#### String Lines Count
+| 节点 | Class ID | 分类 | 说明 |
+| --- | --- | --- | --- |
+| Replace Delimiter | `YogurtReplaceDelimiter` | `YogurtNodes/String` | Replace delimiter in string. Support regex |
+| Split Path | `YogurtSplitPath` | `YogurtNodes/String` | Split path to parts |
+| String Concat | `YogurtStringConcat` | `YogurtNodes/String` | 拼接多个字符串，支持自定义分隔符和可变数量的输入 |
+| String Format | `YogurtStringFormat` | `YogurtNodes/String` | Format strings |
+| String Join | `YogurtStringJoin` | `YogurtNodes/String` | 将多个字符串使用指定连接符连接 |
+| String Lines Count | `YogurtStringLinesCount` | `YogurtNodes/String` | Get the number of lines in a multiline string |
+| String Lines Switch | `YogurtStringLinesSwitch` | `YogurtNodes/String` | Get line from multiline string by index |
+| String To Value | `YogurtStringToValue` | `YogurtNodes/String` | Get value from string |
+| Regex Node | `YogurtRegexNode` | `ZnzmoNodes/String` | Regex-based extraction and replacement for multiline text. |
 
-- **类别：** YogurtNodes/String
-- **描述：** 计算多行字符串中的行数
-- **特点：**
-  - 可选行去除空格
-  - 空行过滤控制
-  - 可配置的计数行为
-
-#### String To Value
-
-- **类别：** YogurtNodes/String
-- **描述：** 将字符串输入转换为多种值类型
-- **特点：**
-  - 自动转换为整数
-  - 自动转换为浮点数
-  - 保留原始字符串
-  - 安全转换，具有回退值
-
-#### String Lines Switch
-
-- **类别：** YogurtNodes/String
-- **描述：** 通过索引从多行字符串中提取特定行
-- **特点：**
-  - 行索引
-  - 多种输出格式（字符串、整数、浮点数）
-  - 行数输出
-  - 空行处理选项
-
-#### Replace Delimiter
-
-- **类别：** YogurtNodes/String
-- **描述：** 用自定义分隔符替换字符串中的分隔符
-- **特点：**
-  - 支持正则表达式
-  - 自定义分隔符指定
-  - 灵活的替换选项
-
-#### Split Path
-
-- **类别：** YogurtNodes/String
-- **描述：** 将文件路径分割成其组成部分
-- **特点：**
-  - 路径组件提取
-  - 返回父目录
-  - 文件名和扩展名分离
-  - 扩展名的多种格式选项
-
-#### Regex Node
-- **类别：** YogurtNodes/String
-- **描述：** 基于正则表达式的多行文本提取与替换
-- **特点：**
-  - 支持extract和replace两种模式
-  - 支持分组引用与格式化
-  - 可按数量、顺序提取或替换
-  - 适用于复杂文本处理
 
 ### 逻辑处理节点
 
-#### None Node
+| 节点 | Class ID | 分类 | 说明 |
+| --- | --- | --- | --- |
+| DataSize | `YogurtDataSize` | `YogurtNodes/Logic` | Get the size/length of any data structure |
+| DictContainsKey | `YogurtDictContainsKey` | `YogurtNodes/Logic` | Check if a dictionary contains a specific key |
+| DictContainsValue | `YogurtDictContainsValue` | `YogurtNodes/Logic` | Check if a dictionary contains a specific value |
+| DictFilter | `YogurtDictFilter` | `YogurtNodes/Logic` | Filter dictionary entries based on key or value patterns |
+| DictFromLists | `YogurtDictFromLists` | `YogurtNodes/Logic` | Create a dictionary from a list of keys and a list of values |
+| DictGet | `YogurtDictGet` | `YogurtNodes/Logic` | Get a value by key from any dict-like object |
+| DictInvert | `YogurtDictInvert` | `YogurtNodes/Logic` | Invert a dictionary (swap keys and values) |
+| DictKeys | `YogurtDictKeys` | `YogurtNodes/Logic` | Get all keys from any dict-like object |
+| DictLength | `YogurtDictLength` | `YogurtNodes/Logic` | Get the length (number of keys) of any dict-like object |
+| DictMerge | `YogurtDictMerge` | `YogurtNodes/Logic` | Merge multiple dictionaries |
+| DictSubset | `YogurtDictSubset` | `YogurtNodes/Logic` | Get a subset of a dict-like object by specifying keys |
+| DictValues | `YogurtDictValues` | `YogurtNodes/Logic` | Get all values from any dict-like object |
+| EndNode | `YogurtEndNode` | `YogurtNodes/Logic` | End |
+| IsEmpty | `YogurtIsEmpty` | `YogurtNodes/Logic` | Check if a data structure is empty |
+| JsonDeepCopy | `YogurtJsonDeepCopy` | `YogurtNodes/Logic` | Create a deep copy of JSON object |
+| JsonFlatten | `YogurtJsonFlatten` | `YogurtNodes/Logic` | Flatten nested JSON object to flat key-value pairs |
+| JsonGetPath | `YogurtJsonGetPath` | `YogurtNodes/Logic` | Get value from JSON object using JSONPath |
+| JsonMerge | `YogurtJsonMerge` | `YogurtNodes/Logic` | Merge multiple JSON objects using deep merge |
+| JsonParse | `YogurtJsonParse` | `YogurtNodes/Logic` | Parse JSON string to object |
+| JsonPathExists | `YogurtJsonPathExists` | `YogurtNodes/Logic` | Check if a path exists in JSON object |
+| JsonSetPath | `YogurtJsonSetPath` | `YogurtNodes/Logic` | Set value in JSON object using JSONPath |
+| JsonStringify | `YogurtJsonStringify` | `YogurtNodes/Logic` | Convert object to JSON string |
+| JsonUnflatten | `YogurtJsonUnflatten` | `YogurtNodes/Logic` | Unflatten flat JSON object back to nested structure |
+| JsonValidate | `YogurtJsonValidate` | `YogurtNodes/Logic` | Validate JSON data structure |
+| ListBinaryOps | `YogurtListBinaryOps` | `YogurtNodes/Logic` | Perform union, intersection, difference, zip and related operations on two lists. |
+| ListConcat | `YogurtListConcat` | `YogurtNodes/Logic` | Concatenate multiple lists |
+| ListContains | `YogurtListContains` | `YogurtNodes/Logic` | Check if a list contains a specific element |
+| ListFilter | `YogurtListFilter` | `YogurtNodes/Logic` | Filter list elements based on regex pattern |
+| ListFind | `YogurtListFind` | `YogurtNodes/Logic` | Find the index of an element in a list |
+| ListIndex | `YogurtListIndex` | `YogurtNodes/Logic` | 通过索引从任何列表类型对象中获取元素 |
+| ListJoin | `YogurtListJoin` | `YogurtNodes/Logic` | Join list elements into a string |
+| ListLength | `YogurtListLength` | `YogurtNodes/Logic` | 获取任何列表类型对象的长度 |
+| ListSlice | `YogurtListSlice` | `YogurtNodes/Logic` | 从任何列表类型对象中获取切片 |
+| ListUnique | `YogurtListUnique` | `YogurtNodes/Logic` | Remove duplicate elements from a list while preserving order |
+| None | `YogurtNoneNode` | `YogurtNodes/Logic` | Return None. |
+| PackAny | `YogurtPackAny` | `YogurtNodes/Logic` | Pack any |
+| StringSplit | `YogurtStringSplit` | `YogurtNodes/Logic` | Split a string into a list |
+| Switch | `YogurtSwitch` | `YogurtNodes/Logic` | Switch |
+| ToDict | `YogurtToDict` | `YogurtNodes/Logic` | Convert pairs or mapping to a dictionary |
+| ToList | `YogurtToList` | `YogurtNodes/Logic` | Convert any iterable to a list |
+| UnpackAny | `YogurtUnpackAny` | `YogurtNodes/Logic` | Unpack any |
 
-- **类别：** YogurtNodes/Logic
-- **描述：** 返回None值的实用节点
-- **用例：** 适用于需要空值的条件工作流
 
-#### Pack Any
+### 模型节点
 
-- **类别：** YogurtNodes/Logic
-- **描述：** 将多个输入项打包成单一输出
-- **特点：**
-  - 支持多达8个输入项
-  - 处理任何类型的数据
-  - 简化复杂工作流
+| 节点 | Class ID | 分类 | 说明 |
+| --- | --- | --- | --- |
+| Checkpoint Selector | `YogurtCheckpointSelector` | `YogurtNodes/Models` | Select Checkpoint |
+| ControlNet Selector | `YogurtControlNetSelector` | `YogurtNodes/Models` | Select ControlNet |
+| Diffusion Model Selector | `YogurtDiffusionModelSelector` | `YogurtNodes/Models` | Select Diffusion Model |
+| Lora Selector | `YogurtLoraSelector` | `YogurtNodes/Models` | Select Lora |
+| Convert LoRA Keys | `YogurtConvertLoraKeys` | `YogurtNodes/Models/LoRA` | Rename LoRA keys by mapping JSON. |
+| Create LoRA Mapping JSON | `YogurtCreateLoraMappingJson` | `YogurtNodes/Models/LoRA` | Build a best-effort mapping from LoRA A keys to LoRA B keys. |
+| LoRA Add (Rank Aware) | `YogurtLoraAdd` | `YogurtNodes/Models/LoRA` | Merge two LoRAs, with SVD rank alignment when ranks differ. |
+| LoRA Compress | `YogurtLoraRankCompress` | `YogurtNodes/Models/LoRA` | Compress LoRA rank with SVD for standard .lora_down/.lora_up pairs. Optionally absorb alpha/rank first to preserve the actual LoRA effect before compression. |
+| LoRA Layers Operation | `YogurtLoraLayersOperation` | `YogurtNodes/Models/LoRA` | Modify only selected LoRA layers by index. |
+| LoRA Load Only | `YogurtLoadLoraOnly` | `YogurtNodes/Models/LoRA` | Load a LoRA without applying it. Use with other LoRA operation nodes. |
+| LoRA Merge Full Rank | `YogurtLoraMerge` | `YogurtNodes/Models/LoRA` | Merge up to five standard LoRAs exactly by concatenating rank dimensions. Fast and preserves the summed model-side effect exactly, but output rank/file size grow. Does not support DoRA or LoCon/reshape variants. |
+| LoRA Scale Weights | `YogurtLoraScaleWeights` | `YogurtNodes/Models/LoRA` | Scale LoRA tensor weights globally so effect can be tuned while using strength=1. |
+| LoRA Simple Add | `YogurtLoraSimpleAdd` | `YogurtNodes/Models/LoRA` | Simple weighted sum of two LoRA states. |
+| LoRA Stat Viewer | `YogurtLoraStatViewer` | `YogurtNodes/Models/LoRA` | Inspect LoRA key patterns to help define regex and layer selection. |
+| Merge LoRA To Model | `YogurtMergeLoraToModel` | `YogurtNodes/Models/LoRA` | Apply loaded LoRA to model and optional CLIP. |
+| Save LoRA | `YogurtSaveLora` | `YogurtNodes/Models/LoRA` | Save LoRA state as safetensors. |
 
-#### Unpack Any
-
-- **类别：** YogurtNodes/Logic
-- **描述：** 将打包的输入项解包成多个输出
-- **特点：**
-  - 与Pack Any节点无缝配合
-  - 输出多达8个独立项
-  - 适用于数据分发
-
-#### Switch
-
-- **类别：** YogurtNodes/Logic
-- **描述：** 基于条件的开关节点
-- **特点：**
-  - 支持正则表达式匹配
-  - 多达8个条件分支
-  - 默认值选项
-  - 灵活的条件控制
-
-### 模型选择节点
-
-#### ControlNet Selector
-
-- **类别：** YogurtNodes/Models
-- **描述：** 高级ControlNet模型选择和配置
-- **特点：**
-  - 从可用ControlNets动态生成模型列表
-  - 可调整强度参数
-  - 起始和结束百分比控制
-  - 模型路径和名称提取
-  - 条件工作流的None选项
-
-#### Diffusion Model Selector
-
-- **类别：** YogurtNodes/Models
-- **描述：** Stable Diffusion模型选择工具
-- **特点：**
-  - 可用扩散模型的动态列表
-  - 触发词支持
-  - 模型路径和名称提取
-  - 条件工作流的None选项
-
-#### Checkpoint Selector
-
-- **类别：** YogurtNodes/Models
-- **描述：** 检查点模型选择和管理
-- **特点：**
-  - 动态检查点列表
-  - 触发词支持
-  - 模型信息提取
-  - 条件工作流的None选项
-
-#### Lora Selector
-
-- **类别：** YogurtNodes/Models
-- **描述：** LoRA模型选择和配置
-- **特点：**
-  - 动态LoRA模型列表
-  - 单独的模型和CLIP强度控制
-  - 触发词支持
-  - 模型路径和名称提取
-  - 条件工作流的None选项
 
 ### 输入/输出操作节点
 
-#### Save Image Bridge Ex
+| 节点 | Class ID | 分类 | 说明 |
+| --- | --- | --- | --- |
+| Any Bridge | `YogurtAnyBridge` | `YogurtNodes/IO` | Any Bridge |
+| Create Directory | `YogurtCreateDirectory` | `YogurtNodes/IO` | Create a directory |
+| Create Parent Directory | `YogurtCreateParentDirectory` | `YogurtNodes/IO` | Create a parent directory |
+| Deserialize Any | `YogurtDeserializeAny` | `YogurtNodes/IO` | Deserialize bytes data to Python object using pickle |
+| Glob Files | `YogurtGlobFiles` | `YogurtNodes/IO` | Use glob pattern to traverse the folder, return the matching file path list |
+| Load Audio Path | `YogurtLoadAudioPath` | `YogurtNodes/IO` | Load audio from path. |
+| Load Bytes | `YogurtLoadBytes` | `YogurtNodes/IO` | Load bytes data from a file |
+| Load Image | `YogurtLoadImage` | `YogurtNodes/IO` | Load image. |
+| Load Image Path | `YogurtLoadImagePath` | `YogurtNodes/IO` | Load image from path. |
+| Load Video | `YogurtLoadVideo` | `YogurtNodes/IO` | Load video. |
+| Load Video Path | `YogurtLoadVideoPath` | `YogurtNodes/IO` | Load video from path. |
+| Path Operator | `YogurtPathOperator` | `YogurtNodes/IO` | Execute join, relative, or common path operations. |
+| Preview Any Bridge | `YogurtPreviewAnyBridge` | `YogurtNodes/IO` | Preview Any Bridge |
+| Preview Any Bridge (Output) | `YogurtPreviewAnyBridgeOutput` | `YogurtNodes/IO` | Preview Any Bridge (Output) node. |
+| Preview Image Bridge | `YogurtPreviewImageBridge` | `YogurtNodes/IO` | Preview the input images. |
+| Preview Image Bridge (Output) | `YogurtPreviewImageBridgeOutput` | `YogurtNodes/IO` | Preview Image Bridge (Output) node. |
+| Preview Mask Bridge | `YogurtPreviewMaskBridge` | `YogurtNodes/IO` | Preview the input masks. |
+| Preview Mask Bridge (Output) | `YogurtPreviewMaskBridgeOutput` | `YogurtNodes/IO` | Preview Mask Bridge (Output) node. |
+| Save Bytes Bridge | `YogurtSaveBytesBridge` | `YogurtNodes/IO` | Saves the input bytes data to your ComfyUI output directory. |
+| Save Bytes Bridge (Non Output) | `YogurtSaveBytesBridgeNonOutput` | `YogurtNodes/IO` | Save Bytes Bridge (Non Output) node. |
+| Save Image Bridge | `YogurtSaveImageBridge` | `YogurtNodes/IO` | Saves the input images to your ComfyUI output directory. |
+| Save Image Bridge (Non Output) | `YogurtSaveImageBridgeNonOutput` | `YogurtNodes/IO` | Save Image Bridge (Non Output) node. |
+| Save Image Bridge Ex | `YogurtSaveImageBridgeEx` | `YogurtNodes/IO` | Saves the input images to your ComfyUI output directory. |
+| Save Image Bridge Ex (Non Output) | `YogurtSaveImageBridgeExNonOutput` | `YogurtNodes/IO` | Save Image Bridge Ex (Non Output) node. |
+| Save Image Bridge Simple | `YogurtSaveImageBridgeSimple` | `YogurtNodes/IO` | Saves the input images to your ComfyUI output directory. |
+| Save Image Bridge Simple (Non Output) | `YogurtSaveImageBridgeSimpleNonOutput` | `YogurtNodes/IO` | Save Image Bridge Simple (Non Output) node. |
+| Save Mask Bridge | `YogurtSaveMaskBridge` | `YogurtNodes/IO` | Saves the input masks to your ComfyUI output directory. |
+| Save Mask Bridge | `YogurtSaveMaskBridgeEx` | `YogurtNodes/IO` | Saves the input masks to your ComfyUI output directory. |
+| Save Mask Bridge | `YogurtSaveMaskBridgeSimple` | `YogurtNodes/IO` | Saves the input masks to your ComfyUI output directory. |
+| Save Mask Bridge (Non Output) | `YogurtSaveMaskBridgeExNonOutput` | `YogurtNodes/IO` | Save Mask Bridge (Non Output) node. |
+| Save Mask Bridge (Non Output) | `YogurtSaveMaskBridgeNonOutput` | `YogurtNodes/IO` | Save Mask Bridge (Non Output) node. |
+| Save Mask Bridge Simple (Non Output) | `YogurtSaveMaskBridgeSimpleNonOutput` | `YogurtNodes/IO` | Save Mask Bridge Simple (Non Output) node. |
+| Save Text Bridge | `YogurtSaveTextBridge` | `YogurtNodes/IO` | Saves the input text to your ComfyUI output directory. |
+| Save Text Bridge (Non Output) | `YogurtSaveTextBridgeNonOutput` | `YogurtNodes/IO` | Save Text Bridge (Non Output) node. |
+| Serialize Any | `YogurtSerializeAny` | `YogurtNodes/IO` | Serialize any Python object to bytes using pickle |
 
-- **类别：** YogurtNodes/IO
-- **描述：** 增强的图像保存功能，具有广泛的选项
-- **特点：**
-  - 多种格式支持（PNG、JPEG）
-  - 可自定义输出目录
-  - 带变量的动态文件名前缀
-  - 元数据控制
-  - 覆盖保护
-  - 压缩级别控制
-  - JPEG的质量设置
-  - 自定义后缀支持
-
-#### Save Image Bridge
-
-- **类别：** YogurtNodes/IO
-- **描述：** 基本图像保存功能
-- **特点：**
-  - PNG和JPEG支持
-  - 基本输出选项
-  - 元数据处理
-  - 压缩设置
-
-#### Preview Image Bridge
-
-- **类别：** YogurtNodes/IO
-- **描述：** 快速图像预览功能
-- **特点：**
-  - 临时文件处理
-  - 快速预览生成
-  - 自动清理
-
-#### Save Text Bridge
-
-- **类别：** YogurtNodes/IO
-- **描述：** 文本文件保存，支持多种格式
-- **特点：**
-  - 多种格式支持（.txt、.json、.md、.csv）
-  - 自定义文件扩展名
-  - 动态文件名生成
-  - 覆盖保护
-  - UTF-8编码支持
-
-#### Any Bridge
-
-- **类别：** YogurtNodes/IO
-- **描述：** 通用数据桥，用于工作流控制
-- **特点：**
-  - 处理任何数据类型
-  - 可选的黑洞模式
-  - 工作流控制支持
-
-#### Create Directory
-
-- **类别：** YogurtNodes/IO
-- **描述：** 目录创建工具
-- **特点：**
-  - 创建单个目录
-  - 自动父目录创建
-  - 路径验证
-
-#### Glob Files
-
-- **类别：** YogurtNodes/IO
-- **描述：** 使用glob模式遍历文件夹，返回匹配的文件路径列表
-- **特点：**
-  - 支持glob和rglob模式
-  - 灵活的排序选项（字母序、反向）
-  - 仅文件过滤选项
-  - 路径格式选项（POSIX、绝对路径、解析路径）
-  - 可自定义搜索模式
-
-#### Save Mask Bridge Ex
-- **类别：** YogurtNodes/IO
-- **描述：** 增强的掩码保存节点，支持多种格式和自定义后缀
-- **特点：**
-  - 支持PNG/JPEG/自定义格式
-  - 可自定义输出目录、文件前缀、后缀
-  - 支持元数据、压缩、覆盖保护
-
-#### Save Mask Bridge
-- **类别：** YogurtNodes/IO
-- **描述：** 基本掩码保存节点
-- **特点：**
-  - 支持PNG/JPEG格式
-  - 可自定义输出目录、文件前缀
-  - 支持元数据、压缩、覆盖保护
-
-#### Save Mask Bridge Simple
-- **类别：** YogurtNodes/IO
-- **描述：** 简化版掩码保存节点
-- **特点：**
-  - 仅需最基本参数，快速保存掩码
-
-#### Preview Mask Bridge
-- **类别：** YogurtNodes/IO
-- **描述：** 掩码预览节点
-- **特点：**
-  - 将掩码保存为临时文件，便于快速预览
 
 ### 语言模型节点
 
-#### Gemini Generate Text
+| 节点 | Class ID | 分类 | 说明 |
+| --- | --- | --- | --- |
+| FreedomGPT Generate Image | `YogurtFreedomGPTGenerateImage` | `YogurtNodes/LLM` | Generate images using FreedomGPT API |
+| FreedomGPT Generate Text | `YogurtFreedomGPTGenerateText` | `YogurtNodes/LLM` | Generate text using FreedomGPT API |
+| FreedomGPT Image Understand | `YogurtFreedomGPTImageUnderstand` | `YogurtNodes/LLM` | Understand image content using FreedomGPT vision models |
+| GRSAI Generate Image | `YogurtGRSAIGenerateImage` | `YogurtNodes/LLM` | Generate or edit images with the GRSAI API and return torch tensors |
+| Gemini Generate Image | `YogurtGeminiGenerateImage` | `YogurtNodes/LLM` | Generate image using Gemini API and return as torch.Tensor (h,w,c) and text |
+| Gemini Generate Text | `YogurtGeminiGenerateText` | `YogurtNodes/LLM` | Generate text using Gemini API |
+| Gemini Image Understand | `YogurtGeminiImageUnderstand` | `YogurtNodes/LLM` | Understand images using Gemini API |
+| Grok Generate Image | `YogurtGrokGenerateImage` | `YogurtNodes/LLM` | Generate image using xAI Grok API and return as torch.Tensor (h,w,c) and text |
+| Grok Generate Text | `YogurtGrokGenerateText` | `YogurtNodes/LLM` | Generate text using xAI API |
+| Grok Image Understand | `YogurtGrokImageUnderstand` | `YogurtNodes/LLM` | Understand image content using xAI vision models |
+| History Builder | `YogurtHistoryBuilder` | `YogurtNodes/LLM` | 构建与 LLM 节点兼容的会话历史 |
+| OpenAI Generate Image | `YogurtOpenAIGenerateImage` | `YogurtNodes/LLM` | Generate image using OpenAI API and return as torch.Tensor (h,w,c) and text |
+| OpenAI Generate Text | `YogurtOpenAIGenerateText` | `YogurtNodes/LLM` | Generate text using OpenAI API |
+| OpenAI Image Understand | `YogurtOpenAIImageUnderstand` | `YogurtNodes/LLM` | Understand image content using OpenAI vision models |
+| OpenRouter Generate Image | `YogurtOpenRouterGenerateImage` | `YogurtNodes/LLM` | Generate image using OpenRouter API and return as torch.Tensor (h,w,c) and text |
+| OpenRouter Generate Text | `YogurtOpenRouterGenerateText` | `YogurtNodes/LLM` | Generate text using OpenRouter API |
+| OpenRouter Image Understand | `YogurtOpenRouterImageUnderstand` | `YogurtNodes/LLM` | Understand image content using OpenRouter API |
+| Qwen Generate/Edit Image | `YogurtQwenGenerateImage` | `YogurtNodes/LLM` | 使用阿里云百炼 Qwen 图片模型进行文生图或多图编辑 |
+| SeeDream Generate Image | `YogurtSeeDreamGenerateImage` | `YogurtNodes/LLM` | 使用豆包SeeDream API生成图像，支持文生图、图生图、多图生图和序列图像生成 |
+| Vertex AI Generate Image | `YogurtVertexAIGenerateImage` | `YogurtNodes/LLM` | Generate image using Vertex AI API and return as torch.Tensor (h,w,c) and text |
+| Vertex AI Generate Text | `YogurtVertexAIGenerateText` | `YogurtNodes/LLM` | Generate text using Vertex AI |
+| Vertex Image Understand | `YogurtVertexAIImageUnderstand` | `YogurtNodes/LLM` | Understand images using Vertex AI |
+| Wan Generate/Edit Image | `YogurtWanGenerateImage` | `YogurtNodes/LLM` | 使用阿里云百炼 Wan 图片模型进行文生图或图像编辑 |
 
-- **类别：** YogurtNodes/LLM
-- **描述：** 使用Gemini API生成文本
-- **特点：**
-  - 多种Gemini模型支持
-  - 系统提示和用户提示控制
-  - 可自定义的生成参数（温度、top_p、top_k等）
-  - 安全设置控制
-  - 最大输出令牌数设置
-  - 自动重试机制
 
-#### Gemini Image Understand
+### 网络节点
 
-- **类别：** YogurtNodes/LLM
-- **描述：** 使用Gemini API理解图像内容
-- **特点：**
-  - 图像内容分析
-  - 与文本提示结合
-  - 可自定义的生成参数
-  - 多语言支持
-  - 详细的图像描述生成
-
-#### Gemini Generate Image
-
-- **类别：** YogurtNodes/LLM
-- **描述：** 使用Gemini API生成图片
-- **特点：**
-  - 支持多种Gemini图像生成模型
-  - 系统提示和用户提示控制
-  - 可自定义的生成参数（温度、top_p、top_k等）
-  - 安全设置控制
-  - 最大输出令牌数设置
-  - 自动重试机制
-  - 输出图片（torch.Tensor）、文本描述和图片数量
-
-#### OpenAI Generate Text
-
-- **类别：** YogurtNodes/LLM
-- **描述：** 使用OpenAI API生成文本
-- **特点：**
-  - 支持多种OpenAI模型（GPT-4、GPT-3.5等）
-  - 自定义基础URL支持兼容API
-  - 系统提示和用户提示控制
-  - 可自定义的生成参数（温度、top_p、max_tokens等）
-  - 频率和存在惩罚控制
-  - 种子支持可重现输出
-  - 自动重试机制
-  - 动态模型列表获取
-
-#### OpenAI Image Understand
-
-- **类别：** YogurtNodes/LLM
-- **描述：** 使用OpenAI视觉模型理解图像
-- **特点：**
-  - 支持OpenAI视觉模型（GPT-4V、GPT-4o等）
-  - 多图像分析支持
-  - 结合图像和文本提示处理
-  - 自定义基础URL支持兼容API
-  - 可自定义的生成参数
-  - 高质量图像细节处理
-  - 自动重试机制
-
-#### OpenRouter Generate Text
-
-- **类别：** YogurtNodes/LLM
-- **描述：** 使用OpenRouter API生成文本
-- **特点：**
-  - 支持多种OpenRouter模型
-  - 自定义基础设施提供商选择
-  - 系统提示和用户提示控制
-  - 可自定义的生成参数（温度、top_p、max_tokens）
-  - 聊天模板支持消息格式化
-  - 历史记录支持对话连续性
-  - 自动重试机制
-  - 动态模型列表获取
-
-#### OpenRouter Image Understand
-
-- **类别：** YogurtNodes/LLM
-- **描述：** 使用OpenRouter视觉模型理解图像
-- **特点：**
-  - 支持OpenRouter视觉模型
-  - 多图像分析支持
-  - 结合图像和文本提示处理
-  - 自定义基础设施提供商选择
-  - 可自定义的生成参数
-  - 历史记录支持对话连续性
-  - 自动重试机制
-
-#### GRSAI Nano Banana
-
-- **类别：** YogurtNodes/LLM
-- **描述：** 使用 GRSAI Nano Banana API 生成或编辑图像
-- **特点：**
-  - 内置文档列出的全部 Nano Banana 模型选项
-  - 支持文生图、单图参考和多图参考
-  - 支持比例、分辨率、轮询间隔和超时控制
-  - 支持远程图片 URL 或 data URL 作为参考图输入
-  - 自动轮询 `/v1/draw/result` 获取最终结果
-
-#### History Builder
-
-- **类别：** YogurtNodes/LLM
-- **描述：** 构建和管理与所有LLM节点兼容的会话历史
-- **特点：**
-  - 输出兼容的HISTORY类型，可无缝集成
-  - 支持用户和助手消息的增量历史构建
-  - 自动消息过滤（忽略空消息）
-  - 功能简单专注
-  - 是在LLM调用间维持对话上下文的必备工具
+| 节点 | Class ID | 分类 | 说明 |
+| --- | --- | --- | --- |
+| ComfyUI Client Get Output | `YogurtComfyUIClientGetOutput` | `YogurtNodes/Net` | 根据节点 ID/名称，从结果包中取出该节点的全部输出列表 |
+| ComfyUI Client Load | `YogurtComfyUIClientLoad` | `YogurtNodes/Net` | 配置 ComfyUI 客户端实例，供后续节点复用 |
+| ComfyUI Client Run | `YogurtComfyUIClientRun` | `YogurtNodes/Net` | 提交工作流并等待结果返回 |
+| ComfyUI Client Set Float | `YogurtComfyUIClientSetFloat` | `YogurtNodes/Net` | 向工作流节点输入设置浮点数 |
+| ComfyUI Client Set Image | `YogurtComfyUIClientSetImage` | `YogurtNodes/Net` | 上传图片并写入工作流节点输入 |
+| ComfyUI Client Set Int | `YogurtComfyUIClientSetInt` | `YogurtNodes/Net` | 向工作流节点输入设置整数 |
+| ComfyUI Client Set Seed | `YogurtComfyUIClientSetSeed` | `YogurtNodes/Net` | 为工作流中的节点设置随机种子 |
+| ComfyUI Client Set String | `YogurtComfyUIClientSetString` | `YogurtNodes/Net` | 向工作流节点输入设置字符串 |
 
 ## 🔑 Gemini API Key 配置说明
 

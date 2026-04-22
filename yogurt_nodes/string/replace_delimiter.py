@@ -2,8 +2,9 @@ import re
 
 
 class ReplaceDelimiter:
-    """
-    Replace Delimiter
+    """Replace Delimiter node.
+
+    Replace delimiter in string. Support regex
     """
 
     @classmethod

@@ -2,7 +2,10 @@ from ..utils import ANY_TYPE
 
 
 class DictContainsKey:
-    """Check if a dictionary contains a specific key."""
+    """DictContainsKey node.
+
+    Check if a dictionary contains a specific key
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -37,7 +40,10 @@ class DictContainsKey:
 
 
 class DictContainsValue:
-    """Check if a dictionary contains a specific value."""
+    """DictContainsValue node.
+
+    Check if a dictionary contains a specific value
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -72,7 +78,10 @@ class DictContainsValue:
 
 
 class DictMerge:
-    """Merge multiple dictionaries."""
+    """DictMerge node.
+
+    Merge multiple dictionaries
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -140,7 +149,10 @@ class DictMerge:
 
 
 class DictInvert:
-    """Invert a dictionary (swap keys and values)."""
+    """DictInvert node.
+
+    Invert a dictionary (swap keys and values)
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -192,7 +204,10 @@ class DictInvert:
 
 
 class DictFromLists:
-    """Create a dictionary from a list of keys and a list of values."""
+    """DictFromLists node.
+
+    Create a dictionary from a list of keys and a list of values
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -250,7 +265,10 @@ class DictFromLists:
 
 
 class DictFilter:
-    """Filter dictionary entries based on key or value patterns."""
+    """DictFilter node.
+
+    Filter dictionary entries based on key or value patterns
+    """
 
     @classmethod
     def INPUT_TYPES(cls):

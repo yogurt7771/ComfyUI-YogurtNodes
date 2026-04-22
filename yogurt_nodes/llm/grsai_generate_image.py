@@ -30,8 +30,11 @@ def _parse_reference_urls(image_urls: str) -> List[str]:
     return values
 
 
-class GRSAINanoBananaGenerateImage:
-    """GRSAI Nano Banana image generation node."""
+class GRSAIGenerateImage:
+    """GRSAI Generate Image node.
+
+    Generate or edit images with the GRSAI API and return torch tensors
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -57,7 +60,7 @@ class GRSAINanoBananaGenerateImage:
                     GRSAIClient.get_models(),
                     {
                         "default": "nano-banana-pro",
-                        "tooltip": "Nano Banana model name from the GRSAI documentation",
+                        "tooltip": "GRSAI model name from the GRSAI documentation",
                     },
                 ),
                 "system_prompt": (
@@ -173,6 +176,13 @@ class GRSAINanoBananaGenerateImage:
                         "tooltip": "Extra request parameters in JSON format",
                     },
                 ),
+                "draw_type": (
+                    GRSAIClient.get_draw_types(),
+                    {
+                        "default": "auto",
+                        "tooltip": "Endpoint type for /v1/draw/. Use auto to infer from the selected model name",
+                    },
+                ),
             },
         }
 
@@ -185,10 +195,8 @@ class GRSAINanoBananaGenerateImage:
 
     FUNCTION = "generate_image"
 
-    _NODE_NAME = "GRSAI Nano Banana"
-    DESCRIPTION = (
-        "Generate or edit images with the GRSAI Nano Banana API and return torch tensors"
-    )
+    _NODE_NAME = "GRSAI Generate Image"
+    DESCRIPTION = "Generate or edit images with the GRSAI API and return torch tensors"
     CATEGORY = "YogurtNodes/LLM"
 
     async def generate_image(
@@ -214,6 +222,7 @@ class GRSAINanoBananaGenerateImage:
         image3: Optional[torch.Tensor] = None,
         image4: Optional[torch.Tensor] = None,
         history: List[tuple[str, str]] | None = None,
+        draw_type: str = "auto",
     ):
         images = []
         for img in [image, image1, image2, image3, image4]:
@@ -246,6 +255,7 @@ class GRSAINanoBananaGenerateImage:
             chat_template=chat_template,
             history=history,
             extra=extra_dict,
+            draw_type=draw_type,
         )
 
         tensor_imgs = []
@@ -259,3 +269,6 @@ class GRSAINanoBananaGenerateImage:
         if len(tensor_imgs) > 1:
             return (torch.cat(tensor_imgs, dim=0), text, history)
         return (torch.zeros(1, 3, 1, 1, dtype=torch.float32), text, history)
+
+
+GRSAINanoBananaGenerateImage = GRSAIGenerateImage

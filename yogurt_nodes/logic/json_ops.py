@@ -4,7 +4,10 @@ from ..utils import ANY_TYPE, json_merge, json_get_path, json_set_path
 
 
 class JsonParse:
-    """Parse JSON string to object."""
+    """JsonParse node.
+
+    Parse JSON string to object
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -55,7 +58,10 @@ class JsonParse:
 
 
 class JsonStringify:
-    """Convert object to JSON string."""
+    """JsonStringify node.
+
+    Convert object to JSON string
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -118,7 +124,10 @@ class JsonStringify:
 
 
 class JsonMerge:
-    """Merge multiple JSON objects using deep merge."""
+    """JsonMerge node.
+
+    Merge multiple JSON objects using deep merge
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -168,7 +177,10 @@ class JsonMerge:
 
 
 class JsonGetPath:
-    """Get value from JSON object using JSONPath."""
+    """JsonGetPath node.
+
+    Get value from JSON object using JSONPath
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -236,7 +248,10 @@ class JsonGetPath:
 
 
 class JsonSetPath:
-    """Set value in JSON object using JSONPath."""
+    """JsonSetPath node.
+
+    Set value in JSON object using JSONPath
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -300,7 +315,10 @@ class JsonSetPath:
 
 
 class JsonValidate:
-    """Validate JSON data structure."""
+    """JsonValidate node.
+
+    Validate JSON data structure
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -373,7 +391,10 @@ class JsonValidate:
 
 
 class JsonPathExists:
-    """Check if a path exists in JSON object."""
+    """JsonPathExists node.
+
+    Check if a path exists in JSON object
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -415,7 +436,10 @@ class JsonPathExists:
 
 
 class JsonDeepCopy:
-    """Create a deep copy of JSON object."""
+    """JsonDeepCopy node.
+
+    Create a deep copy of JSON object
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -446,7 +470,10 @@ class JsonDeepCopy:
 
 
 class JsonFlatten:
-    """Flatten nested JSON object to flat key-value pairs."""
+    """JsonFlatten node.
+
+    Flatten nested JSON object to flat key-value pairs
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -513,7 +540,10 @@ class JsonFlatten:
 
 
 class JsonUnflatten:
-    """Unflatten flat JSON object back to nested structure."""
+    """JsonUnflatten node.
+
+    Unflatten flat JSON object back to nested structure
+    """
 
     @classmethod
     def INPUT_TYPES(cls):

@@ -2,7 +2,8 @@ from pathlib import Path
 
 
 class SplitPath:
-    """
+    """Split Path node.
+
     Split path to parts
     """
 

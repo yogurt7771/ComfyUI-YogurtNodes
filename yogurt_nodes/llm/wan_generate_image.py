@@ -23,8 +23,9 @@ def collect_input_images(*images: Optional[torch.Tensor]):
 
 
 class WanGenerateImage:
-    """
-    Wan Generate/Edit Image
+    """Wan Generate/Edit Image node.
+
+    使用阿里云百炼 Wan 图片模型进行文生图或图像编辑
     """
 
     @classmethod

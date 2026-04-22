@@ -2,7 +2,10 @@ from ..utils import ANY_TYPE
 
 
 class ListLength:
-    """获取任何列表类型对象的长度。"""
+    """ListLength node.
+
+    获取任何列表类型对象的长度
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -33,7 +36,10 @@ class ListLength:
 
 
 class ListIndex:
-    """通过索引从任何列表类型对象中获取元素。"""
+    """ListIndex node.
+
+    通过索引从任何列表类型对象中获取元素
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -72,13 +78,9 @@ class ListIndex:
 
 
 class ListSlice:
-    """从任何列表类型对象中获取切片。
-    
-    start: 起始索引（包含）。None表示从开头开始
-    stop: 结束索引（不包含）。None表示到结尾
-    step: 步长。默认为1
-    use_none_start: 使用None作为起始位置（从开头切片）
-    use_none_stop: 使用None作为结束位置（切片到结尾）
+    """ListSlice node.
+
+    从任何列表类型对象中获取切片
     """
 
     @classmethod

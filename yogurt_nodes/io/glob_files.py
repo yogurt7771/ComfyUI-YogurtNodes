@@ -7,11 +7,9 @@ from PIL import Image
 
 
 class GlobFiles:
-    """
-    使用 glob 模式遍历文件夹，返回匹配的文件路径列表。
+    """Glob Files node.
 
-    支持在 `glob_pattern` 中按行提供多个模式；结果会依次拼接。
-    可选返回相对于 root_directory 的路径。
+    Use glob pattern to traverse the folder, return the matching file path list
     """
 
     @classmethod

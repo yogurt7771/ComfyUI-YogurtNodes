@@ -173,6 +173,10 @@ def _make_seam_blend_pattern(
 
 
 class ImageTileWithSeamMask:
+    """Image Tile (Seam Mask) node.
+
+    Split image into overlapped tiles and generate inpaint masks (white=inpaint, black=reference).
+    """
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -329,6 +333,10 @@ class ImageTileWithSeamMask:
 
 
 class ImageUntileWithSeamMask:
+    """Image Untile (Seam Mask) node.
+
+    Merge overlapped tiles back to one image with seam feathering (mask + overlap-based smooth transition).
+    """
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -500,6 +508,10 @@ class ImageUntileWithSeamMask:
 
 
 class TileInfoToTTPImageAssyArgs:
+    """Tile Info To TTP Image Assy Args node.
+
+    Convert tile_info to TTP_Image_Assy inputs: positions/original_size/grid_size/padding.
+    """
     @classmethod
     def INPUT_TYPES(cls):
         return {

@@ -6,8 +6,9 @@ from ..utils import OpenRouterClient
 
 
 class OpenRouterGenerateText:
-    """
-    OpenRouter Generate Text
+    """OpenRouter Generate Text node.
+
+    Generate text using OpenRouter API
     """
 
     @classmethod

@@ -181,8 +181,9 @@ def _scan_mergeable_lora_pairs(lora_sd: Dict[str, object]) -> Dict[str, Dict[str
 
 
 class LoadLoraOnly:
-    """
-    Load a LoRA file into a reusable LORA object.
+    """LoRA Load Only node.
+
+    Load a LoRA without applying it. Use with other LoRA operation nodes.
     """
 
     def __init__(self):
@@ -225,8 +226,9 @@ class LoadLoraOnly:
 
 
 class LoraLayersOperation:
-    """
-    Scale or zero selected layers in a LoRA by regex + index selection.
+    """LoRA Layers Operation node.
+
+    Modify only selected LoRA layers by index.
     """
 
     @classmethod
@@ -313,8 +315,9 @@ class LoraLayersOperation:
 
 
 class LoraScaleWeights:
-    """
-    Globally scale LoRA tensor weights so downstream strength=1 has custom intensity.
+    """LoRA Scale Weights node.
+
+    Scale LoRA tensor weights globally so effect can be tuned while using strength=1.
     """
 
     @classmethod
@@ -389,8 +392,9 @@ class LoraScaleWeights:
 
 
 class MergeLoraToModel:
-    """
-    Apply a preloaded LoRA object to model and optional CLIP.
+    """Merge LoRA To Model node.
+
+    Apply loaded LoRA to model and optional CLIP.
     """
 
     @classmethod
@@ -454,8 +458,9 @@ class MergeLoraToModel:
 
 
 class LoraStatViewer:
-    """
-    Summarize LoRA key distribution and print sample keys.
+    """LoRA Stat Viewer node.
+
+    Inspect LoRA key patterns to help define regex and layer selection.
     """
 
     @classmethod
@@ -541,8 +546,9 @@ class LoraStatViewer:
 
 
 class CreateLoraMappingJson:
-    """
-    Create a key mapping JSON to convert one LoRA key layout to another.
+    """Create LoRA Mapping JSON node.
+
+    Build a best-effort mapping from LoRA A keys to LoRA B keys.
     """
 
     @classmethod
@@ -613,8 +619,9 @@ class CreateLoraMappingJson:
 
 
 class ConvertLoraKeys:
-    """
-    Convert LoRA key names based on JSON mapping text.
+    """Convert LoRA Keys node.
+
+    Rename LoRA keys by mapping JSON.
     """
 
     @classmethod
@@ -656,8 +663,9 @@ class ConvertLoraKeys:
 
 
 class LoraSimpleAdd:
-    """
-    Add two LoRA state dicts key-by-key with scalar weights.
+    """LoRA Simple Add node.
+
+    Simple weighted sum of two LoRA states.
     """
 
     @classmethod
@@ -713,8 +721,9 @@ class LoraSimpleAdd:
 
 
 class LoraAdd:
-    """
-    Rank-aware LoRA merge using SVD alignment for mismatched ranks.
+    """LoRA Add (Rank Aware) node.
+
+    Merge two LoRAs, with SVD rank alignment when ranks differ.
     """
 
     @classmethod
@@ -851,8 +860,9 @@ class LoraAdd:
 
 
 class LoraMerge:
-    """
-    Merge up to five standard LoRAs exactly by concatenating rank dimensions.
+    """LoRA Merge Full Rank node.
+
+    Merge up to five standard LoRAs exactly by concatenating rank dimensions. Fast and preserves the summed model-side effect exactly, but output rank/file size grow. Does not support DoRA or LoCon/reshape variants.
     """
 
     @classmethod
@@ -1054,8 +1064,9 @@ class LoraMerge:
 
 
 class LoraRankCompress:
-    """
-    Compress standard LoRA down/up pairs with SVD rank reduction.
+    """LoRA Compress node.
+
+    Compress LoRA rank with SVD for standard .lora_down/.lora_up pairs. Optionally absorb alpha/rank first to preserve the actual LoRA effect before compression.
     """
 
     @classmethod
@@ -1290,8 +1301,9 @@ class LoraRankCompress:
 
 
 class SaveLora:
-    """
-    Save LoRA state to output directory as safetensors.
+    """Save LoRA node.
+
+    Save LoRA state as safetensors.
     """
 
     def __init__(self):

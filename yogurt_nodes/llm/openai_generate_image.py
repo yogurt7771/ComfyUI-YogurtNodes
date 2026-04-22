@@ -11,8 +11,9 @@ from .image_output_utils import build_image_outputs
 
 
 class OpenAIGenerateImage:
-    """
-    OpenAI Generate Image
+    """OpenAI Generate Image node.
+
+    Generate image using OpenAI API and return as torch.Tensor (h,w,c) and text
     """
 
     @classmethod

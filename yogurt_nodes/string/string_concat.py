@@ -2,7 +2,8 @@ TEXT_COUNT = 8
 
 
 class StringConcat:
-    """
+    """String Concat node.
+
     拼接多个字符串，支持自定义分隔符和可变数量的输入
     """
 

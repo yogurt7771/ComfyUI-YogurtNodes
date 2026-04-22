@@ -9,8 +9,9 @@ from ..utils import GrokClient
 
 
 class GrokImageUnderstand:
-    """
-    Grok Image Understand
+    """Grok Image Understand node.
+
+    Understand image content using xAI vision models
     """
 
     @classmethod

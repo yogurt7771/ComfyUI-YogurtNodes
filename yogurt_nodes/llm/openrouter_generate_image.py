@@ -11,8 +11,9 @@ from .image_output_utils import build_image_outputs
 
 
 class OpenRouterGenerateImage:
-    """
-    OpenRouter Generate Image
+    """OpenRouter Generate Image node.
+
+    Generate image using OpenRouter API and return as torch.Tensor (h,w,c) and text
     """
 
     @classmethod

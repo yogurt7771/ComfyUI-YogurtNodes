@@ -3,7 +3,10 @@ from ..utils import ANY_TYPE
 
 
 class ListContains:
-    """Check if a list contains a specific element."""
+    """ListContains node.
+
+    Check if a list contains a specific element
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -38,7 +41,10 @@ class ListContains:
 
 
 class ListFind:
-    """Find the index of an element in a list."""
+    """ListFind node.
+
+    Find the index of an element in a list
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -85,7 +91,10 @@ class ListFind:
 
 
 class ListConcat:
-    """Concatenate multiple lists."""
+    """ListConcat node.
+
+    Concatenate multiple lists
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -135,7 +144,10 @@ class ListConcat:
 
 
 class ListUnique:
-    """Remove duplicate elements from a list while preserving order."""
+    """ListUnique node.
+
+    Remove duplicate elements from a list while preserving order
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -172,7 +184,10 @@ class ListUnique:
 
 
 class ListJoin:
-    """Join list elements into a string."""
+    """ListJoin node.
+
+    Join list elements into a string
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -213,7 +228,10 @@ class ListJoin:
 
 
 class ListFilter:
-    """Filter list elements based on regex pattern."""
+    """ListFilter node.
+
+    Filter list elements based on regex pattern
+    """
 
     @classmethod
     def INPUT_TYPES(cls):

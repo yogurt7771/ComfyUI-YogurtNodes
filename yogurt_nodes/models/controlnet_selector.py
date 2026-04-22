@@ -5,8 +5,9 @@ from folder_paths import get_filename_list
 
 
 class ControlNetSelector:
-    """
-    Select ControlNet from a list of ControlNets
+    """ControlNet Selector node.
+
+    Select ControlNet
     """
 
     initial_list = get_filename_list("controlnet")

@@ -287,8 +287,9 @@ async def generate_image(
 
 
 class GeminiGenerateImage:
-    """
-    Gemini Generate Image
+    """Gemini Generate Image node.
+
+    Generate image using Gemini API and return as torch.Tensor (h,w,c) and text
     """
 
     @classmethod
@@ -408,8 +409,9 @@ class GeminiGenerateImage:
 
 
 class VertexAIGenerateImage:
-    """
-    Vertex AI Generate Image
+    """Vertex AI Generate Image node.
+
+    Generate image using Vertex AI API and return as torch.Tensor (h,w,c) and text
     """
 
     @classmethod

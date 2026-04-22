@@ -4,6 +4,10 @@ import cv2
 
 
 class PoissonBlend:
+    """Poisson Blend node.
+
+    使用OpenCV泊松融合(seamlessClone)将前景融合到背景。
+    """
     @classmethod
     def INPUT_TYPES(cls):
         return {

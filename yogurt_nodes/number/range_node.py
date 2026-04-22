@@ -2,8 +2,9 @@ import torch
 
 
 class Range:
-    """
-    Get value from string
+    """Range node.
+
+    get a number from a range
     """
 
     @classmethod
@@ -56,8 +57,9 @@ class Range:
 
 
 class RangeItem:
-    """
-    Get a value from a range
+    """RangeItem node.
+
+    get a value from a range
     """
 
     @classmethod

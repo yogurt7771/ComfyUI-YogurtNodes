@@ -6,8 +6,9 @@ from ..utils import FreedomGPTClient
 
 
 class FreedomGPTGenerateText:
-    """
-    FreedomGPT Generate Text
+    """FreedomGPT Generate Text node.
+
+    Generate text using FreedomGPT API
     """
 
     @classmethod

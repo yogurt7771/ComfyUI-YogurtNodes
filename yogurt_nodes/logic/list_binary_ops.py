@@ -5,44 +5,9 @@ from ..utils import ANY_TYPE
 
 
 class ListBinaryOps:
-    """Apply common binary operations between two list-like inputs.
+    """ListBinaryOps node.
 
-    Operations:
-        union: Return unique elements from both inputs while preserving order.
-        union_sorted: Return unique elements from both inputs and sort the result.
-        intersection: Keep elements that appear in both inputs, respecting multiplicity.
-        intersection_unique: Keep unique elements that appear in both inputs.
-        difference: Remove elements from the first input that occur in the second.
-        difference_unique: Remove elements from the first input that occur in the second and de-duplicate the remainder.
-        symmetric_difference: Combine non-overlapping elements from both inputs.
-        cartesian_product: Generate all ordered pairs from the two inputs.
-        zip: Pair elements by position into tuples until the shorter input ends.
-        zip_repeat: Pair elements while repeating the shorter input until lengths match.
-        zip_concat: Pair elements and concatenate the pair with concat.
-        zip_longest: Pair elements by position and pad the shorter input with fill_value.
-        zip_longest_concat: Pair elements with padding and concatenate with concat.
-        interleave: Alternate elements from the two inputs.
-        splice: Replace a slice of the first input with the entirety of the second input.
-        swap_ranges: Swap slices between the two inputs and return the modified first list.
-        elementwise_add: Add elements pairwise.
-        elementwise_sub: Subtract elements pairwise (first minus second).
-        elementwise_mul: Multiply elements pairwise.
-        merge_dicts: Merge dictionaries pairwise using update semantics.
-        merge_with_key: Merge dictionaries by a shared key value.
-
-    Returns:
-        tuple[list[Any], int]: The transformed list result and its length.
-
-    Example:
-        >>> node = ListBinaryOps()
-        >>> node.execute("union", [1, 2, 2], [2, 3])[0]
-        [1, 2, 3]
-        >>> node.execute("zip_longest", ["a", "b"], [1], fill_value=0)[0]
-        [('a', 1), ('b', 0)]
-        >>> node.execute("zip_concat", ["x", "y"], [1, 2], concat="-")[0]
-        ['x-1', 'y-2']
-        >>> node.execute("cartesian_product", [1, 2], ["a", "b"])[0]
-        [(1, 'a'), (1, 'b'), (2, 'a'), (2, 'b')]
+    Perform union, intersection, difference, zip and related operations on two lists.
     """
 
     OPERATIONS = (

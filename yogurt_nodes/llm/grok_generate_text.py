@@ -6,8 +6,9 @@ from ..utils import GrokClient
 
 
 class GrokGenerateText:
-    """
-    Grok Generate Text
+    """Grok Generate Text node.
+
+    Generate text using xAI API
     """
 
     @classmethod

@@ -2,7 +2,10 @@ from ..utils import ANY_TYPE
 
 
 class DictLength:
-    """Get the length (number of keys) of any dict-like object."""
+    """DictLength node.
+
+    Get the length (number of keys) of any dict-like object
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -33,7 +36,10 @@ class DictLength:
 
 
 class DictGet:
-    """Get a value by key from any dict-like object."""
+    """DictGet node.
+
+    Get a value by key from any dict-like object
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -89,7 +95,10 @@ class DictGet:
 
 
 class DictKeys:
-    """Get all keys from any dict-like object."""
+    """DictKeys node.
+
+    Get all keys from any dict-like object
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -132,7 +141,10 @@ class DictKeys:
 
 
 class DictValues:
-    """Get all values from any dict-like object."""
+    """DictValues node.
+
+    Get all values from any dict-like object
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -175,7 +187,10 @@ class DictValues:
 
 
 class DictSubset:
-    """Get a subset of a dict-like object by specifying keys."""
+    """DictSubset node.
+
+    Get a subset of a dict-like object by specifying keys
+    """
 
     @classmethod
     def INPUT_TYPES(cls):

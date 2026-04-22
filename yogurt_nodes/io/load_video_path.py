@@ -55,6 +55,10 @@ def get_video_start_and_duration(start_time=0.0, end_time=0.0) -> tuple[float, f
 
 
 class LoadVideoPath:
+    """Load Video Path node.
+
+    Load video from path.
+    """
     @classmethod
     def INPUT_TYPES(s):
         return {

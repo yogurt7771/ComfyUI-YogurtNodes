@@ -5,8 +5,9 @@ from typing import List, Tuple, Optional
 
 
 class HistoryBuilder:
-    """
-    构建LLM会话历史记录，与现有 generate_text 节点完全兼容
+    """History Builder node.
+
+    构建与 LLM 节点兼容的会话历史
     """
 
     @classmethod

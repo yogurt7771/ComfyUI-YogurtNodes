@@ -9,8 +9,9 @@ from ..utils import OpenRouterClient
 
 
 class OpenRouterImageUnderstand:
-    """
-    使用 OpenRouter API 理解图像内容
+    """OpenRouter Image Understand node.
+
+    Understand image content using OpenRouter API
     """
 
     @classmethod

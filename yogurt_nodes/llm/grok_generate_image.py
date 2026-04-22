@@ -10,8 +10,9 @@ from ..utils import GrokClient
 
 
 class GrokGenerateImage:
-    """
-    Grok Generate Image
+    """Grok Generate Image node.
+
+    Generate image using xAI Grok API and return as torch.Tensor (h,w,c) and text
     """
 
     @classmethod

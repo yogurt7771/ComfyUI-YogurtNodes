@@ -6,6 +6,10 @@ from .save_image_bridge_ex import SaveImageBridgeEx
 
 
 class PreviewImageBridge(SaveImageBridgeEx):
+    """Preview Image Bridge node.
+
+    Preview the input images.
+    """
     def __init__(self):
         self.output_dir = folder_paths.get_temp_directory()
         self.type = "temp"
@@ -38,5 +42,6 @@ class PreviewImageBridge(SaveImageBridgeEx):
 
 
 class PreviewImageBridgeOutput(PreviewImageBridge):
+    """Preview Image Bridge (Output) node."""
     OUTPUT_NODE = False
     _NODE_NAME = "Preview Image Bridge (Output)"

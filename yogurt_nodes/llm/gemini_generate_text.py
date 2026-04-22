@@ -272,8 +272,9 @@ class GeminiGenerateTextBase:
 
 
 class GeminiGenerateText(GeminiGenerateTextBase):
-    """
-    Gemini Generate Text
+    """Gemini Generate Text node.
+
+    Generate text using Gemini API
     """
 
     @classmethod
@@ -322,6 +323,10 @@ class GeminiGenerateText(GeminiGenerateTextBase):
 
 
 class GeminiImageUnderstand(GeminiGenerateText):
+    """Gemini Image Understand node.
+
+    Understand images using Gemini API
+    """
     @classmethod
     def INPUT_TYPES(cls):
         input_types = GeminiGenerateText.INPUT_TYPES()
@@ -344,8 +349,9 @@ class GeminiImageUnderstand(GeminiGenerateText):
 
 
 class VertexAIGenerateText(GeminiGenerateTextBase):
-    """
-    Vertex AI Generate Text
+    """Vertex AI Generate Text node.
+
+    Generate text using Vertex AI
     """
 
     @classmethod
@@ -404,6 +410,10 @@ class VertexAIGenerateText(GeminiGenerateTextBase):
 
 
 class VertexAIImageUnderstand(VertexAIGenerateText):
+    """Vertex Image Understand node.
+
+    Understand images using Vertex AI
+    """
     @classmethod
     def INPUT_TYPES(cls):
         input_types = VertexAIGenerateText.INPUT_TYPES()

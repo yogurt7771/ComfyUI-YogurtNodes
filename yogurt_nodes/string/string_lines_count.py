@@ -4,7 +4,8 @@ TEXT_COUNT = 8
 
 
 class StringLinesCount:
-    """
+    """String Lines Count node.
+
     Get the number of lines in a multiline string
     """
 

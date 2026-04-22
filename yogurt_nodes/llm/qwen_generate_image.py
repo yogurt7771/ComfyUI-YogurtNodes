@@ -23,8 +23,9 @@ def collect_input_images(*images: Optional[torch.Tensor]):
 
 
 class QwenGenerateImage:
-    """
-    Qwen Generate/Edit Image
+    """Qwen Generate/Edit Image node.
+
+    使用阿里云百炼 Qwen 图片模型进行文生图或多图编辑
     """
 
     @classmethod

@@ -2,7 +2,10 @@ from ..utils import ANY_TYPE
 
 
 class ToList:
-    """Convert any iterable to a list."""
+    """ToList node.
+
+    Convert any iterable to a list
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -33,7 +36,10 @@ class ToList:
 
 
 class ToDict:
-    """Convert pairs or mapping to a dictionary."""
+    """ToDict node.
+
+    Convert pairs or mapping to a dictionary
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -92,7 +98,10 @@ class ToDict:
 
 
 class IsEmpty:
-    """Check if a data structure is empty."""
+    """IsEmpty node.
+
+    Check if a data structure is empty
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -127,7 +136,10 @@ class IsEmpty:
 
 
 class DataSize:
-    """Get the size/length of any data structure."""
+    """DataSize node.
+
+    Get the size/length of any data structure
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -170,7 +182,10 @@ class DataSize:
 
 
 class StringSplit:
-    """Split a string into a list."""
+    """StringSplit node.
+
+    Split a string into a list
+    """
 
     @classmethod
     def INPUT_TYPES(cls):

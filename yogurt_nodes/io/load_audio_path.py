@@ -97,6 +97,10 @@ def trim_waveform(
 
 
 class LoadAudioPath:
+    """Load Audio Path node.
+
+    Load audio from path.
+    """
     @classmethod
     def INPUT_TYPES(s):
         return {
