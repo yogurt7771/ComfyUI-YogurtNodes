@@ -231,6 +231,12 @@ class OpenAIClient:
         self.proxy_url = proxy_url if proxy_url else None
         self.timeout = timeout
 
+    @property
+    def proxies(self) -> Optional[Dict[str, str]]:
+        if not self.proxy_url:
+            return None
+        return {"http": self.proxy_url, "https": self.proxy_url}
+
     def generate_text(
         self,
         model_name: str,

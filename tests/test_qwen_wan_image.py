@@ -346,6 +346,42 @@ class DashScopeImageClientTests(unittest.TestCase):
             (False, True, False, False, False),
         )
 
+    def test_openai_generate_text_forwards_proxy_mapping(self):
+        client_class = getattr(self.openai_client_module, "OpenAIClient", None)
+        self.assertIsNotNone(client_class, "缺少 OpenAIClient 类")
+
+        proxy_url = "http://127.0.0.1:7890"
+        client = client_class(api_key="test-key", proxy_url=proxy_url)
+
+        class FakeResponse:
+            status_code = 200
+
+            text = '{"choices":[{"message":{"content":"ok"}}]}'
+
+            @staticmethod
+            def json():
+                return {"choices": [{"message": {"content": "ok"}}]}
+
+        with (
+            mock.patch.object(
+                self.openai_client_module.requests,
+                "post",
+                return_value=FakeResponse(),
+            ) as mock_post,
+            mock.patch.object(self.openai_client_module.time, "sleep"),
+        ):
+            text, _, _ = client.generate_text(
+                model_name="gpt-4o-mini",
+                prompt="ping",
+                retry_count=1,
+            )
+
+        self.assertEqual(text, "ok")
+        self.assertEqual(
+            mock_post.call_args.kwargs["proxies"],
+            {"http": proxy_url, "https": proxy_url},
+        )
+
     def test_gemini_node_uses_single_and_list_outputs_with_count(self):
         node_class = getattr(self.gemini_node_module, "GeminiGenerateImage", None)
         self.assertIsNotNone(node_class, "缺少 GeminiGenerateImage 节点类")
