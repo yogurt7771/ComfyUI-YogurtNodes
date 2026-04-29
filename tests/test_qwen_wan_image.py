@@ -1,4 +1,7 @@
+import base64
 import importlib.util
+import io
+import os
 import sys
 import types
 import unittest
@@ -382,6 +385,58 @@ class DashScopeImageClientTests(unittest.TestCase):
             {"http": proxy_url, "https": proxy_url},
         )
 
+    def test_openai_images_api_uses_httpx_proxy(self):
+        client_class = getattr(self.openai_client_module, "OpenAIClient", None)
+        self.assertIsNotNone(client_class, "缺少 OpenAIClient 类")
+
+        proxy_url = "http://127.0.0.1:7890"
+        created_clients = []
+        image_buffer = io.BytesIO()
+        Image.new("RGB", (8, 8), color="red").save(image_buffer, format="PNG")
+        encoded_image = base64.b64encode(image_buffer.getvalue()).decode("ascii")
+
+        class FakeResponse:
+            status_code = 200
+            text = '{"data":[{"b64_json":"..."}]}'
+
+            @staticmethod
+            def json():
+                return {"data": [{"b64_json": encoded_image}]}
+
+        class FakeHTTPXClient:
+            def __init__(self, **kwargs):
+                self.kwargs = kwargs
+                created_clients.append(self)
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                return None
+
+            def post(self, *args, **kwargs):
+                return FakeResponse()
+
+        client = client_class(api_key="test-key", proxy_url=proxy_url)
+        with (
+            mock.patch.object(
+                self.openai_client_module.httpx,
+                "Client",
+                FakeHTTPXClient,
+            ),
+            mock.patch.object(self.openai_client_module.time, "sleep"),
+        ):
+            images, _, _ = client.generate_image(
+                model_name="gpt-image-1",
+                prompt="test",
+                api_type="image",
+                response_format="b64_json",
+                retry_count=1,
+            )
+
+        self.assertEqual(len(images), 1)
+        self.assertEqual(created_clients[0].kwargs["proxy"], proxy_url)
+
     def test_gemini_node_uses_single_and_list_outputs_with_count(self):
         node_class = getattr(self.gemini_node_module, "GeminiGenerateImage", None)
         self.assertIsNotNone(node_class, "缺少 GeminiGenerateImage 节点类")
@@ -397,6 +452,125 @@ class DashScopeImageClientTests(unittest.TestCase):
             node_class.OUTPUT_IS_LIST,
             (False, True, False, False, False, False),
         )
+
+    def test_gemini_client_sets_httpx_proxy_args(self):
+        client_class = getattr(self.gemini_client_module, "GeminiClient", None)
+        self.assertIsNotNone(client_class, "缺少 GeminiClient 类")
+
+        proxy_url = "http://127.0.0.1:7890"
+        created_clients = []
+
+        class FakeGenAIClient:
+            def __init__(self, **kwargs):
+                created_clients.append(kwargs)
+
+        with mock.patch.object(
+            self.gemini_client_module.genai,
+            "Client",
+            FakeGenAIClient,
+        ):
+            client_class(api_key="test-key", proxy_url=proxy_url, timeout=11)
+
+        http_options = created_clients[0]["http_options"]
+        self.assertEqual(http_options.client_args["proxy"], proxy_url)
+        self.assertEqual(http_options.async_client_args["proxy"], proxy_url)
+        self.assertEqual(http_options.timeout, 11000)
+
+    def test_gemini_vertex_credentials_refresh_uses_proxy_env(self):
+        client_class = getattr(self.gemini_client_module, "GeminiClient", None)
+        self.assertIsNotNone(client_class, "缺少 GeminiClient 类")
+
+        proxy_url = "http://127.0.0.1:7890"
+        refresh_proxy_values = []
+
+        class FakeCredentials:
+            token = None
+            valid = False
+            expired = True
+
+            def with_scopes(self, scopes):
+                return self
+
+            def refresh(self, request):
+                refresh_proxy_values.append(os.environ.get("HTTPS_PROXY"))
+                self.token = "token"
+                self.valid = True
+                self.expired = False
+
+        fake_credentials = FakeCredentials()
+
+        class FakeGenAIClient:
+            def __init__(self, **kwargs):
+                self.kwargs = kwargs
+
+        with (
+            mock.patch.object(
+                self.gemini_client_module.genai,
+                "Client",
+                FakeGenAIClient,
+            ),
+            mock.patch(
+                "google.oauth2.service_account.Credentials.from_service_account_info",
+                return_value=fake_credentials,
+            ),
+        ):
+            client = client_class(
+                use_vertex_ai=True,
+                vertex_ai_json="{}",
+                vertex_ai_project="project",
+                vertex_ai_region="us-central1",
+                proxy_url=proxy_url,
+            )
+            client._ensure_vertex_credentials()
+
+        self.assertEqual(refresh_proxy_values, [proxy_url])
+
+    def test_gemini_vertex_adc_credentials_are_loaded_under_proxy_env(self):
+        client_class = getattr(self.gemini_client_module, "GeminiClient", None)
+        self.assertIsNotNone(client_class, "缺少 GeminiClient 类")
+
+        proxy_url = "http://127.0.0.1:7890"
+        token_proxy_values = []
+
+        class FakeCredentials:
+            token = "token"
+            valid = True
+            expired = False
+
+        class FakeAPIClient:
+            _credentials = None
+
+            def _access_token(self):
+                token_proxy_values.append(os.environ.get("HTTPS_PROXY"))
+                self._credentials = FakeCredentials()
+                return "token"
+
+        class FakeGenAIClient:
+            def __init__(self, **kwargs):
+                self._api_client = FakeAPIClient()
+
+        with (
+            mock.patch.object(
+                self.gemini_client_module.genai,
+                "Client",
+                FakeGenAIClient,
+            ),
+            mock.patch.object(
+                self.gemini_client_module,
+                "load_api_keys",
+                return_value={},
+            ),
+        ):
+            client = client_class(
+                use_vertex_ai=True,
+                vertex_ai_json="",
+                vertex_ai_project="project",
+                vertex_ai_region="us-central1",
+                proxy_url=proxy_url,
+            )
+            client._ensure_vertex_credentials()
+
+        self.assertEqual(token_proxy_values, [proxy_url])
 
 
 class OpenRouterImageNodeTests(unittest.TestCase):

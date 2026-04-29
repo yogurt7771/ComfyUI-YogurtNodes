@@ -59,79 +59,127 @@ class GeminiClient:
         如API Key未设置，将抛出异常。
         """
         self.proxy_url = proxy_url
+        self.use_vertex_ai = use_vertex_ai
+        self.credentials = None
+        api_keys = None
+
+        if use_vertex_ai:
+            print("Using Vertex AI Gemini API")
+            # 创建 Vertex AI Credentials
+            from google.oauth2 import service_account
+
+            scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+            if vertex_ai_json is None or len(vertex_ai_json) == 0:
+                if api_keys is None:
+                    api_keys = load_api_keys()
+                vertex_ai_json = api_keys.get("vertex_ai_json", "")
+                if len(vertex_ai_json) == 0:
+                    print("Warning: Vertex AI service account JSON is not set. Trying to read from environment variable GOOGLE_APPLICATION_CREDENTIALS.")
+                    credentials = None
+                else:
+                    print(f"Loading Vertex AI credentials from file: {vertex_ai_json}")
+                    credentials = service_account.Credentials.from_service_account_file(
+                        vertex_ai_json
+                    )
+            else:
+                credentials = service_account.Credentials.from_service_account_info(
+                    json.loads(vertex_ai_json)
+                )
+            if credentials is not None:
+                credentials = credentials.with_scopes(scopes)
+            self.credentials = credentials
+            if vertex_ai_project is None or len(vertex_ai_project) == 0:
+                if api_keys is None:
+                    api_keys = load_api_keys()
+                vertex_ai_project = api_keys.get("vertex_ai_project", "")
+                if len(vertex_ai_project) == 0:
+                    print("Warning: Vertex AI project ID is not set. Trying to read from environment variable GOOGLE_CLOUD_PROJECT.")
+                    vertex_ai_project = None
+                else:
+                    print(f"Using Vertex AI project ID: {vertex_ai_project}")
+            if vertex_ai_region is None or len(vertex_ai_region) == 0:
+                if api_keys is None:
+                    api_keys = load_api_keys()
+                vertex_ai_region = api_keys.get("vertex_ai_region", "")
+                if len(vertex_ai_region) == 0:
+                    print("Warning: Vertex AI region is not set. Trying to read from environment variable VERTEX_AI_REGION.")
+                    vertex_ai_region = None
+                else:
+                    print(f"Using Vertex AI region: {vertex_ai_region}")
+            http_options = self._build_http_options(
+                base_url=base_url,
+                timeout=timeout,
+                api_version="v1",
+            )
+            with SetProxyEnv(self.proxy_url):
+                self.client = genai.Client(http_options=http_options, vertexai=True, credentials=credentials, project=vertex_ai_project, location=vertex_ai_region)
+        else:
+            print("Using Google Gemini API")
+            if len(api_key) == 0:  # 如果 api_key 为空，则尝试从 api_key.json 文件中读取
+                # 读取 api_key.json 文件
+                if api_keys is None:
+                    api_keys = load_api_keys()
+                api_key = api_keys.get("gemini", "")
+            if len(api_key) == 0:  # 如果 api_key 为空，则尝试从环境变量中读取
+                print("Warning: Gemini API key is not set. Trying to read from environment variable GEMINI_API_KEY.")
+            http_options = self._build_http_options(
+                base_url=base_url,
+                timeout=timeout,
+            )
+            if use_vertex_api_key:
+                self.client = genai.Client(
+                    vertexai=True, api_key=api_key, http_options=http_options
+                )
+            else:
+                self.client = genai.Client(
+                    api_key=api_key, http_options=http_options
+                )
+
+    def _build_http_options(
+        self,
+        base_url: str = "",
+        timeout: int = 0,
+        api_version: str | None = None,
+    ) -> types.HttpOptions:
+        http_options = types.HttpOptions()
+        if base_url:
+            http_options.base_url = base_url
+        if api_version:
+            http_options.api_version = api_version
+        if timeout > 0:
+            http_options.timeout = timeout * 1000
+        if self.proxy_url:
+            http_options.client_args = {"proxy": self.proxy_url}
+            http_options.async_client_args = {"proxy": self.proxy_url}
+        return http_options
+
+    def _ensure_vertex_credentials(self):
+        if not self.use_vertex_ai:
+            return
+
+        credentials = self.credentials
+        if credentials is None:
+            api_client = getattr(self.client, "_api_client", None)
+            credentials = getattr(api_client, "_credentials", None)
+            if credentials is None:
+                access_token = getattr(api_client, "_access_token", None)
+                if callable(access_token):
+                    with SetProxyEnv(self.proxy_url):
+                        access_token()
+                    credentials = getattr(api_client, "_credentials", None)
+            if credentials is not None:
+                self.credentials = credentials
+
+        if credentials is None:
+            return
+
+        if getattr(credentials, "valid", False) and getattr(credentials, "token", None):
+            return
+
+        from google.auth.transport.requests import Request
 
         with SetProxyEnv(self.proxy_url):
-            if use_vertex_ai:
-                print("Using Vertex AI Gemini API")
-                # 创建 Vertex AI Credentials
-                from google.oauth2 import service_account
-                api_keys = None
-                SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
-                if vertex_ai_json is None or len(vertex_ai_json) == 0:
-                    if api_keys is None:
-                        api_keys = load_api_keys()
-                    vertex_ai_json = api_keys.get("vertex_ai_json", "")
-                    if len(vertex_ai_json) == 0:
-                        print("Warning: Vertex AI service account JSON is not set. Trying to read from environment variable GOOGLE_APPLICATION_CREDENTIALS.")
-                        credentials = None
-                    else:
-                        print(f"Loading Vertex AI credentials from file: {vertex_ai_json}")
-                        credentials = service_account.Credentials.from_service_account_file(
-                            vertex_ai_json
-                        )
-                else:
-                    credentials = service_account.Credentials.from_service_account_info(
-                        json.loads(vertex_ai_json)
-                    )
-                if credentials is not None:
-                    credentials = credentials.with_scopes(SCOPES)
-                if vertex_ai_project is None or len(vertex_ai_project) == 0:
-                    if api_keys is None:
-                        api_keys = load_api_keys()
-                    vertex_ai_project = api_keys.get("vertex_ai_project", "")
-                    if len(vertex_ai_project) == 0:
-                        print("Warning: Vertex AI project ID is not set. Trying to read from environment variable GOOGLE_CLOUD_PROJECT.")
-                        vertex_ai_project = None
-                    else:
-                        print(f"Using Vertex AI project ID: {vertex_ai_project}")
-                if vertex_ai_region is None or len(vertex_ai_region) == 0:
-                    if api_keys is None:
-                        api_keys = load_api_keys()
-                    vertex_ai_region = api_keys.get("vertex_ai_region", "")
-                    if len(vertex_ai_region) == 0:
-                        print("Warning: Vertex AI region is not set. Trying to read from environment variable VERTEX_AI_REGION.")
-                        vertex_ai_region = None
-                    else:
-                        print(f"Using Vertex AI region: {vertex_ai_region}")
-                http_options = types.HttpOptions()
-                if base_url:
-                    http_options.base_url = base_url
-                http_options.api_version = "v1"
-                if timeout > 0:
-                    http_options.timeout = timeout * 1000
-                self.client = genai.Client(http_options=http_options, vertexai=True, credentials=credentials, project=vertex_ai_project, location=vertex_ai_region)
-            else:
-                print("Using Google Gemini API")
-                if len(api_key) == 0:  # 如果 api_key 为空，则尝试从 api_key.json 文件中读取
-                    # 读取 api_key.json 文件
-                    if api_keys is None:
-                        api_keys = load_api_keys()
-                    api_key = api_keys.get("gemini", "")
-                if len(api_key) == 0:  # 如果 api_key 为空，则尝试从环境变量中读取
-                    print("Warning: Gemini API key is not set. Trying to read from environment variable GEMINI_API_KEY.")
-                http_options = types.HttpOptions()
-                if base_url:
-                    http_options.base_url = base_url
-                if timeout > 0:
-                    http_options.timeout = timeout * 1000
-                if use_vertex_api_key:
-                    self.client = genai.Client(
-                        vertexai=True, api_key=api_key, http_options=http_options
-                    )
-                else:
-                    self.client = genai.Client(
-                        api_key=api_key, http_options=http_options
-                    )
+            credentials.refresh(Request())
 
     def _get_safety_settings(
         self, disable_safety_settings: bool, safety_level: str
@@ -401,44 +449,44 @@ class GeminiClient:
         # pprint(config)
         last_exception = None
         response = None
-        with SetProxyEnv(self.proxy_url):
-            for _attempt in range(retry_count):
-                model_management.throw_exception_if_processing_interrupted()
-                try:
-                    if seed < 0:
-                        seed = random.randint(0, 2**31 - 1)
-                    config.seed = seed
+        for _attempt in range(retry_count):
+            model_management.throw_exception_if_processing_interrupted()
+            try:
+                if seed < 0:
+                    seed = random.randint(0, 2**31 - 1)
+                config.seed = seed
 
-                    response = self.client.models.generate_content(
-                        model=model_name,
-                        contents=contents,
-                        config=config,
-                    )
-                    if (
-                        response.candidates is None
-                        or response.candidates[0].content is None
-                        or response.candidates[0].content.parts is None
-                    ):
-                        raise ValueError(f"Model {model_name} returned no candidates.")
-                    last_thought = ""
-                    last_text = ""
-                    for part in response.candidates[0].content.parts:
-                        if hasattr(part, 'thought') and part.thought is True:
-                            last_thought += part.text
-                        else:
-                            last_text += part.text
-                    if last_text is not None and len(last_text) > 0:
-                        history.append(("assistant", last_text))
-                        return last_text, last_thought, history
-                    raise ValueError(f"Model {model_name} returned empty text response.")
-                except (ValueError, ConnectionError, TimeoutError) as exception:
-                    # print(f"Attempt {attempt + 1}/{retry_count} failed for model {model_name}: {exception}")
-                    last_exception = exception
-                    time.sleep(3)
-                except Exception as exception:
-                    # print(f"Unexpected error in attempt {attempt + 1}/{retry_count} for model {model_name}: {exception}")
-                    last_exception = exception
-                    time.sleep(3)
+                self._ensure_vertex_credentials()
+                response = self.client.models.generate_content(
+                    model=model_name,
+                    contents=contents,
+                    config=config,
+                )
+                if (
+                    response.candidates is None
+                    or response.candidates[0].content is None
+                    or response.candidates[0].content.parts is None
+                ):
+                    raise ValueError(f"Model {model_name} returned no candidates.")
+                last_thought = ""
+                last_text = ""
+                for part in response.candidates[0].content.parts:
+                    if hasattr(part, 'thought') and part.thought is True:
+                        last_thought += part.text
+                    else:
+                        last_text += part.text
+                if last_text is not None and len(last_text) > 0:
+                    history.append(("assistant", last_text))
+                    return last_text, last_thought, history
+                raise ValueError(f"Model {model_name} returned empty text response.")
+            except (ValueError, ConnectionError, TimeoutError) as exception:
+                # print(f"Attempt {attempt + 1}/{retry_count} failed for model {model_name}: {exception}")
+                last_exception = exception
+                time.sleep(3)
+            except Exception as exception:
+                # print(f"Unexpected error in attempt {attempt + 1}/{retry_count} for model {model_name}: {exception}")
+                last_exception = exception
+                time.sleep(3)
 
         raise RuntimeError(
             f"Failed to generate text after {retry_count} retries. "
@@ -501,66 +549,66 @@ class GeminiClient:
         # pprint(config)
         response = None
         response_logged = False
-        with SetProxyEnv(self.proxy_url):
-            for _attempt in range(retry_count):
-                last_text = ""
-                last_thought = ""
-                model_management.throw_exception_if_processing_interrupted()
-                try:
-                    if seed < 0:
-                        seed = random.randint(0, 2**31 - 1)
-                    config.seed = seed
-                    response = self.client.models.generate_content(
-                        model=model_name,
-                        contents=contents,
-                        config=config,
-                    )
-                    if not response_logged:
-                        # print(response)
-                        response_logged = True
-                    if (
-                        response.candidates is None
-                        or not response.candidates
-                        or response.candidates[0].content is None
-                        or response.candidates[0].content.parts is None
-                    ):
-                        raise ValueError(f"Model {model_name} returned no candidates.")
+        for _attempt in range(retry_count):
+            last_text = ""
+            last_thought = ""
+            model_management.throw_exception_if_processing_interrupted()
+            try:
+                if seed < 0:
+                    seed = random.randint(0, 2**31 - 1)
+                config.seed = seed
+                self._ensure_vertex_credentials()
+                response = self.client.models.generate_content(
+                    model=model_name,
+                    contents=contents,
+                    config=config,
+                )
+                if not response_logged:
+                    # print(response)
+                    response_logged = True
+                if (
+                    response.candidates is None
+                    or not response.candidates
+                    or response.candidates[0].content is None
+                    or response.candidates[0].content.parts is None
+                ):
+                    raise ValueError(f"Model {model_name} returned no candidates.")
 
-                    for part in response.candidates[0].content.parts:
-                        # 1. 优先检查：是否为思维链 (Thought)
-                        # 注意：思维链的内容也存储在 text 字段中，所以必须先通过 thought 属性判断
-                        if hasattr(part, "thought") and part.thought is True:
-                            if hasattr(part, "text") and part.text:
-                                last_thought += part.text
-                        elif hasattr(part, "text") and part.text:
-                            last_text += part.text
+                for part in response.candidates[0].content.parts:
+                    # 1. 优先检查：是否为思维链 (Thought)
+                    # 注意：思维链的内容也存储在 text 字段中，所以必须先通过 thought 属性判断
+                    if hasattr(part, "thought") and part.thought is True:
+                        if hasattr(part, "text") and part.text:
+                            last_thought += part.text
+                    elif hasattr(part, "text") and part.text:
+                        last_text += part.text
 
-                        # 2. 其次检查：是否为图片 (Inline Data)
-                        # 使用 elif 避免逻辑重叠
-                        if hasattr(part, "inline_data") and part.inline_data:
-                            inline_data = part.inline_data
-                            if inline_data is not None and hasattr(inline_data, "data"):
-                                data_buffer = inline_data.data
-                                if data_buffer is not None:
-                                    try:
-                                        image = Image.open(BytesIO(data_buffer)).convert("RGB")
-                                        images.append(image)
-                                    except Exception as e:
-                                        print(f"Image processing error: {e}")
+                    # 2. 其次检查：是否为图片 (Inline Data)
+                    # 使用 elif 避免逻辑重叠
+                    if hasattr(part, "inline_data") and part.inline_data:
+                        inline_data = part.inline_data
+                        if inline_data is not None and hasattr(inline_data, "data"):
+                            data_buffer = inline_data.data
+                            if data_buffer is not None:
+                                try:
+                                    image = Image.open(BytesIO(data_buffer)).convert("RGB")
+                                    images.append(image)
+                                except Exception as e:
+                                    print(f"Image processing error: {e}")
 
-                    # 循环结束后，将最终文本存入历史记录
-                    if last_text:
-                        history.append(("assistant", last_text))
+                # 循环结束后，将最终文本存入历史记录
+                if last_text:
+                    history.append(("assistant", last_text))
 
-                    return images, last_text, last_thought, history
-                except (ValueError, ConnectionError, TimeoutError) as exception:
-                    # print(f"Attempt {attempt + 1}/{retry_count} failed for model {model_name}: {exception}")
-                    last_exception = exception
-                    time.sleep(3)
-                except Exception as exception:
-                    # print(f"Unexpected error in attempt {attempt + 1}/{retry_count} for model {model_name}: {exception}")
-                    last_exception = exception
-                    time.sleep(3)
+                return images, last_text, last_thought, history
+            except (ValueError, ConnectionError, TimeoutError) as exception:
+                # print(f"Attempt {attempt + 1}/{retry_count} failed for model {model_name}: {exception}")
+                last_exception = exception
+                time.sleep(3)
+            except Exception as exception:
+                # print(f"Unexpected error in attempt {attempt + 1}/{retry_count} for model {model_name}: {exception}")
+                last_exception = exception
+                time.sleep(3)
 
         raise RuntimeError(
             f"Failed to generate image after {retry_count} retries. "

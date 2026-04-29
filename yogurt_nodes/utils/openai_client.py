@@ -686,7 +686,7 @@ class OpenAIClient:
         )
 
         with httpx.Client(
-            # proxy=self.proxies,
+            proxy=self.proxy_url,
             timeout=self.timeout if self.timeout > 0 else None,
         ) as client:
             for _attempt in range(retry_count):
