@@ -28,8 +28,28 @@ class ImageScaleToTotalPixelsAdvanced:
             },
         }
 
-    RETURN_TYPES = ("IMAGE", "MASK")
-    RETURN_NAMES = ("image", "mask")
+    RETURN_TYPES = (
+        "IMAGE",
+        "MASK",
+        "INT",
+        "INT",
+        "INT",
+        "INT",
+        "INT",
+        "FLOAT",
+        "INT",
+    )
+    RETURN_NAMES = (
+        "image",
+        "mask",
+        "width",
+        "height",
+        "channels",
+        "longest_side",
+        "shortest_side",
+        "aspect_ratio",
+        "pixels",
+    )
     FUNCTION = "execute"
 
     OUTPUT_NODE = False
@@ -124,7 +144,7 @@ class ImageScaleToTotalPixelsAdvanced:
         - divide_by: 最终宽高需要被整除的数（如 8/16/32），<=1 则不约束
         - pad_value: '#RRGGBB' 或 '#RGB' 的填充色字符串
         返回：
-        - io.NodeOutput(image_out, mask_out)
+        - io.NodeOutput(image_out, mask_out, width, height, channels, longest_side, shortest_side, aspect_ratio, pixels)
           image_out: [..., H_out, W_out, C]
           mask_out : [..., H_out, W_out, 1]  (白=有效，黑=pad)
         """
@@ -199,4 +219,22 @@ class ImageScaleToTotalPixelsAdvanced:
         # 6) 回到 HWC 与单通道 mask
         image_out = final.movedim(1, -1)  # [..., H_out, W_out, C]
 
-        return (image_out, mask_out)
+        width = int(Wout)
+        height = int(Hout)
+        channels = int(C)
+        longest_side = max(width, height)
+        shortest_side = min(width, height)
+        aspect_ratio = width / height if height != 0 else 0
+        pixels = width * height
+
+        return (
+            image_out,
+            mask_out,
+            width,
+            height,
+            channels,
+            longest_side,
+            shortest_side,
+            aspect_ratio,
+            pixels,
+        )
