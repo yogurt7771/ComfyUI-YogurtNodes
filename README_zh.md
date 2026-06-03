@@ -62,11 +62,11 @@ pip install -r requirements.txt
 
 这一节由导出节点类及其文档注释自动生成。执行 `python tools/generate_readme.py` 可重新生成。
 
-当前导出节点总数：**144**。
+当前导出节点总数：**146**。
 
 | 分组 | 数量 |
 | --- | ---: |
-| 图像处理节点 | 10 |
+| 图像处理节点 | 12 |
 | 数字处理节点 | 2 |
 | 字符串处理节点 | 9 |
 | 逻辑处理节点 | 41 |
@@ -86,9 +86,11 @@ pip install -r requirements.txt
 | Image Scale To Total Pixels Advanced | `YogurtImageScaleToTotalPixelsAdvanced` | `YogurtNodes/Image` | Image Scale To Total Pixels Advanced. |
 | Image Tile (Seam Mask) | `YogurtImageTileWithSeamMask` | `YogurtNodes/Image` | Split image into overlapped tiles and generate inpaint masks (white=inpaint, black=reference). |
 | Image Untile (Seam Mask) | `YogurtImageUntileWithSeamMask` | `YogurtNodes/Image` | Merge overlapped tiles back to one image with seam feathering (mask + overlap-based smooth transition). |
+| Magnific Image Upscale API | `YogurtMagnificImageUpscaleAPI` | `YogurtNodes/Image` | Call the Magnific image upscaler API, wait for completion, and return an IMAGE batch. |
 | Poisson Blend | `YogurtPoissonBlend` | `YogurtNodes/Image` | 使用OpenCV泊松融合(seamlessClone)将前景融合到背景。 |
 | Replace Image In Batch | `YogurtReplaceImageInBatch` | `YogurtNodes/Image` | Replace one image inside an image batch at the given index. |
 | Tile Info To TTP Image Assy Args | `YogurtTileInfoToTTPImageAssyArgs` | `YogurtNodes/Image` | Convert tile_info to TTP_Image_Assy inputs: positions/original_size/grid_size/padding. |
+| Topaz Image Upscale API | `YogurtTopazImageUpscaleAPI` | `YogurtNodes/Image` | Call the Topaz Labs Image API, wait for completion, and return an IMAGE batch. |
 
 
 ### 数字处理节点

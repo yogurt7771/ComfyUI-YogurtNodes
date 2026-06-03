@@ -16,4 +16,6 @@ from .grsai_generate_image import GRSAIGenerateImage, GRSAINanoBananaGenerateIma
 from .seedream_generate_image import SeeDreamGenerateImage  # noqa
 from .qwen_generate_image import QwenGenerateImage  # noqa
 from .wan_generate_image import WanGenerateImage  # noqa
+from .topaz_image_upscale import TopazImageUpscaleAPI  # noqa
+from .magnific_image_upscale import MagnificImageUpscaleAPI  # noqa
 from .history_builder import HistoryBuilder  # noqa

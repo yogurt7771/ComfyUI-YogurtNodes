@@ -11,3 +11,5 @@ from .freedomgpt_client import FreedomGPTClient  # noqa: F401
 from .gemini_client import GeminiClient  # noqa: F401
 from .grok_client import GrokClient  # noqa: F401
 from .grsai_client import GRSAIClient  # noqa: F401
+from .topaz_client import TopazClient  # noqa: F401
+from .magnific_client import MagnificClient  # noqa: F401

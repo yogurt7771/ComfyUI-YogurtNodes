@@ -58,11 +58,11 @@ All exported nodes are listed here. ComfyUI display names keep the " (Yogurt Nod
 
 This section is auto-generated from exported node classes and their docstrings. Run `python tools/generate_readme.py` to refresh.
 
-Total exported nodes: **144**.
+Total exported nodes: **146**.
 
 | Group | Count |
 | --- | ---: |
-| Image Processing Nodes | 10 |
+| Image Processing Nodes | 12 |
 | Number Processing Nodes | 2 |
 | String Processing Nodes | 9 |
 | Logic Processing Nodes | 41 |
@@ -82,9 +82,11 @@ Total exported nodes: **144**.
 | Image Scale To Total Pixels Advanced | `YogurtImageScaleToTotalPixelsAdvanced` | `YogurtNodes/Image` | Image Scale To Total Pixels Advanced. |
 | Image Tile (Seam Mask) | `YogurtImageTileWithSeamMask` | `YogurtNodes/Image` | Split image into overlapped tiles and generate inpaint masks (white=inpaint, black=reference). |
 | Image Untile (Seam Mask) | `YogurtImageUntileWithSeamMask` | `YogurtNodes/Image` | Merge overlapped tiles back to one image with seam feathering (mask + overlap-based smooth transition). |
+| Magnific Image Upscale API | `YogurtMagnificImageUpscaleAPI` | `YogurtNodes/Image` | Call the Magnific image upscaler API, wait for completion, and return an IMAGE batch. |
 | Poisson Blend | `YogurtPoissonBlend` | `YogurtNodes/Image` | 使用OpenCV泊松融合(seamlessClone)将前景融合到背景。 |
 | Replace Image In Batch | `YogurtReplaceImageInBatch` | `YogurtNodes/Image` | Replace one image inside an image batch at the given index. |
 | Tile Info To TTP Image Assy Args | `YogurtTileInfoToTTPImageAssyArgs` | `YogurtNodes/Image` | Convert tile_info to TTP_Image_Assy inputs: positions/original_size/grid_size/padding. |
+| Topaz Image Upscale API | `YogurtTopazImageUpscaleAPI` | `YogurtNodes/Image` | Call the Topaz Labs Image API, wait for completion, and return an IMAGE batch. |
 
 
 ### Number Processing Nodes
