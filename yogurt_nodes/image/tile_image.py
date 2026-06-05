@@ -196,7 +196,6 @@ class ImageTileWithSeamMask:
     OUTPUT_NODE = False
 
     _NODE_NAME = "Image Tile (Seam Mask)"
-    CATEGORY = "YogurtNodes/Image"
     DESCRIPTION = "Split image into overlapped tiles and generate inpaint masks (white=inpaint, black=reference)."
 
     def execute(
@@ -354,7 +353,6 @@ class ImageUntileWithSeamMask:
     OUTPUT_NODE = False
 
     _NODE_NAME = "Image Untile (Seam Mask)"
-    CATEGORY = "YogurtNodes/Image"
     DESCRIPTION = "Merge overlapped tiles back to one image with seam feathering (mask + overlap-based smooth transition)."
 
     @staticmethod
@@ -527,7 +525,6 @@ class TileInfoToTTPImageAssyArgs:
     OUTPUT_NODE = False
 
     _NODE_NAME = "Tile Info To TTP Image Assy Args"
-    CATEGORY = "YogurtNodes/Image"
     DESCRIPTION = "Convert tile_info to TTP_Image_Assy inputs: positions/original_size/grid_size/padding."
 
     def execute(self, tile_info: dict):

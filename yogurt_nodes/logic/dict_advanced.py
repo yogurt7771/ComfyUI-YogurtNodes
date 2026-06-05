@@ -33,7 +33,6 @@ class DictContainsKey:
 
     _NODE_NAME = "DictContainsKey"
     DESCRIPTION = "Check if a dictionary contains a specific key"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, dict_data, key):
         return (key in dict_data,)
@@ -71,7 +70,6 @@ class DictContainsValue:
 
     _NODE_NAME = "DictContainsValue"
     DESCRIPTION = "Check if a dictionary contains a specific value"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, dict_data, value):
         return (value in dict_data.values(),)
@@ -126,7 +124,6 @@ class DictMerge:
 
     _NODE_NAME = "DictMerge"
     DESCRIPTION = "Merge multiple dictionaries"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, dict1, dict2, dict3=None, dict4=None, overwrite=True):
         result = dict(dict1)
@@ -185,7 +182,6 @@ class DictInvert:
 
     _NODE_NAME = "DictInvert"
     DESCRIPTION = "Invert a dictionary (swap keys and values)"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, dict_data, handle_duplicates=False):
         if not handle_duplicates:
@@ -250,7 +246,6 @@ class DictFromLists:
 
     _NODE_NAME = "DictFromLists"
     DESCRIPTION = "Create a dictionary from a list of keys and a list of values"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, keys, values, fill_missing=None, use_fill=False):
         if use_fill:
@@ -315,7 +310,6 @@ class DictFilter:
 
     _NODE_NAME = "DictFilter"
     DESCRIPTION = "Filter dictionary entries based on key or value patterns"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, dict_data, pattern=".*", filter_by="key", invert=False):
         import re

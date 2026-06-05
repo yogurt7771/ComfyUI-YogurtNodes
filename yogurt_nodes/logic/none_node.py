@@ -18,7 +18,6 @@ class NoneNode:
     OUTPUT_NODE = False
 
     _NODE_NAME = "None"
-    CATEGORY = "YogurtNodes/Logic"
     DESCRIPTION = "Return None."
 
     def execute(self):

@@ -29,7 +29,6 @@ class ToList:
 
     _NODE_NAME = "ToList"
     DESCRIPTION = "Convert any iterable to a list"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, data):
         return (list(data),)
@@ -78,7 +77,6 @@ class ToDict:
 
     _NODE_NAME = "ToDict"
     DESCRIPTION = "Convert pairs or mapping to a dictionary"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, data, default_value=None, use_default=False):
         try:
@@ -125,7 +123,6 @@ class IsEmpty:
 
     _NODE_NAME = "IsEmpty"
     DESCRIPTION = "Check if a data structure is empty"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, data):
         try:
@@ -172,7 +169,6 @@ class DataSize:
 
     _NODE_NAME = "DataSize"
     DESCRIPTION = "Get the size/length of any data structure"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, data, default_size=0):
         try:
@@ -232,7 +228,6 @@ class StringSplit:
 
     _NODE_NAME = "StringSplit"
     DESCRIPTION = "Split a string into a list"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, text, separator=",", max_split=-1, strip_items=True):
         if separator == "":

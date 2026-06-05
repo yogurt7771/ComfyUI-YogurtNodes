@@ -159,7 +159,6 @@ class BatchImages:
     OUTPUT_NODE = False
 
     _NODE_NAME = "Batch Images"
-    CATEGORY = "YogurtNodes/Image"
     DESCRIPTION = "Batch images."
 
     def batch_image(

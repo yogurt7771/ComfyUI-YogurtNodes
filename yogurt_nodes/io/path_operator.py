@@ -53,7 +53,6 @@ class PathOperator:
 
     _NODE_NAME = "Path Operator"
     DESCRIPTION = "Execute join, relative, or common path operations."
-    CATEGORY = "YogurtNodes/IO"
 
     def operate(self, operator: str, path_a: str, path_b: str):
         if not path_a:

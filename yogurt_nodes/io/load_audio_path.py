@@ -116,7 +116,6 @@ class LoadAudioPath:
     OUTPUT_NODE = False
 
     _NODE_NAME = "Load Audio Path"
-    CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Load audio from path."
 
     def load_audio(self, audio_path, start_time=0.0, end_time=0.0):

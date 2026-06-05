@@ -283,7 +283,6 @@ class TopazImageUpscaleAPI:
 
     _NODE_NAME = "Topaz Image Upscale API"
     DESCRIPTION = "Call the Topaz Labs Image API, wait for completion, and return an IMAGE batch."
-    CATEGORY = "YogurtNodes/Image"
 
     def upscale_image(
         self,

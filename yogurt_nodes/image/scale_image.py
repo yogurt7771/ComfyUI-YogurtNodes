@@ -55,7 +55,6 @@ class ImageScaleToTotalPixelsAdvanced:
     OUTPUT_NODE = False
 
     _NODE_NAME = "Image Scale To Total Pixels Advanced"
-    CATEGORY = "YogurtNodes/Image"
     DESCRIPTION = "Image Scale To Total Pixels Advanced."
 
     @classmethod

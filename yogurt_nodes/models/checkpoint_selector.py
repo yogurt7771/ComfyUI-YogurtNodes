@@ -48,7 +48,6 @@ class CheckpointSelector:
 
     _NODE_NAME = "Checkpoint Selector"
     DESCRIPTION = "Select Checkpoint"
-    CATEGORY = "YogurtNodes/Models"
 
     @staticmethod
     def _resolve_absolute_path(checkpoint: str) -> str:

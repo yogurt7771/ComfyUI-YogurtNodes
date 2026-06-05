@@ -197,7 +197,6 @@ class GRSAIGenerateImage:
 
     _NODE_NAME = "GRSAI Generate Image"
     DESCRIPTION = "Generate or edit images with the GRSAI API and return torch tensors"
-    CATEGORY = "YogurtNodes/LLM"
 
     async def generate_image(
         self,

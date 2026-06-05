@@ -24,7 +24,6 @@ class StringToValue:
 
     _NODE_NAME = "String To Value"
     DESCRIPTION = "Get value from string"
-    CATEGORY = "YogurtNodes/String"
 
     def string_to_value(self, text: str):
         try:

@@ -185,7 +185,6 @@ class OpenAIImageUnderstand:
 
     _NODE_NAME = "OpenAI Image Understand"
     DESCRIPTION = "Understand image content using OpenAI vision models"
-    CATEGORY = "YogurtNodes/LLM"
 
     async def understand_image(
         self,

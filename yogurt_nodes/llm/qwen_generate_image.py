@@ -179,7 +179,6 @@ class QwenGenerateImage:
 
     _NODE_NAME = "Qwen Generate/Edit Image"
     DESCRIPTION = "使用阿里云百炼 Qwen 图片模型进行文生图或多图编辑"
-    CATEGORY = "YogurtNodes/LLM"
 
     async def generate_image(
         self,

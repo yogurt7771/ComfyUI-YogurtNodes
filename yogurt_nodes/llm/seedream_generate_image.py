@@ -159,7 +159,6 @@ class SeeDreamGenerateImage:
     DESCRIPTION = (
         "使用豆包SeeDream API生成图像，支持文生图、图生图、多图生图和序列图像生成"
     )
-    CATEGORY = "YogurtNodes/LLM"
 
     async def generate_image(
         self,

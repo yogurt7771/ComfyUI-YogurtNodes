@@ -178,7 +178,6 @@ class OpenRouterImageUnderstand:
 
     _NODE_NAME = "OpenRouter Image Understand"
     DESCRIPTION = "Understand image content using OpenRouter API"
-    CATEGORY = "YogurtNodes/LLM"
 
     async def understand_image(
         self,

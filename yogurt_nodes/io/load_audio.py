@@ -124,7 +124,6 @@ class LoadAudio__V3:
     OUTPUT_NODE = False
 
     _NODE_NAME = "Load Audio"
-    CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Load audio."
 
     def load_audio(self, audio, start_time=0.0, end_time=0.0):

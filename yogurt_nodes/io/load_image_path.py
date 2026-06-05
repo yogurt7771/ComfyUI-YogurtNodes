@@ -22,7 +22,6 @@ class LoadImagePath:
     OUTPUT_NODE = False
 
     _NODE_NAME = "Load Image Path"
-    CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Load image from path."
 
     def load_image(self, image_path):

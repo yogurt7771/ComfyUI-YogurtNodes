@@ -125,7 +125,6 @@ class SaveTextBridge:
     OUTPUT_NODE = True
 
     _NODE_NAME = "Save Text Bridge"
-    CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Saves the input text to your ComfyUI output directory."
 
     def save_text_file(

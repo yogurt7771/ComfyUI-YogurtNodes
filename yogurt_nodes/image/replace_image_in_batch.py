@@ -23,7 +23,6 @@ class ReplaceImageInBatch:
     OUTPUT_NODE = False
 
     _NODE_NAME = "Replace Image In Batch"
-    CATEGORY = "YogurtNodes/Image"
     DESCRIPTION = "Replace one image inside an image batch at the given index."
 
     def execute(self, images: torch.Tensor, image: torch.Tensor, index: int):

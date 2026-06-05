@@ -61,7 +61,6 @@ class LoraSelector:
 
     _NODE_NAME = "Lora Selector"
     DESCRIPTION = "Select Lora"
-    CATEGORY = "YogurtNodes/Models"
 
     @staticmethod
     def _resolve_absolute_path(lora: str) -> str:

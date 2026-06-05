@@ -333,7 +333,6 @@ class GeminiGenerateImage:
     DESCRIPTION = (
         "Generate image using Gemini API and return as torch.Tensor (h,w,c) and text"
     )
-    CATEGORY = "YogurtNodes/LLM"
 
     async def generate_image(
         self,
@@ -461,7 +460,6 @@ class VertexAIGenerateImage:
     DESCRIPTION = (
         "Generate image using Vertex AI API and return as torch.Tensor (h,w,c) and text"
     )
-    CATEGORY = "YogurtNodes/LLM"
 
     async def generate_image(
         self,

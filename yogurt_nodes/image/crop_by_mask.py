@@ -32,7 +32,6 @@ class ImageCropByMask:
     OUTPUT_NODE = False
 
     _NODE_NAME = "Image Crop By Mask"
-    CATEGORY = "YogurtNodes/Image"
     DESCRIPTION = "Crop image to the minimum bounding box of the mask above threshold."
 
     def execute(self, image, mask, threshold):

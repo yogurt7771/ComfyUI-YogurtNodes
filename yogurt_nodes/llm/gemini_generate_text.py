@@ -218,7 +218,6 @@ class GeminiGenerateTextBase:
 
     FUNCTION = "generate_text"
 
-    CATEGORY = "YogurtNodes/LLM"
 
     def create_client(self, /, **kwargs) -> GeminiClient:
         raise NotImplementedError()

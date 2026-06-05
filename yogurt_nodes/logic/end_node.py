@@ -32,7 +32,6 @@ class EndNode:
 
     _NODE_NAME = "EndNode"
     DESCRIPTION = "End"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(
         self,

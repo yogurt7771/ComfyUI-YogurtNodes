@@ -32,7 +32,6 @@ class PreviewMaskBridge(SaveMaskBridgeEx):
     OUTPUT_NODE = False
 
     _NODE_NAME = "Preview Mask Bridge"
-    CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Preview the input masks."
 
     def execute(self, masks, prompt=None, extra_pnginfo=None):

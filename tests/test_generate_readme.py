@@ -32,8 +32,10 @@ class GenerateReadmeTests(unittest.TestCase):
             repo_root = Path(temp_dir)
             package_root = repo_root / "yogurt_nodes"
             image_dir = package_root / "image"
+            masks_dir = package_root / "masks"
             models_dir = package_root / "models"
             image_dir.mkdir(parents=True)
+            masks_dir.mkdir(parents=True)
             models_dir.mkdir(parents=True)
 
             (image_dir / "__init__.py").write_text(
@@ -42,6 +44,10 @@ class GenerateReadmeTests(unittest.TestCase):
             )
             (models_dir / "__init__.py").write_text(
                 "from .sample_lora import *\n",
+                encoding="utf-8",
+            )
+            (masks_dir / "__init__.py").write_text(
+                "from .sample_mask import SplitMask\n",
                 encoding="utf-8",
             )
 
@@ -71,6 +77,16 @@ class GenerateReadmeTests(unittest.TestCase):
                         _NODE_NAME = "LoRA Scale Weights"
                         CATEGORY = "YogurtNodes/Models/LoRA"
                         DESCRIPTION = "Scale LoRA tensor weights globally."
+                    """
+                ).lstrip(),
+                encoding="utf-8",
+            )
+            (masks_dir / "sample_mask.py").write_text(
+                textwrap.dedent(
+                    """
+                    class SplitMask:
+                        _NODE_NAME = "Split Mask"
+                        DESCRIPTION = "Split a combined mask."
                     """
                 ).lstrip(),
                 encoding="utf-8",
@@ -113,17 +129,21 @@ class GenerateReadmeTests(unittest.TestCase):
             )
 
             readme_en = (repo_root / "README.md").read_text(encoding="utf-8")
-            self.assertIn("Total exported nodes: **2**.", readme_en)
+            self.assertIn("Total exported nodes: **3**.", readme_en)
             self.assertIn("### Image Processing Nodes", readme_en)
+            self.assertIn("### Mask Nodes", readme_en)
             self.assertIn("### Model Nodes", readme_en)
             self.assertIn("`YogurtAddTextToImage`", readme_en)
+            self.assertIn("`YogurtSplitMask`", readme_en)
             self.assertIn("`YogurtLoraScaleWeights`", readme_en)
-            self.assertIn("`YogurtNodes/Models/LoRA`", readme_en)
+            self.assertIn("`YogurtNodes/Models`", readme_en)
+            self.assertNotIn("`YogurtNodes/Models/LoRA`", readme_en)
             self.assertIn("## 🔑 Gemini API Key Setup", readme_en)
 
             readme_zh = (repo_root / "README_zh.md").read_text(encoding="utf-8")
-            self.assertIn("当前导出节点总数：**2**。", readme_zh)
+            self.assertIn("当前导出节点总数：**3**。", readme_zh)
             self.assertIn("### 图像处理节点", readme_zh)
+            self.assertIn("### 遮罩节点", readme_zh)
             self.assertIn("### 模型节点", readme_zh)
             self.assertIn("## 🔑 Gemini API Key 配置说明", readme_zh)
 
@@ -184,6 +204,72 @@ class GenerateReadmeTests(unittest.TestCase):
             )
             self.assertEqual((repo_root / "README.md").read_text(encoding="utf-8"), original_en)
             self.assertEqual((repo_root / "README_zh.md").read_text(encoding="utf-8"), original_zh)
+
+    def test_write_mode_normalizes_readme_line_endings(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_root = Path(temp_dir)
+            package_root = repo_root / "yogurt_nodes"
+            string_dir = package_root / "string"
+            string_dir.mkdir(parents=True)
+
+            (string_dir / "__init__.py").write_text(
+                "from .sample_string import StringFormat\n",
+                encoding="utf-8",
+                newline="\n",
+            )
+            (string_dir / "sample_string.py").write_text(
+                textwrap.dedent(
+                    """
+                    class StringFormat:
+                        _NODE_NAME = "String Format"
+                        DESCRIPTION = "Format strings"
+                    """
+                ).lstrip(),
+                encoding="utf-8",
+                newline="\n",
+            )
+            (repo_root / "README.md").write_text(
+                textwrap.dedent(
+                    """
+                    # Demo
+
+                    ## 🔧 Available Nodes
+                    old
+
+                    ## 🔑 Gemini API Key Setup
+                    tail
+                    """
+                ).lstrip(),
+                encoding="utf-8",
+                newline="\n",
+            )
+            (repo_root / "README_zh.md").write_text(
+                textwrap.dedent(
+                    """
+                    # 演示
+
+                    ## 🔧 可用节点
+                    old
+
+                    ## 🔑 Gemini API Key 配置说明
+                    tail
+                    """
+                ).lstrip(),
+                encoding="utf-8",
+                newline="\n",
+            )
+            self.module.update_readmes(repo_root, package_root, write=True)
+            for readme_path in (repo_root / "README.md", repo_root / "README_zh.md"):
+                readme_path.write_bytes(readme_path.read_bytes().replace(b"\n", b"\r\n"))
+
+            updated = self.module.update_readmes(repo_root, package_root, write=True)
+
+            self.assertEqual(
+                {path.name for path in updated},
+                {"README.md", "README_zh.md"},
+            )
+            self.assertNotIn(b"\r\n", (repo_root / "README.md").read_bytes())
+            self.assertNotIn(b"\r\n", (repo_root / "README_zh.md").read_bytes())
 
 
 if __name__ == "__main__":

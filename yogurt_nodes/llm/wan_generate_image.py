@@ -172,7 +172,6 @@ class WanGenerateImage:
 
     _NODE_NAME = "Wan Generate/Edit Image"
     DESCRIPTION = "使用阿里云百炼 Wan 图片模型进行文生图或图像编辑"
-    CATEGORY = "YogurtNodes/LLM"
 
     async def generate_image(
         self,

@@ -74,7 +74,6 @@ class LoadVideoPath:
     OUTPUT_NODE = False
 
     _NODE_NAME = "Load Video Path"
-    CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Load video from path."
 
     def load_video(self, video_path, start_time=0.0, end_time=0.0):

@@ -170,7 +170,6 @@ class OpenAIGenerateText:
 
     _NODE_NAME = "OpenAI Generate Text"
     DESCRIPTION = "Generate text using OpenAI API"
-    CATEGORY = "YogurtNodes/LLM"
 
     async def generate_text(
         self,

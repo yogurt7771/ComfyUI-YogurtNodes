@@ -62,7 +62,6 @@ class StringJoin:
 
     _NODE_NAME = "String Join"
     DESCRIPTION = "将多个字符串使用指定连接符连接"
-    CATEGORY = "YogurtNodes/String"
 
     def execute(
         self,

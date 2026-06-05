@@ -21,7 +21,6 @@ class CreateDirectory:
 
     _NODE_NAME = "Create Directory"
     DESCRIPTION = "Create a directory"
-    CATEGORY = "YogurtNodes/IO"
 
     def create_directory(self, path):
         Path(path).mkdir(parents=True, exist_ok=True)
@@ -48,7 +47,6 @@ class CreateParentDirectory:
 
     _NODE_NAME = "Create Parent Directory"
     DESCRIPTION = "Create a parent directory"
-    CATEGORY = "YogurtNodes/IO"
 
     def create_parent_directory(self, path):
         Path(path).parent.mkdir(parents=True, exist_ok=True)

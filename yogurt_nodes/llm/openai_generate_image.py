@@ -228,7 +228,6 @@ class OpenAIGenerateImage:
     DESCRIPTION = (
         "Generate image using OpenAI API and return as torch.Tensor (h,w,c) and text"
     )
-    CATEGORY = "YogurtNodes/LLM"
 
     async def generate_image(
         self,

@@ -58,17 +58,18 @@ All exported nodes are listed here. ComfyUI display names keep the " (Yogurt Nod
 
 This section is auto-generated from exported node classes and their docstrings. Run `python tools/generate_readme.py` to refresh.
 
-Total exported nodes: **147**.
+Total exported nodes: **152**.
 
 | Group | Count |
 | --- | ---: |
-| Image Processing Nodes | 12 |
+| Image Processing Nodes | 10 |
+| Mask Nodes | 5 |
 | Number Processing Nodes | 2 |
-| String Processing Nodes | 9 |
+| String Processing Nodes | 8 |
 | Logic Processing Nodes | 41 |
 | Model Nodes | 17 |
-| I/O Operation Nodes | 35 |
-| Language Model Nodes | 23 |
+| I/O Operation Nodes | 36 |
+| Language Model Nodes | 25 |
 | Network Nodes | 8 |
 
 ### Image Processing Nodes
@@ -82,11 +83,20 @@ Total exported nodes: **147**.
 | Image Scale To Total Pixels Advanced | `YogurtImageScaleToTotalPixelsAdvanced` | `YogurtNodes/Image` | Image Scale To Total Pixels Advanced. |
 | Image Tile (Seam Mask) | `YogurtImageTileWithSeamMask` | `YogurtNodes/Image` | Split image into overlapped tiles and generate inpaint masks (white=inpaint, black=reference). |
 | Image Untile (Seam Mask) | `YogurtImageUntileWithSeamMask` | `YogurtNodes/Image` | Merge overlapped tiles back to one image with seam feathering (mask + overlap-based smooth transition). |
-| Magnific Image Upscale API | `YogurtMagnificImageUpscaleAPI` | `YogurtNodes/Image` | Call the Magnific image upscaler API, wait for completion, and return an IMAGE batch. |
 | Poisson Blend | `YogurtPoissonBlend` | `YogurtNodes/Image` | 使用OpenCV泊松融合(seamlessClone)将前景融合到背景。 |
 | Replace Image In Batch | `YogurtReplaceImageInBatch` | `YogurtNodes/Image` | Replace one image inside an image batch at the given index. |
 | Tile Info To TTP Image Assy Args | `YogurtTileInfoToTTPImageAssyArgs` | `YogurtNodes/Image` | Convert tile_info to TTP_Image_Assy inputs: positions/original_size/grid_size/padding. |
-| Topaz Image Upscale API | `YogurtTopazImageUpscaleAPI` | `YogurtNodes/Image` | Call the Topaz Labs Image API, wait for completion, and return an IMAGE batch. |
+
+
+### Mask Nodes
+
+| Node | Class ID | Category | Description |
+| --- | --- | --- | --- |
+| Composite Repaint Regions | `YogurtCompositeRepaintRegions` | `YogurtNodes/Masks` | Composite repainted region crops back onto a base image. |
+| Crop Image By Regions | `YogurtCropImageByRegions` | `YogurtNodes/Masks` | Crop repaint image and mask batches from dynamic mask regions. |
+| Mask Region Planner | `YogurtMaskRegionPlanner` | `YogurtNodes/Masks` | Plan dynamic fixed-size repaint tiles from a mask batch. |
+| Preview Repaint Regions | `YogurtPreviewRepaintRegions` | `YogurtNodes/Masks` | Draw planned repaint region boxes over the image. |
+| Split Mask | `YogurtSplitMask` | `YogurtNodes/Masks` | Split a combined mask into one mask batch item per connected component. |
 
 
 ### Number Processing Nodes
@@ -101,15 +111,14 @@ Total exported nodes: **147**.
 
 | Node | Class ID | Category | Description |
 | --- | --- | --- | --- |
+| Regex Node | `YogurtRegexNode` | `YogurtNodes/String` | Regex-based extraction and replacement for multiline text. |
 | Replace Delimiter | `YogurtReplaceDelimiter` | `YogurtNodes/String` | Replace delimiter in string. Support regex |
-| Split Path | `YogurtSplitPath` | `YogurtNodes/String` | Split path to parts |
 | String Concat | `YogurtStringConcat` | `YogurtNodes/String` | 拼接多个字符串，支持自定义分隔符和可变数量的输入 |
 | String Format | `YogurtStringFormat` | `YogurtNodes/String` | Format strings |
 | String Join | `YogurtStringJoin` | `YogurtNodes/String` | 将多个字符串使用指定连接符连接 |
 | String Lines Count | `YogurtStringLinesCount` | `YogurtNodes/String` | Get the number of lines in a multiline string |
 | String Lines Switch | `YogurtStringLinesSwitch` | `YogurtNodes/String` | Get line from multiline string by index |
 | String To Value | `YogurtStringToValue` | `YogurtNodes/String` | Get value from string |
-| Regex Node | `YogurtRegexNode` | `ZnzmoNodes/String` | Regex-based extraction and replacement for multiline text. |
 
 
 ### Logic Processing Nodes
@@ -165,21 +174,21 @@ Total exported nodes: **147**.
 | --- | --- | --- | --- |
 | Checkpoint Selector | `YogurtCheckpointSelector` | `YogurtNodes/Models` | Select Checkpoint |
 | ControlNet Selector | `YogurtControlNetSelector` | `YogurtNodes/Models` | Select ControlNet |
+| Convert LoRA Keys | `YogurtConvertLoraKeys` | `YogurtNodes/Models` | Rename LoRA keys by mapping JSON. |
+| Create LoRA Mapping JSON | `YogurtCreateLoraMappingJson` | `YogurtNodes/Models` | Build a best-effort mapping from LoRA A keys to LoRA B keys. |
 | Diffusion Model Selector | `YogurtDiffusionModelSelector` | `YogurtNodes/Models` | Select Diffusion Model |
+| LoRA Add (Rank Aware) | `YogurtLoraAdd` | `YogurtNodes/Models` | Merge two LoRAs, with SVD rank alignment when ranks differ. |
+| LoRA Compress | `YogurtLoraRankCompress` | `YogurtNodes/Models` | Compress LoRA rank with SVD for standard .lora_down/.lora_up pairs. Optionally absorb alpha/rank first to preserve the actual LoRA effect before compression. |
+| LoRA Layers Operation | `YogurtLoraLayersOperation` | `YogurtNodes/Models` | Modify only selected LoRA layers by index. |
+| LoRA Load Only | `YogurtLoadLoraOnly` | `YogurtNodes/Models` | Load a LoRA without applying it. Use with other LoRA operation nodes. |
+| LoRA Merge Full Rank | `YogurtLoraMerge` | `YogurtNodes/Models` | Merge up to five standard LoRAs exactly by concatenating rank dimensions. Fast and preserves the summed model-side effect exactly, but output rank/file size grow. Does not support DoRA or LoCon/reshape variants. |
+| LoRA Scale Alpha | `YogurtLoraScaleAlpha` | `YogurtNodes/Models` | Scale only LoRA alpha metadata so the adjusted LoRA can be saved downstream. |
+| LoRA Scale Weights | `YogurtLoraScaleWeights` | `YogurtNodes/Models` | Scale LoRA tensor weights globally so effect can be tuned while using strength=1. |
+| LoRA Simple Add | `YogurtLoraSimpleAdd` | `YogurtNodes/Models` | Simple weighted sum of two LoRA states. |
+| LoRA Stat Viewer | `YogurtLoraStatViewer` | `YogurtNodes/Models` | Inspect LoRA key patterns to help define regex and layer selection. |
 | Lora Selector | `YogurtLoraSelector` | `YogurtNodes/Models` | Select Lora |
-| Convert LoRA Keys | `YogurtConvertLoraKeys` | `YogurtNodes/Models/LoRA` | Rename LoRA keys by mapping JSON. |
-| Create LoRA Mapping JSON | `YogurtCreateLoraMappingJson` | `YogurtNodes/Models/LoRA` | Build a best-effort mapping from LoRA A keys to LoRA B keys. |
-| LoRA Add (Rank Aware) | `YogurtLoraAdd` | `YogurtNodes/Models/LoRA` | Merge two LoRAs, with SVD rank alignment when ranks differ. |
-| LoRA Compress | `YogurtLoraRankCompress` | `YogurtNodes/Models/LoRA` | Compress LoRA rank with SVD for standard .lora_down/.lora_up pairs. Optionally absorb alpha/rank first to preserve the actual LoRA effect before compression. |
-| LoRA Layers Operation | `YogurtLoraLayersOperation` | `YogurtNodes/Models/LoRA` | Modify only selected LoRA layers by index. |
-| LoRA Load Only | `YogurtLoadLoraOnly` | `YogurtNodes/Models/LoRA` | Load a LoRA without applying it. Use with other LoRA operation nodes. |
-| LoRA Merge Full Rank | `YogurtLoraMerge` | `YogurtNodes/Models/LoRA` | Merge up to five standard LoRAs exactly by concatenating rank dimensions. Fast and preserves the summed model-side effect exactly, but output rank/file size grow. Does not support DoRA or LoCon/reshape variants. |
-| LoRA Scale Alpha | `YogurtLoraScaleAlpha` | `YogurtNodes/Models/LoRA` | Scale only LoRA alpha metadata so the adjusted LoRA can be saved downstream. |
-| LoRA Scale Weights | `YogurtLoraScaleWeights` | `YogurtNodes/Models/LoRA` | Scale LoRA tensor weights globally so effect can be tuned while using strength=1. |
-| LoRA Simple Add | `YogurtLoraSimpleAdd` | `YogurtNodes/Models/LoRA` | Simple weighted sum of two LoRA states. |
-| LoRA Stat Viewer | `YogurtLoraStatViewer` | `YogurtNodes/Models/LoRA` | Inspect LoRA key patterns to help define regex and layer selection. |
-| Merge LoRA To Model | `YogurtMergeLoraToModel` | `YogurtNodes/Models/LoRA` | Apply loaded LoRA to model and optional CLIP. |
-| Save LoRA | `YogurtSaveLora` | `YogurtNodes/Models/LoRA` | Save LoRA state as safetensors. |
+| Merge LoRA To Model | `YogurtMergeLoraToModel` | `YogurtNodes/Models` | Apply loaded LoRA to model and optional CLIP. |
+| Save LoRA | `YogurtSaveLora` | `YogurtNodes/Models` | Save LoRA state as safetensors. |
 
 
 ### I/O Operation Nodes
@@ -221,6 +230,7 @@ Total exported nodes: **147**.
 | Save Text Bridge | `YogurtSaveTextBridge` | `YogurtNodes/IO` | Saves the input text to your ComfyUI output directory. |
 | Save Text Bridge (Non Output) | `YogurtSaveTextBridgeNonOutput` | `YogurtNodes/IO` | Save Text Bridge (Non Output) node. |
 | Serialize Any | `YogurtSerializeAny` | `YogurtNodes/IO` | Serialize any Python object to bytes using pickle |
+| Split Path | `YogurtSplitPath` | `YogurtNodes/IO` | Split path to parts |
 
 
 ### Language Model Nodes
@@ -238,6 +248,7 @@ Total exported nodes: **147**.
 | Grok Generate Text | `YogurtGrokGenerateText` | `YogurtNodes/LLM` | Generate text using xAI API |
 | Grok Image Understand | `YogurtGrokImageUnderstand` | `YogurtNodes/LLM` | Understand image content using xAI vision models |
 | History Builder | `YogurtHistoryBuilder` | `YogurtNodes/LLM` | 构建与 LLM 节点兼容的会话历史 |
+| Magnific Image Upscale API | `YogurtMagnificImageUpscaleAPI` | `YogurtNodes/LLM` | Call the Magnific image upscaler API, wait for completion, and return an IMAGE batch. |
 | OpenAI Generate Image | `YogurtOpenAIGenerateImage` | `YogurtNodes/LLM` | Generate image using OpenAI API and return as torch.Tensor (h,w,c) and text |
 | OpenAI Generate Text | `YogurtOpenAIGenerateText` | `YogurtNodes/LLM` | Generate text using OpenAI API |
 | OpenAI Image Understand | `YogurtOpenAIImageUnderstand` | `YogurtNodes/LLM` | Understand image content using OpenAI vision models |
@@ -246,6 +257,7 @@ Total exported nodes: **147**.
 | OpenRouter Image Understand | `YogurtOpenRouterImageUnderstand` | `YogurtNodes/LLM` | Understand image content using OpenRouter API |
 | Qwen Generate/Edit Image | `YogurtQwenGenerateImage` | `YogurtNodes/LLM` | 使用阿里云百炼 Qwen 图片模型进行文生图或多图编辑 |
 | SeeDream Generate Image | `YogurtSeeDreamGenerateImage` | `YogurtNodes/LLM` | 使用豆包SeeDream API生成图像，支持文生图、图生图、多图生图和序列图像生成 |
+| Topaz Image Upscale API | `YogurtTopazImageUpscaleAPI` | `YogurtNodes/LLM` | Call the Topaz Labs Image API, wait for completion, and return an IMAGE batch. |
 | Vertex AI Generate Image | `YogurtVertexAIGenerateImage` | `YogurtNodes/LLM` | Generate image using Vertex AI API and return as torch.Tensor (h,w,c) and text |
 | Vertex AI Generate Text | `YogurtVertexAIGenerateText` | `YogurtNodes/LLM` | Generate text using Vertex AI |
 | Vertex Image Understand | `YogurtVertexAIImageUnderstand` | `YogurtNodes/LLM` | Understand images using Vertex AI |
@@ -368,4 +380,4 @@ For questions, bug reports, or feature requests, please [open an issue](https://
 ## 🙏 Acknowledgments
 
 - ComfyUI Community
-- All Contributors 
+- All Contributors

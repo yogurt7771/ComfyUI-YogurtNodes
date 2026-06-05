@@ -125,7 +125,6 @@ class SaveBytesBridge:
     OUTPUT_NODE = True
 
     _NODE_NAME = "Save Bytes Bridge"
-    CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Saves the input bytes data to your ComfyUI output directory."
 
     def save_bytes_file(
@@ -194,7 +193,6 @@ class LoadBytes:
 
     _NODE_NAME = "Load Bytes"
     DESCRIPTION = "Load bytes data from a file"
-    CATEGORY = "YogurtNodes/IO"
 
     def load_bytes_file(self, file_path):
         try:

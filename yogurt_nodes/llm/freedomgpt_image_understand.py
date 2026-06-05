@@ -171,7 +171,6 @@ class FreedomGPTImageUnderstand:
 
     _NODE_NAME = "FreedomGPT Image Understand"
     DESCRIPTION = "Understand image content using FreedomGPT vision models"
-    CATEGORY = "YogurtNodes/LLM"
 
     async def understand_image(
         self,

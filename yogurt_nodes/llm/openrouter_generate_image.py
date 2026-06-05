@@ -210,7 +210,6 @@ class OpenRouterGenerateImage:
 
     _NODE_NAME = "OpenRouter Generate Image"
     DESCRIPTION = "Generate image using OpenRouter API and return as torch.Tensor (h,w,c) and text"
-    CATEGORY = "YogurtNodes/LLM"
 
     async def generate_image(
         self,

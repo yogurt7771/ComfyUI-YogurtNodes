@@ -62,7 +62,6 @@ class Switch:
 
     _NODE_NAME = "Switch"
     DESCRIPTION = "Switch"
-    CATEGORY = "YogurtNodes/Logic"
 
     def check_lazy_status(
         self,

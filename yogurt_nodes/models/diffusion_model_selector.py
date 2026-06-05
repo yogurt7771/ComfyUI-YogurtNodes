@@ -47,7 +47,6 @@ class DiffusionModelSelector:
 
     _NODE_NAME = "Diffusion Model Selector"
     DESCRIPTION = "Select Diffusion Model"
-    CATEGORY = "YogurtNodes/Models"
 
     @staticmethod
     def _resolve_absolute_path(diffusion_model: str) -> str:

@@ -5,12 +5,32 @@ from typing import Callable
 
 
 V3_CLASS_SUFFIX = "__V3"
+CATEGORY_PACKAGE_NAMES = {
+    "io": "IO",
+    "llm": "LLM",
+    "net": "Net",
+}
 
 
 def strip_v3_suffix(class_name: str) -> str:
     if class_name.endswith(V3_CLASS_SUFFIX):
         return class_name[: -len(V3_CLASS_SUFFIX)]
     return class_name
+
+
+def category_from_module_name(module_name: str) -> str:
+    parts = module_name.split(".")
+    try:
+        package_index = parts.index("yogurt_nodes") + 1
+    except ValueError:
+        return "YogurtNodes"
+
+    if package_index >= len(parts):
+        return "YogurtNodes"
+
+    package_name = parts[package_index]
+    category_name = CATEGORY_PACKAGE_NAMES.get(package_name, package_name.title())
+    return f"YogurtNodes/{category_name}"
 
 
 def build_node_mappings(
@@ -34,6 +54,7 @@ def build_node_mappings(
         class_name = getattr(obj, "__name__", obj.__class__.__name__)
         public_class_name = strip_v3_suffix(class_name)
         node_name = f"Yogurt{public_class_name}"
+        obj.CATEGORY = category_from_module_name(getattr(obj, "__module__", ""))
 
         if class_name.endswith(V3_CLASS_SUFFIX):
             wrapped_cls = wrap_node_to_v3(node_name, obj)

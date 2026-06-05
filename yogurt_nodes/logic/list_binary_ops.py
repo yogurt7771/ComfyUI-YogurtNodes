@@ -130,7 +130,6 @@ class ListBinaryOps:
 
     _NODE_NAME = "ListBinaryOps"
     DESCRIPTION = "Perform union, intersection, difference, zip and related operations on two lists."
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(
         self,

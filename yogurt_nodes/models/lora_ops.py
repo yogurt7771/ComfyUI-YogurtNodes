@@ -206,7 +206,6 @@ class LoadLoraOnly:
 
     _NODE_NAME = "LoRA Load Only"
     DESCRIPTION = "Load a LoRA without applying it. Use with other LoRA operation nodes."
-    CATEGORY = "YogurtNodes/Models/LoRA"
 
     def load_lora(self, lora_name: str):
         lora_path = folder_paths.get_full_path_or_raise("loras", lora_name)
@@ -271,7 +270,6 @@ class LoraLayersOperation:
 
     _NODE_NAME = "LoRA Layers Operation"
     DESCRIPTION = "Modify only selected LoRA layers by index."
-    CATEGORY = "YogurtNodes/Models/LoRA"
 
     def modify_lora(
         self,
@@ -361,7 +359,6 @@ class LoraScaleWeights:
 
     _NODE_NAME = "LoRA Scale Weights"
     DESCRIPTION = "Scale LoRA tensor weights globally so effect can be tuned while using strength=1."
-    CATEGORY = "YogurtNodes/Models/LoRA"
 
     def scale_lora_weights(
         self,
@@ -434,7 +431,6 @@ class LoraScaleAlpha:
 
     _NODE_NAME = "LoRA Scale Alpha"
     DESCRIPTION = "Scale only LoRA alpha metadata so the adjusted LoRA can be saved downstream."
-    CATEGORY = "YogurtNodes/Models/LoRA"
 
     @staticmethod
     def _is_alpha_key(key: str) -> bool:
@@ -536,7 +532,6 @@ class MergeLoraToModel:
 
     _NODE_NAME = "Merge LoRA To Model"
     DESCRIPTION = "Apply loaded LoRA to model and optional CLIP."
-    CATEGORY = "YogurtNodes/Models/LoRA"
 
     def apply_lora(
         self,
@@ -597,7 +592,6 @@ class LoraStatViewer:
 
     _NODE_NAME = "LoRA Stat Viewer"
     DESCRIPTION = "Inspect LoRA key patterns to help define regex and layer selection."
-    CATEGORY = "YogurtNodes/Models/LoRA"
 
     def view_lora_stats(
         self,
@@ -667,7 +661,6 @@ class CreateLoraMappingJson:
 
     _NODE_NAME = "Create LoRA Mapping JSON"
     DESCRIPTION = "Build a best-effort mapping from LoRA A keys to LoRA B keys."
-    CATEGORY = "YogurtNodes/Models/LoRA"
 
     @staticmethod
     def _extract_core_structure(key: str) -> str:
@@ -743,7 +736,6 @@ class ConvertLoraKeys:
 
     _NODE_NAME = "Convert LoRA Keys"
     DESCRIPTION = "Rename LoRA keys by mapping JSON."
-    CATEGORY = "YogurtNodes/Models/LoRA"
 
     def convert_lora(self, lora: Dict[str, object], mapping_json: str):
         mapping = json.loads(mapping_json)
@@ -792,7 +784,6 @@ class LoraSimpleAdd:
 
     _NODE_NAME = "LoRA Simple Add"
     DESCRIPTION = "Simple weighted sum of two LoRA states."
-    CATEGORY = "YogurtNodes/Models/LoRA"
 
     def simple_add_lora(
         self,
@@ -860,7 +851,6 @@ class LoraAdd:
 
     _NODE_NAME = "LoRA Add (Rank Aware)"
     DESCRIPTION = "Merge two LoRAs, with SVD rank alignment when ranks differ."
-    CATEGORY = "YogurtNodes/Models/LoRA"
 
     @staticmethod
     def _extract_alpha(lora_sd: Dict[str, object], down_key: str) -> float:
@@ -1010,7 +1000,6 @@ class LoraMerge:
         "Fast and preserves the summed model-side effect exactly, but output rank/file "
         "size grow. Does not support DoRA or LoCon/reshape variants."
     )
-    CATEGORY = "YogurtNodes/Models/LoRA"
 
     @staticmethod
     def _copy_scaled_single_pair(
@@ -1239,7 +1228,6 @@ class LoraRankCompress:
         "Compress LoRA rank with SVD for standard .lora_down/.lora_up pairs. "
         "Optionally absorb alpha/rank first to preserve the actual LoRA effect before compression."
     )
-    CATEGORY = "YogurtNodes/Models/LoRA"
 
     @staticmethod
     def _pick_rank_from_energy(
@@ -1447,7 +1435,6 @@ class SaveLora:
 
     _NODE_NAME = "Save LoRA"
     DESCRIPTION = "Save LoRA state as safetensors."
-    CATEGORY = "YogurtNodes/Models/LoRA"
 
     @staticmethod
     def _remove_zero_layers(lora: Dict[str, object]) -> Dict[str, object]:

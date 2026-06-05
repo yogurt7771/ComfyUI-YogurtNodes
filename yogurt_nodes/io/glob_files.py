@@ -122,7 +122,6 @@ class GlobFiles:
 
     _NODE_NAME = "Glob Files"
     DESCRIPTION = "Use glob pattern to traverse the folder, return the matching file path list"
-    CATEGORY = "YogurtNodes/IO"
 
     def execute(
         self,

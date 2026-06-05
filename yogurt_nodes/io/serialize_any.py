@@ -29,7 +29,6 @@ class SerializeAny:
 
     _NODE_NAME = "Serialize Any"
     DESCRIPTION = "Serialize any Python object to bytes using pickle"
-    CATEGORY = "YogurtNodes/IO"
 
     def serialize(self, data):
         try:
@@ -66,7 +65,6 @@ class DeserializeAny:
 
     _NODE_NAME = "Deserialize Any"
     DESCRIPTION = "Deserialize bytes data to Python object using pickle"
-    CATEGORY = "YogurtNodes/IO"
 
     def deserialize(self, bytes_data):
         try:

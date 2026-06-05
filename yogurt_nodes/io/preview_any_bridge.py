@@ -26,7 +26,6 @@ class PreviewAnyBridge:
 
     _NODE_NAME = "Preview Any Bridge"
     DESCRIPTION = "Preview Any Bridge"
-    CATEGORY = "YogurtNodes/IO"
 
     def execute(self, data):
         value = 'None'

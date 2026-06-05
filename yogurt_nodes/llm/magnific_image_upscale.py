@@ -233,7 +233,6 @@ class MagnificImageUpscaleAPI:
 
     _NODE_NAME = "Magnific Image Upscale API"
     DESCRIPTION = "Call the Magnific image upscaler API, wait for completion, and return an IMAGE batch."
-    CATEGORY = "YogurtNodes/Image"
 
     def upscale_image(
         self,

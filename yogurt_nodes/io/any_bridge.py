@@ -35,7 +35,6 @@ class AnyBridge:
 
     _NODE_NAME = "Any Bridge"
     DESCRIPTION = "Any Bridge"
-    CATEGORY = "YogurtNodes/IO"
 
     def execute(self, data, **blackholes):
         show_data = str(data)

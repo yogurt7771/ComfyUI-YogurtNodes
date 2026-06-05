@@ -170,7 +170,6 @@ class OpenRouterGenerateText:
 
     _NODE_NAME = "OpenRouter Generate Text"
     DESCRIPTION = "Generate text using OpenRouter API"
-    CATEGORY = "YogurtNodes/LLM"
 
     async def generate_text(
         self,

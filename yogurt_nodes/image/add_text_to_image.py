@@ -56,7 +56,6 @@ class AddTextToImage:
     OUTPUT_NODE = False
 
     _NODE_NAME = "Add Text To Image"
-    CATEGORY = "YogurtNodes/Image"
     DESCRIPTION = "Add text to image."
 
     def draw_text(self, images: torch.Tensor, location="top", centered="true", font="msyh.ttc", font_size=48, text_color="#00000000", background_color="#FFFFFFFF", text=""):

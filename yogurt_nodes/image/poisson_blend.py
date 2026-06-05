@@ -27,7 +27,6 @@ class PoissonBlend:
     FUNCTION = "execute"
     OUTPUT_NODE = False
     _NODE_NAME = "Poisson Blend"
-    CATEGORY = "YogurtNodes/Image"
     DESCRIPTION = "使用OpenCV泊松融合(seamlessClone)将前景融合到背景。"
 
     def execute(self, background, foreground, mask, x, y, width, height):

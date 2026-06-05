@@ -37,7 +37,6 @@ class StringLinesCount:
 
     _NODE_NAME = "String Lines Count"
     DESCRIPTION = "Get the number of lines in a multiline string"
-    CATEGORY = "YogurtNodes/String"
 
     def get_count(
         self,

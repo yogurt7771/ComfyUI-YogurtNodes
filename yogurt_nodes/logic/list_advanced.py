@@ -34,7 +34,6 @@ class ListContains:
 
     _NODE_NAME = "ListContains"
     DESCRIPTION = "Check if a list contains a specific element"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, list_data, element):
         return (element in list_data,)
@@ -81,7 +80,6 @@ class ListFind:
 
     _NODE_NAME = "ListFind"
     DESCRIPTION = "Find the index of an element in a list"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, list_data, element, default_index=-1):
         try:
@@ -132,7 +130,6 @@ class ListConcat:
 
     _NODE_NAME = "ListConcat"
     DESCRIPTION = "Concatenate multiple lists"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, list1, list2, list3=None, list4=None):
         result = list(list1) + list(list2)
@@ -171,7 +168,6 @@ class ListUnique:
 
     _NODE_NAME = "ListUnique"
     DESCRIPTION = "Remove duplicate elements from a list while preserving order"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, list_data):
         seen = set()
@@ -221,7 +217,6 @@ class ListJoin:
 
     _NODE_NAME = "ListJoin"
     DESCRIPTION = "Join list elements into a string"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, list_data, separator=", "):
         return (separator.join(str(item) for item in list_data),)
@@ -293,7 +288,6 @@ class ListFilter:
 
     _NODE_NAME = "ListFilter"
     DESCRIPTION = "Filter list elements based on regex pattern"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(
         self,

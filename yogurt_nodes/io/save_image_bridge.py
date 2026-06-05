@@ -66,7 +66,6 @@ class SaveImageBridge(SaveImageBridgeEx):
         }
 
     _NODE_NAME = "Save Image Bridge"
-    CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Saves the input images to your ComfyUI output directory."
 
 

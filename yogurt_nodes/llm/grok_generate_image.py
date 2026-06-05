@@ -181,7 +181,6 @@ class GrokGenerateImage:
 
     _NODE_NAME = "Grok Generate Image"
     DESCRIPTION = "Generate image using xAI Grok API and return as torch.Tensor (h,w,c) and text"
-    CATEGORY = "YogurtNodes/LLM"
 
     async def generate_image(
         self,

@@ -71,6 +71,36 @@ class MaskRegionRepaintTests(unittest.TestCase):
         self.assertEqual(inputs["max_waste_ratio"][1]["default"], 1.0)
         self.assertEqual(inputs["threshold"][1]["default"], 0.5)
 
+    def test_merge_distance_changes_merge_order_score(self):
+        planner = self.module.MaskRegionPlanner()
+        left = {
+            "mask_ids": [0],
+            "object_bbox": [0, 0, 2, 2],
+            "safe_bbox": [0, 0, 2, 2],
+            "preferred_bbox": [0, 0, 2, 2],
+            "bbox": [0, 0, 10, 10],
+            "mask_area": 4,
+            "safe_area": 4,
+        }
+        right = {
+            "mask_ids": [1],
+            "object_bbox": [6, 0, 2, 2],
+            "safe_bbox": [6, 0, 2, 2],
+            "preferred_bbox": [6, 0, 2, 2],
+            "bbox": [6, 0, 10, 10],
+            "mask_area": 4,
+            "safe_area": 4,
+        }
+
+        _, score_with_small_distance = planner._try_merge(
+            left, right, 32, 16, 10, 10, 1, 0, 1.0
+        )
+        _, score_with_large_distance = planner._try_merge(
+            left, right, 32, 16, 10, 10, 1, 4, 1.0
+        )
+
+        self.assertLess(score_with_large_distance, score_with_small_distance)
+
     def test_region_planner_merges_near_masks_into_one_dynamic_tile(self):
         image = torch.zeros((1, 12, 16, 3), dtype=torch.float32)
         masks = torch.zeros((2, 12, 16), dtype=torch.float32)

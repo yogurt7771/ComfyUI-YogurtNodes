@@ -43,7 +43,6 @@ class JsonParse:
 
     _NODE_NAME = "JsonParse"
     DESCRIPTION = "Parse JSON string to object"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, json_string, strict=True):
         try:
@@ -110,7 +109,6 @@ class JsonStringify:
 
     _NODE_NAME = "JsonStringify"
     DESCRIPTION = "Convert object to JSON string"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, data, indent=0, ensure_ascii=False, sort_keys=False):
         indent_val = None if indent == 0 else indent
@@ -165,7 +163,6 @@ class JsonMerge:
 
     _NODE_NAME = "JsonMerge"
     DESCRIPTION = "Merge multiple JSON objects using deep merge"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, json1, json2, json3=None, json4=None):
         result = json_merge(json1, json2)
@@ -233,7 +230,6 @@ class JsonGetPath:
 
     _NODE_NAME = "JsonGetPath"
     DESCRIPTION = "Get value from JSON object using JSONPath"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, json_data, path, default_value=None, use_default=False, raise_on_error=False):
         try:
@@ -302,7 +298,6 @@ class JsonSetPath:
 
     _NODE_NAME = "JsonSetPath"
     DESCRIPTION = "Set value in JSON object using JSONPath"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, json_data, path, value, create_missing=True, copy_data=True):
         if copy_data:
@@ -359,7 +354,6 @@ class JsonValidate:
 
     _NODE_NAME = "JsonValidate"
     DESCRIPTION = "Validate JSON data structure"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, data, check_type="any", required_keys=""):
         try:
@@ -425,7 +419,6 @@ class JsonPathExists:
 
     _NODE_NAME = "JsonPathExists"
     DESCRIPTION = "Check if a path exists in JSON object"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, json_data, path):
         try:
@@ -463,7 +456,6 @@ class JsonDeepCopy:
 
     _NODE_NAME = "JsonDeepCopy"
     DESCRIPTION = "Create a deep copy of JSON object"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, json_data):
         return (copy.deepcopy(json_data),)
@@ -513,7 +505,6 @@ class JsonFlatten:
 
     _NODE_NAME = "JsonFlatten"
     DESCRIPTION = "Flatten nested JSON object to flat key-value pairs"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, json_data, separator=".", include_arrays=True):
         def _flatten(obj, parent_key="", sep="."):
@@ -583,7 +574,6 @@ class JsonUnflatten:
 
     _NODE_NAME = "JsonUnflatten"
     DESCRIPTION = "Unflatten flat JSON object back to nested structure"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, flat_json, separator=".", auto_detect_arrays=True):
         if not isinstance(flat_json, dict):

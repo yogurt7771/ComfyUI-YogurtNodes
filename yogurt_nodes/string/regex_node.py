@@ -69,7 +69,6 @@ class RegexNode:
 
     _NODE_NAME = "Regex Node"
     DESCRIPTION = "Regex-based extraction and replacement for multiline text."
-    CATEGORY = "ZnzmoNodes/String"
 
     def execute(
         self,

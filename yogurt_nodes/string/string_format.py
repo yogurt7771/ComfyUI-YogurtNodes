@@ -40,7 +40,6 @@ class StringFormat:
 
     _NODE_NAME = "String Format"
     DESCRIPTION = "Format strings"
-    CATEGORY = "YogurtNodes/String"
 
     def main(
         self,

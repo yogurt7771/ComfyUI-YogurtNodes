@@ -29,7 +29,6 @@ class ListLength:
 
     _NODE_NAME = "ListLength"
     DESCRIPTION = "获取任何列表类型对象的长度"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, list_data):
         return (len(list_data),)
@@ -71,7 +70,6 @@ class ListIndex:
 
     _NODE_NAME = "ListIndex"
     DESCRIPTION = "通过索引从任何列表类型对象中获取元素"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, list_data, index):
         return (list_data[index],)
@@ -148,7 +146,6 @@ class ListSlice:
 
     _NODE_NAME = "ListSlice"
     DESCRIPTION = "从任何列表类型对象中获取切片"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(
         self,

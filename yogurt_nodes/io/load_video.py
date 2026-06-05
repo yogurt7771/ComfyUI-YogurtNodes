@@ -83,7 +83,6 @@ class LoadVideo:
     OUTPUT_NODE = False
 
     _NODE_NAME = "Load Video"
-    CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Load video."
 
     def load_video(self, video, start_time=0.0, end_time=0.0):

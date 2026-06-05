@@ -162,7 +162,6 @@ class FreedomGPTGenerateText:
 
     _NODE_NAME = "FreedomGPT Generate Text"
     DESCRIPTION = "Generate text using FreedomGPT API"
-    CATEGORY = "YogurtNodes/LLM"
 
     async def generate_text(
         self,

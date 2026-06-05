@@ -39,7 +39,6 @@ class StringLinesSwitch:
 
     _NODE_NAME = "String Lines Switch"
     DESCRIPTION = "Get line from multiline string by index"
-    CATEGORY = "YogurtNodes/String"
 
     def get_line(
         self,

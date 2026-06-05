@@ -126,7 +126,6 @@ class FreedomGPTGenerateImage:
 
     _NODE_NAME = "FreedomGPT Generate Image"
     DESCRIPTION = "Generate images using FreedomGPT API"
-    CATEGORY = "YogurtNodes/LLM"
 
     async def generate_image(
         self,

@@ -77,7 +77,6 @@ class SaveMaskBridgeEx(SaveImageBridgeEx):
     FUNCTION = "execute"
 
     _NODE_NAME = "Save Mask Bridge"
-    CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Saves the input masks to your ComfyUI output directory."
 
     def execute(

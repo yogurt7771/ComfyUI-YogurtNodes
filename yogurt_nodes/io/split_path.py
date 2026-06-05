@@ -30,7 +30,6 @@ class SplitPath:
 
     _NODE_NAME = "Split Path"
     DESCRIPTION = "Split path to parts"
-    CATEGORY = "YogurtNodes/String"
 
     def split_path(self, path: str):
         path = Path(path)

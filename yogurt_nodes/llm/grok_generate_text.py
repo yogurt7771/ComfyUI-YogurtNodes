@@ -180,7 +180,6 @@ class GrokGenerateText:
 
     _NODE_NAME = "Grok Generate Text"
     DESCRIPTION = "Generate text using xAI API"
-    CATEGORY = "YogurtNodes/LLM"
 
     async def generate_text(
         self,

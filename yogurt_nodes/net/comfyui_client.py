@@ -119,7 +119,6 @@ class ComfyUIClientLoad:
 
     _NODE_NAME = "ComfyUI Client Load"
     DESCRIPTION = "配置 ComfyUI 客户端实例，供后续节点复用"
-    CATEGORY = "YogurtNodes/Net"
 
     def load(
         self,
@@ -164,7 +163,6 @@ class ComfyUIClientSetString:
 
     _NODE_NAME = "ComfyUI Client Set String"
     DESCRIPTION = "向工作流节点输入设置字符串"
-    CATEGORY = "YogurtNodes/Net"
 
     def set_value(self, client: ComfyUIClient, node: str, key: str, value: str):
         client.set_data(node, key, value)
@@ -201,7 +199,6 @@ class ComfyUIClientSetFloat:
 
     _NODE_NAME = "ComfyUI Client Set Float"
     DESCRIPTION = "向工作流节点输入设置浮点数"
-    CATEGORY = "YogurtNodes/Net"
 
     def set_value(self, client: ComfyUIClient, node: str, key: str, value: float):
         client.set_data(node, key, float(value))
@@ -238,7 +235,6 @@ class ComfyUIClientSetInt:
 
     _NODE_NAME = "ComfyUI Client Set Int"
     DESCRIPTION = "向工作流节点输入设置整数"
-    CATEGORY = "YogurtNodes/Net"
 
     def set_value(self, client: ComfyUIClient, node: str, key: str, value: int):
         client.set_data(node, key, int(value))
@@ -277,7 +273,6 @@ class ComfyUIClientSetSeed:
 
     _NODE_NAME = "ComfyUI Client Set Seed"
     DESCRIPTION = "为工作流中的节点设置随机种子"
-    CATEGORY = "YogurtNodes/Net"
 
     def set_seed(self, client: ComfyUIClient, seed: int, nodes: str = ""):
         target_nodes = _parse_nodes(nodes)
@@ -309,7 +304,6 @@ class ComfyUIClientSetImage:
 
     _NODE_NAME = "ComfyUI Client Set Image"
     DESCRIPTION = "上传图片并写入工作流节点输入"
-    CATEGORY = "YogurtNodes/Net"
 
     def set_image(self, client: ComfyUIClient, node: str, key: str, image):
         pil_image = _tensor_to_pil(image)
@@ -368,7 +362,6 @@ class ComfyUIClientRun:
 
     _NODE_NAME = "ComfyUI Client Run"
     DESCRIPTION = "提交工作流并等待结果返回"
-    CATEGORY = "YogurtNodes/Net"
 
     def run(
         self,
@@ -413,7 +406,6 @@ class ComfyUIClientGetOutput:
 
     _NODE_NAME = "ComfyUI Client Get Output"
     DESCRIPTION = "根据节点 ID/名称，从结果包中取出该节点的全部输出列表"
-    CATEGORY = "YogurtNodes/Net"
 
     def _resolve_node_id(self, results: dict, node: str, outputs: dict) -> str:
         target = node.strip()

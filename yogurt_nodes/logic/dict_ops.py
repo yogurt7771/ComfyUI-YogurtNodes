@@ -29,7 +29,6 @@ class DictLength:
 
     _NODE_NAME = "DictLength"
     DESCRIPTION = "Get the length (number of keys) of any dict-like object"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, dict_data):
         return (len(dict_data),)
@@ -85,7 +84,6 @@ class DictGet:
 
     _NODE_NAME = "DictGet"
     DESCRIPTION = "Get a value by key from any dict-like object"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, dict_data, key, default_value=None, use_default=False):
         if use_default:
@@ -131,7 +129,6 @@ class DictKeys:
 
     _NODE_NAME = "DictKeys"
     DESCRIPTION = "Get all keys from any dict-like object"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, dict_data, as_list=True):
         keys = dict_data.keys()
@@ -177,7 +174,6 @@ class DictValues:
 
     _NODE_NAME = "DictValues"
     DESCRIPTION = "Get all values from any dict-like object"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, dict_data, as_list=True):
         values = dict_data.values()
@@ -229,7 +225,6 @@ class DictSubset:
 
     _NODE_NAME = "DictSubset"
     DESCRIPTION = "Get a subset of a dict-like object by specifying keys"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, dict_data, keys, ignore_missing=False):
         subset = {}

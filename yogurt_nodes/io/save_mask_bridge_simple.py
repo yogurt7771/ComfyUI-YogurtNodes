@@ -34,7 +34,6 @@ class SaveMaskBridgeSimple(SaveMaskBridgeEx):
         }
 
     _NODE_NAME = "Save Mask Bridge"
-    CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Saves the input masks to your ComfyUI output directory."
 
 

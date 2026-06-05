@@ -442,7 +442,6 @@ class SplitMask:
     FUNCTION = "execute"
     OUTPUT_NODE = False
     _NODE_NAME = "Split Mask"
-    CATEGORY = "YogurtNodes/Masks"
     DESCRIPTION = "Split a mask into a batch of connected-component masks."
 
     def execute(
@@ -573,7 +572,6 @@ class MaskRegionPlanner:
     FUNCTION = "execute"
     OUTPUT_NODE = False
     _NODE_NAME = "Mask Region Planner"
-    CATEGORY = "YogurtNodes/Masks"
     DESCRIPTION = "Plan dynamic fixed-size repaint tiles from split masks."
 
     def _make_region(
@@ -669,7 +667,8 @@ class MaskRegionPlanner:
             "safe_area": safe_area,
             "oversize": False,
         }
-        score = float(waste_ratio + gap / max(tile_width, tile_height, 1) - tile_overlap_ratio)
+        distance_penalty = max(gap - float(merge_distance), 0.0) / max(tile_width, tile_height, 1)
+        score = float(waste_ratio + distance_penalty - tile_overlap_ratio)
         return merged, score
 
     def execute(
@@ -813,7 +812,6 @@ class CropImageByRegions:
     FUNCTION = "execute"
     OUTPUT_NODE = False
     _NODE_NAME = "Crop Image By Regions"
-    CATEGORY = "YogurtNodes/Masks"
     DESCRIPTION = "Crop repaint image and mask batches from dynamic mask regions."
 
     @staticmethod
@@ -920,7 +918,6 @@ class CompositeRepaintRegions:
     FUNCTION = "execute"
     OUTPUT_NODE = False
     _NODE_NAME = "Composite Repaint Regions"
-    CATEGORY = "YogurtNodes/Masks"
     DESCRIPTION = "Composite repainted region crops back onto a base image."
 
     def execute(
@@ -1012,7 +1009,6 @@ class PreviewRepaintRegions:
     FUNCTION = "execute"
     OUTPUT_NODE = False
     _NODE_NAME = "Preview Repaint Regions"
-    CATEGORY = "YogurtNodes/Masks"
     DESCRIPTION = "Draw planned repaint region boxes over the image."
 
     def execute(self, image: torch.Tensor, region_info: dict):

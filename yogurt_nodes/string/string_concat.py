@@ -35,7 +35,6 @@ class StringConcat:
 
     _NODE_NAME = "String Concat"
     DESCRIPTION = "拼接多个字符串，支持自定义分隔符和可变数量的输入"
-    CATEGORY = "YogurtNodes/String"
 
     def concat_strings(
         self,

@@ -32,7 +32,6 @@ class PreviewImageBridge(SaveImageBridgeEx):
     OUTPUT_NODE = False
 
     _NODE_NAME = "Preview Image Bridge"
-    CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Preview the input images."
 
     def execute(self, images, prompt=None, extra_pnginfo=None):

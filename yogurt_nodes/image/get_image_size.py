@@ -19,7 +19,6 @@ class GetImageSize:
     OUTPUT_NODE = False
 
     _NODE_NAME = "Get Image Size"
-    CATEGORY = "YogurtNodes/Image"
     DESCRIPTION = "Get image size information."
 
     def execute(self, image) -> tuple[int, int]:

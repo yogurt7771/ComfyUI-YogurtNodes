@@ -34,7 +34,6 @@ class PackAny:
 
     _NODE_NAME = "PackAny"
     DESCRIPTION = "Pack any"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(
         self,
@@ -71,7 +70,6 @@ class UnpackAny:
 
     _NODE_NAME = "UnpackAny"
     DESCRIPTION = "Unpack any"
-    CATEGORY = "YogurtNodes/Logic"
 
     def execute(self, pack):
         return (*pack,)

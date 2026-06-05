@@ -31,7 +31,6 @@ class LoadImage:
     OUTPUT_NODE = False
 
     _NODE_NAME = "Load Image"
-    CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Load image."
 
     def load_image(self, image):

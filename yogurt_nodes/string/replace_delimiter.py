@@ -29,7 +29,6 @@ class ReplaceDelimiter:
 
     _NODE_NAME = "Replace Delimiter"
     DESCRIPTION = "Replace delimiter in string. Support regex"
-    CATEGORY = "YogurtNodes/String"
 
     def replace_delimiter(self, text: str, from_: str, to: str):
         new_text = re.sub(re.escape(from_), to, text)

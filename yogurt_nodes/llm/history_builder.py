@@ -46,7 +46,6 @@ class HistoryBuilder:
 
     _NODE_NAME = "History Builder"
     DESCRIPTION = "构建与 LLM 节点兼容的会话历史"
-    CATEGORY = "YogurtNodes/LLM"
 
     async def build_history(
         self,

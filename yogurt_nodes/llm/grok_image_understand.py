@@ -202,7 +202,6 @@ class GrokImageUnderstand:
 
     _NODE_NAME = "Grok Image Understand"
     DESCRIPTION = "Understand image content using xAI vision models"
-    CATEGORY = "YogurtNodes/LLM"
 
     async def understand_image(
         self,

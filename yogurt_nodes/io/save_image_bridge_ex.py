@@ -230,7 +230,6 @@ class SaveImageBridgeEx:
     OUTPUT_NODE = True
 
     _NODE_NAME = "Save Image Bridge Ex"
-    CATEGORY = "YogurtNodes/IO"
     DESCRIPTION = "Saves the input images to your ComfyUI output directory."
 
     def execute(

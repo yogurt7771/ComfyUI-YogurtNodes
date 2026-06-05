@@ -39,7 +39,6 @@ class Range:
 
     _NODE_NAME = "Range"
     DESCRIPTION = "get a number from a range"
-    CATEGORY = "YogurtNodes/Number"
 
     def execute(self, **kwargs):
         from_value = kwargs["from"]
@@ -86,7 +85,6 @@ class RangeItem:
 
     _NODE_NAME = "RangeItem"
     DESCRIPTION = "get a value from a range"
-    CATEGORY = "YogurtNodes/Number"
 
     def execute(self, **kwargs):
         data = kwargs["range"]

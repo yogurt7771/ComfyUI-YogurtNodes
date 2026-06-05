@@ -21,6 +21,7 @@ from sync_node_docstrings import (  # noqa: E402
 
 SECTION_ORDER = [
     "Image",
+    "Masks",
     "Number",
     "String",
     "Logic",
@@ -33,6 +34,7 @@ SECTION_ORDER = [
 SECTION_TITLES = {
     "en": {
         "Image": "Image Processing Nodes",
+        "Masks": "Mask Nodes",
         "Number": "Number Processing Nodes",
         "String": "String Processing Nodes",
         "Logic": "Logic Processing Nodes",
@@ -44,6 +46,7 @@ SECTION_TITLES = {
     },
     "zh": {
         "Image": "图像处理节点",
+        "Masks": "遮罩节点",
         "Number": "数字处理节点",
         "String": "字符串处理节点",
         "Logic": "逻辑处理节点",
@@ -65,7 +68,7 @@ TABLE_HEADERS = {
     "zh": ("节点", "Class ID", "分类", "说明"),
 }
 
-FALLBACK_CATEGORY_NAMES = {
+CATEGORY_PACKAGE_NAMES = {
     "io": "IO",
     "llm": "LLM",
     "net": "Net",
@@ -148,8 +151,8 @@ def _group_from_category(category: str) -> str:
     return "Other"
 
 
-def _fallback_category(package_name: str) -> str:
-    suffix = FALLBACK_CATEGORY_NAMES.get(package_name, package_name.title())
+def _category_from_package_name(package_name: str) -> str:
+    suffix = CATEGORY_PACKAGE_NAMES.get(package_name, package_name.title())
     return f"YogurtNodes/{suffix}"
 
 
@@ -176,10 +179,7 @@ def collect_exported_nodes(package_root: Path) -> list[NodeInfo]:
             if not node_name:
                 continue
 
-            category = _extract_string_assignment(
-                class_def,
-                "CATEGORY",
-            ) or _fallback_category(package_name)
+            category = _category_from_package_name(package_name)
             description = _extract_description(
                 node_name,
                 ast.get_docstring(class_def, clean=True),
@@ -304,13 +304,15 @@ def update_readmes(repo_root: Path, package_root: Path, *, write: bool) -> list[
 
     for target in README_TARGETS:
         path = repo_root / target.path
+        original_bytes = path.read_bytes()
         content = path.read_text(encoding="utf-8")
         replacement = render_nodes_section(nodes, target.language)
         new_content = _replace_section(content, target, replacement)
-        if new_content == content:
+        needs_lf_normalization = b"\r\n" in original_bytes
+        if new_content == content and not needs_lf_normalization:
             continue
         if write:
-            path.write_text(new_content, encoding="utf-8")
+            path.write_text(new_content, encoding="utf-8", newline="\n")
         updated.append(path)
 
     return updated

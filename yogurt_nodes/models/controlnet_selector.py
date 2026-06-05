@@ -62,7 +62,6 @@ class ControlNetSelector:
 
     _NODE_NAME = "ControlNet Selector"
     DESCRIPTION = "Select ControlNet"
-    CATEGORY = "YogurtNodes/Models"
 
     @staticmethod
     def _resolve_absolute_path(controlnet: str) -> str:
