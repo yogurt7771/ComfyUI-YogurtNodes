@@ -62,7 +62,7 @@ pip install -r requirements.txt
 
 这一节由导出节点类及其文档注释自动生成。执行 `python tools/generate_readme.py` 可重新生成。
 
-当前导出节点总数：**146**。
+当前导出节点总数：**147**。
 
 | 分组 | 数量 |
 | --- | ---: |
@@ -70,7 +70,7 @@ pip install -r requirements.txt
 | 数字处理节点 | 2 |
 | 字符串处理节点 | 9 |
 | 逻辑处理节点 | 41 |
-| 模型节点 | 16 |
+| 模型节点 | 17 |
 | 输入/输出操作节点 | 35 |
 | 语言模型节点 | 23 |
 | 网络节点 | 8 |
@@ -178,6 +178,7 @@ pip install -r requirements.txt
 | LoRA Layers Operation | `YogurtLoraLayersOperation` | `YogurtNodes/Models/LoRA` | Modify only selected LoRA layers by index. |
 | LoRA Load Only | `YogurtLoadLoraOnly` | `YogurtNodes/Models/LoRA` | Load a LoRA without applying it. Use with other LoRA operation nodes. |
 | LoRA Merge Full Rank | `YogurtLoraMerge` | `YogurtNodes/Models/LoRA` | Merge up to five standard LoRAs exactly by concatenating rank dimensions. Fast and preserves the summed model-side effect exactly, but output rank/file size grow. Does not support DoRA or LoCon/reshape variants. |
+| LoRA Scale Alpha | `YogurtLoraScaleAlpha` | `YogurtNodes/Models/LoRA` | Scale only LoRA alpha metadata so the adjusted LoRA can be saved downstream. |
 | LoRA Scale Weights | `YogurtLoraScaleWeights` | `YogurtNodes/Models/LoRA` | Scale LoRA tensor weights globally so effect can be tuned while using strength=1. |
 | LoRA Simple Add | `YogurtLoraSimpleAdd` | `YogurtNodes/Models/LoRA` | Simple weighted sum of two LoRA states. |
 | LoRA Stat Viewer | `YogurtLoraStatViewer` | `YogurtNodes/Models/LoRA` | Inspect LoRA key patterns to help define regex and layer selection. |

@@ -391,6 +391,107 @@ class LoraScaleWeights:
         return (modified, changed)
 
 
+class LoraScaleAlpha:
+    """LoRA Scale Alpha node.
+
+    Scale only LoRA alpha metadata so the adjusted LoRA can be saved downstream.
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "lora": (
+                    "LORA",
+                    {"tooltip": "The LoRA object whose alpha values will be scaled."},
+                ),
+                "alpha_scale": (
+                    "FLOAT",
+                    {
+                        "default": 1.0,
+                        "min": -10.0,
+                        "max": 10.0,
+                        "step": 0.01,
+                        "tooltip": "Multiplier applied only to LoRA alpha/network_alpha keys.",
+                    },
+                ),
+            },
+            "optional": {
+                "key_pattern": (
+                    "STRING",
+                    {
+                        "default": r".*",
+                        "multiline": False,
+                        "tooltip": "Only alpha keys matching this regex will be scaled.",
+                    },
+                ),
+            },
+        }
+
+    RETURN_TYPES = ("LORA", "INT")
+    RETURN_NAMES = ("scaled_lora", "scaled_alpha_count")
+    FUNCTION = "scale_lora_alpha"
+
+    _NODE_NAME = "LoRA Scale Alpha"
+    DESCRIPTION = "Scale only LoRA alpha metadata so the adjusted LoRA can be saved downstream."
+    CATEGORY = "YogurtNodes/Models/LoRA"
+
+    @staticmethod
+    def _is_alpha_key(key: str) -> bool:
+        return (
+            key.endswith(".alpha")
+            or key.endswith(".network_alpha")
+            or key.endswith("_network_alpha")
+        )
+
+    def scale_lora_alpha(
+        self,
+        lora: Dict[str, object],
+        alpha_scale: float,
+        key_pattern: str = r".*",
+    ):
+        modified = _clone_lora_state(lora)
+        pattern = re.compile(key_pattern)
+        changed = 0
+
+        for key, value in modified.items():
+            if not self._is_alpha_key(key) or not pattern.search(key):
+                continue
+            if isinstance(value, torch.Tensor):
+                modified[key] = value * alpha_scale
+                changed += 1
+            elif isinstance(value, (int, float)) and not isinstance(value, bool):
+                modified[key] = torch.tensor(float(value) * alpha_scale)
+                changed += 1
+
+        for up_suffix, down_suffix, _mid_suffix in _LORA_PAIR_SUFFIXES:
+            for key, up in list(modified.items()):
+                if not key.endswith(up_suffix):
+                    continue
+
+                base = key[: -len(up_suffix)]
+                alpha_key = f"{base}.alpha"
+                if alpha_key in modified or not pattern.search(alpha_key):
+                    continue
+
+                down_key = f"{base}{down_suffix}"
+                down = modified.get(down_key)
+                if not isinstance(up, torch.Tensor) or not isinstance(down, torch.Tensor):
+                    continue
+                if down.ndim < 1:
+                    continue
+
+                rank = int(down.shape[0])
+                modified[alpha_key] = _make_scalar_tensor(None, rank * alpha_scale, down)
+                changed += 1
+
+        print(
+            f"[Yogurt LoRA] scaled {changed} alpha keys "
+            f"by {alpha_scale} (pattern='{key_pattern}')"
+        )
+        return (modified, changed)
+
+
 class MergeLoraToModel:
     """Merge LoRA To Model node.
 

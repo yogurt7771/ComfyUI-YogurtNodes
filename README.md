@@ -58,7 +58,7 @@ All exported nodes are listed here. ComfyUI display names keep the " (Yogurt Nod
 
 This section is auto-generated from exported node classes and their docstrings. Run `python tools/generate_readme.py` to refresh.
 
-Total exported nodes: **146**.
+Total exported nodes: **147**.
 
 | Group | Count |
 | --- | ---: |
@@ -66,7 +66,7 @@ Total exported nodes: **146**.
 | Number Processing Nodes | 2 |
 | String Processing Nodes | 9 |
 | Logic Processing Nodes | 41 |
-| Model Nodes | 16 |
+| Model Nodes | 17 |
 | I/O Operation Nodes | 35 |
 | Language Model Nodes | 23 |
 | Network Nodes | 8 |
@@ -174,6 +174,7 @@ Total exported nodes: **146**.
 | LoRA Layers Operation | `YogurtLoraLayersOperation` | `YogurtNodes/Models/LoRA` | Modify only selected LoRA layers by index. |
 | LoRA Load Only | `YogurtLoadLoraOnly` | `YogurtNodes/Models/LoRA` | Load a LoRA without applying it. Use with other LoRA operation nodes. |
 | LoRA Merge Full Rank | `YogurtLoraMerge` | `YogurtNodes/Models/LoRA` | Merge up to five standard LoRAs exactly by concatenating rank dimensions. Fast and preserves the summed model-side effect exactly, but output rank/file size grow. Does not support DoRA or LoCon/reshape variants. |
+| LoRA Scale Alpha | `YogurtLoraScaleAlpha` | `YogurtNodes/Models/LoRA` | Scale only LoRA alpha metadata so the adjusted LoRA can be saved downstream. |
 | LoRA Scale Weights | `YogurtLoraScaleWeights` | `YogurtNodes/Models/LoRA` | Scale LoRA tensor weights globally so effect can be tuned while using strength=1. |
 | LoRA Simple Add | `YogurtLoraSimpleAdd` | `YogurtNodes/Models/LoRA` | Simple weighted sum of two LoRA states. |
 | LoRA Stat Viewer | `YogurtLoraStatViewer` | `YogurtNodes/Models/LoRA` | Inspect LoRA key patterns to help define regex and layer selection. |
