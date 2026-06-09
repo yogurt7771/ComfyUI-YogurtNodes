@@ -1,5 +1,8 @@
 import re
-from ..utils import ANY_TYPE
+from ..utils import ANY_TYPE, DYNAMIC_INPUT_COUNT, make_dynamic_inputs, ordered_dynamic_values
+
+
+LIST_CONCAT_INPUT_COUNT = DYNAMIC_INPUT_COUNT
 
 
 class ListContains:
@@ -108,13 +111,12 @@ class ListConcat:
                 ),
             },
             "optional": {
-                "list3": (
+                **make_dynamic_inputs(
+                    "list",
                     ANY_TYPE,
-                    {"tooltip": "Third list (optional)"},
-                ),
-                "list4": (
-                    ANY_TYPE,
-                    {"tooltip": "Fourth list (optional)"},
+                    count=LIST_CONCAT_INPUT_COUNT - 2,
+                    start_index=3,
+                    tooltip="Additional list {index} (optional)",
                 ),
             },
         }
@@ -131,12 +133,19 @@ class ListConcat:
     _NODE_NAME = "ListConcat"
     DESCRIPTION = "Concatenate multiple lists"
 
-    def execute(self, list1, list2, list3=None, list4=None):
+    def execute(self, list1, list2, list3=None, list4=None, **kwargs):
         result = list(list1) + list(list2)
         if list3 is not None:
             result.extend(list3)
         if list4 is not None:
             result.extend(list4)
+        for list_value in ordered_dynamic_values(
+            kwargs,
+            "list",
+            count=LIST_CONCAT_INPUT_COUNT - 4,
+            start_index=5,
+        ):
+            result.extend(list_value)
         return (result,)
 
 

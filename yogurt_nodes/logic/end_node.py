@@ -1,7 +1,7 @@
-from ..utils import ANY_TYPE
+from ..utils import ANY_TYPE, DYNAMIC_INPUT_COUNT, make_dynamic_inputs
 
 
-DATA_NUM = 8
+DATA_NUM = DYNAMIC_INPUT_COUNT
 
 
 class EndNode:
@@ -11,15 +11,13 @@ class EndNode:
     """
     @classmethod
     def INPUT_TYPES(cls):
-        items = {
-            f"data{i}": (
-                ANY_TYPE,
-                {"tooltip": f"The {i}th data."},
-            )
-            for i in range(1, DATA_NUM + 1)
-        }
         return {
-            "optional": {**items},
+            "optional": make_dynamic_inputs(
+                "data",
+                ANY_TYPE,
+                count=DATA_NUM,
+                tooltip="The {index}th data.",
+            ),
         }
 
     @classmethod

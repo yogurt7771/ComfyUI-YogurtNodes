@@ -1,9 +1,9 @@
 from typing import Any, Tuple
 
-from ..utils import ANY_TYPE
+from ..utils import ANY_TYPE, DYNAMIC_INPUT_COUNT, make_dynamic_inputs
 
 
-INPUT_COUNT = 10
+INPUT_COUNT = DYNAMIC_INPUT_COUNT
 
 
 class StringFormat:
@@ -14,13 +14,18 @@ class StringFormat:
 
     @classmethod
     def INPUT_TYPES(cls):
-        texts = {f"input{i}": (ANY_TYPE, {"tooltip": f"The input to be formatted. {i}"}) for i in range(INPUT_COUNT)}
         return {
             "required": {
                 "format": ("STRING", {"multiline": True}),
             },
             "optional": {
-                **texts,
+                **make_dynamic_inputs(
+                    "input",
+                    ANY_TYPE,
+                    count=INPUT_COUNT,
+                    start_index=0,
+                    tooltip="The input to be formatted. {index}",
+                ),
             },
         }
 

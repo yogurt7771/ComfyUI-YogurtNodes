@@ -2,9 +2,11 @@ import torch
 import torch.nn.functional as F
 import comfy
 
+from ..utils import DYNAMIC_INPUT_COUNT, make_dynamic_inputs
+
 
 MAX_RESOLUTION = 16384
-IMAGE_COUNT = 16
+IMAGE_COUNT = DYNAMIC_INPUT_COUNT
 
 
 def resize_image(image, width, height, method="stretch", interpolation="nearest", condition="always", multiple_of=0, keep_proportion=False, pad_value=1.0):
@@ -112,7 +114,12 @@ class BatchImages:
     """Batch Images node."""
     @classmethod
     def INPUT_TYPES(cls):
-        images = {f"images{i}": ("IMAGE", {"tooltip": "The images to batch."}) for i in range(1, IMAGE_COUNT + 1)}
+        images = make_dynamic_inputs(
+            "images",
+            "IMAGE",
+            count=IMAGE_COUNT,
+            tooltip="The image {index} to batch.",
+        )
         return {
             "required": {
                 "interpolation": (

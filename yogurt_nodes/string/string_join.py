@@ -1,9 +1,9 @@
 from typing import Any, List
 
-from ..utils import ANY_TYPE
+from ..utils import ANY_TYPE, DYNAMIC_INPUT_COUNT, make_dynamic_inputs, ordered_dynamic_values
 
 
-INPUT_COUNT = 8
+INPUT_COUNT = DYNAMIC_INPUT_COUNT
 
 
 def append_any_as_str_(lists: List[str], data: Any):
@@ -30,10 +30,6 @@ class StringJoin:
 
     @classmethod
     def INPUT_TYPES(cls):
-        items = {
-            f"item{i}": (ANY_TYPE, {"tooltip": f"The {i}th item to join."})
-            for i in range(1, INPUT_COUNT + 1)
-        }
         return {
             "required": {
                 "separator": (
@@ -46,7 +42,12 @@ class StringJoin:
                 ),
             },
             "optional": {
-                **items,
+                **make_dynamic_inputs(
+                    "item",
+                    ANY_TYPE,
+                    count=INPUT_COUNT,
+                    tooltip="The {index}th item to join.",
+                ),
             },
         }
 
@@ -73,17 +74,15 @@ class StringJoin:
 
         Args:
             separator: 连接符
-            item1~item8: 8个字符串输入
+            item1~item32: dynamic item inputs
 
         Returns:
             tuple: 包含连接结果的元组
         """
         # 收集所有非空字符串
         strings: List[str] = []
-        for i in range(1, INPUT_COUNT + 1):
-            item_key = f"item{i}"
-            if item_key in kwargs:
-                append_any_as_str_(strings, kwargs[item_key])
+        for item in ordered_dynamic_values(kwargs, "item", count=INPUT_COUNT):
+            append_any_as_str_(strings, item)
         result = separator.join(strings)
 
         return (result,)

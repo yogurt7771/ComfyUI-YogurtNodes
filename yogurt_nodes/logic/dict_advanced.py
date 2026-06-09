@@ -1,4 +1,7 @@
-from ..utils import ANY_TYPE
+from ..utils import ANY_TYPE, DYNAMIC_INPUT_COUNT, make_dynamic_inputs, ordered_dynamic_values
+
+
+DICT_MERGE_INPUT_COUNT = DYNAMIC_INPUT_COUNT
 
 
 class DictContainsKey:
@@ -95,13 +98,12 @@ class DictMerge:
                 ),
             },
             "optional": {
-                "dict3": (
+                **make_dynamic_inputs(
+                    "dict",
                     ANY_TYPE,
-                    {"tooltip": "Third dictionary (optional)"},
-                ),
-                "dict4": (
-                    ANY_TYPE,
-                    {"tooltip": "Fourth dictionary (optional)"},
+                    count=DICT_MERGE_INPUT_COUNT - 2,
+                    start_index=3,
+                    tooltip="Additional dictionary {index} (optional)",
                 ),
                 "overwrite": (
                     "BOOLEAN",
@@ -125,15 +127,23 @@ class DictMerge:
     _NODE_NAME = "DictMerge"
     DESCRIPTION = "Merge multiple dictionaries"
 
-    def execute(self, dict1, dict2, dict3=None, dict4=None, overwrite=True):
+    def execute(self, dict1, dict2, dict3=None, dict4=None, overwrite=True, **kwargs):
         result = dict(dict1)
-        
+
         dicts_to_merge = [dict2]
         if dict3 is not None:
             dicts_to_merge.append(dict3)
         if dict4 is not None:
             dicts_to_merge.append(dict4)
-        
+        dicts_to_merge.extend(
+            ordered_dynamic_values(
+                kwargs,
+                "dict",
+                count=DICT_MERGE_INPUT_COUNT - 4,
+                start_index=5,
+            )
+        )
+
         for d in dicts_to_merge:
             if overwrite:
                 result.update(d)

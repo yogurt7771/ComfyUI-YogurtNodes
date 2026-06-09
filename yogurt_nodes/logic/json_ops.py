@@ -1,6 +1,17 @@
 import json
 import copy
-from ..utils import ANY_TYPE, json_merge, json_get_path, json_set_path
+from ..utils import (
+    ANY_TYPE,
+    DYNAMIC_INPUT_COUNT,
+    json_get_path,
+    json_merge,
+    json_set_path,
+    make_dynamic_inputs,
+    ordered_dynamic_values,
+)
+
+
+JSON_MERGE_INPUT_COUNT = DYNAMIC_INPUT_COUNT
 
 
 class JsonParse:
@@ -141,13 +152,12 @@ class JsonMerge:
                 ),
             },
             "optional": {
-                "json3": (
+                **make_dynamic_inputs(
+                    "json",
                     ANY_TYPE,
-                    {"tooltip": "Third JSON object (optional)"},
-                ),
-                "json4": (
-                    ANY_TYPE,
-                    {"tooltip": "Fourth JSON object (optional)"},
+                    count=JSON_MERGE_INPUT_COUNT - 2,
+                    start_index=3,
+                    tooltip="Additional JSON object {index} (optional)",
                 ),
             },
         }
@@ -164,12 +174,19 @@ class JsonMerge:
     _NODE_NAME = "JsonMerge"
     DESCRIPTION = "Merge multiple JSON objects using deep merge"
 
-    def execute(self, json1, json2, json3=None, json4=None):
+    def execute(self, json1, json2, json3=None, json4=None, **kwargs):
         result = json_merge(json1, json2)
         if json3 is not None:
             result = json_merge(result, json3)
         if json4 is not None:
             result = json_merge(result, json4)
+        for json_value in ordered_dynamic_values(
+            kwargs,
+            "json",
+            count=JSON_MERGE_INPUT_COUNT - 4,
+            start_index=5,
+        ):
+            result = json_merge(result, json_value)
         return (result,)
 
 

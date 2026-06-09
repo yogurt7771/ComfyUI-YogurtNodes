@@ -1,7 +1,7 @@
-from ..utils import ANY_TYPE
+from ..utils import ANY_TYPE, DYNAMIC_INPUT_COUNT, make_dynamic_inputs
 
 
-PACK_NUM = 8
+PACK_NUM = DYNAMIC_INPUT_COUNT
 
 
 class PackAny:
@@ -12,15 +12,13 @@ class PackAny:
     """
     @classmethod
     def INPUT_TYPES(cls):
-        items = {
-            f"item{i}": (
-                ANY_TYPE,
-                {"tooltip": f"The {i}th item to pack."},
-            )
-            for i in range(1, PACK_NUM + 1)
-        }
         return {
-            "optional": {**items},
+            "optional": make_dynamic_inputs(
+                "item",
+                ANY_TYPE,
+                count=PACK_NUM,
+                tooltip="The {index}th item to pack.",
+            ),
         }
 
     @classmethod

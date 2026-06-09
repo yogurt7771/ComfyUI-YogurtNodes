@@ -1,26 +1,24 @@
-from ..utils import ANY_TYPE
+from ..utils import ANY_TYPE, DYNAMIC_INPUT_COUNT, make_dynamic_inputs
 
 
-BLACKHOLE_NUM = 8
+BLACKHOLE_NUM = DYNAMIC_INPUT_COUNT
 
 
 class AnyBridge:
     """Any Bridge node."""
     @classmethod
     def INPUT_TYPES(cls):
-        blackholes = {
-            f"blackhole{i}": (
-                ANY_TYPE,
-                {"tooltip": f"the data will not be returned. {i}"},
-            )
-            for i in range(1, BLACKHOLE_NUM + 1)
-        }
         return {
             "required": {
                 "data": (ANY_TYPE, {"tooltip": "The data to be returned."}),
             },
             "optional": {
-                **blackholes,
+                **make_dynamic_inputs(
+                    "blackhole",
+                    ANY_TYPE,
+                    count=BLACKHOLE_NUM,
+                    tooltip="The data will not be returned. {index}",
+                ),
             },
         }
 

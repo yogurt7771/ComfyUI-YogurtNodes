@@ -1,4 +1,9 @@
 from .any_type import ANY_TYPE  # noqa: F401
+from .dynamic_inputs import (  # noqa: F401
+    DYNAMIC_INPUT_COUNT,
+    make_dynamic_inputs,
+    ordered_dynamic_values,
+)
 from .json_ops import json_merge, json_get_path, json_set_path  # noqa: F401
 from .proxy_utils import SetProxyEnv  # noqa: F401
 from .seedream_client import SeeDreamClient
