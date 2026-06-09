@@ -1,15 +1,14 @@
 import json
 import os
 import random
-import time
 from pprint import pprint
 from typing import Any, Dict, List, Optional
 
-import requests
 from PIL import Image
 
 import comfy.model_management as model_management
 from .api_keys import load_api_keys
+from .cancellable_http import CancellableHttpClient
 from .openai_client import build_messages
 
 
@@ -70,6 +69,7 @@ class OpenRouterClient:
         else:
             self.proxies = None
         self.timeout = timeout
+        self.http = CancellableHttpClient(proxy_url=self.proxy_url, timeout=self.timeout)
 
     def generate_text(
         self,
@@ -145,7 +145,7 @@ class OpenRouterClient:
             model_management.throw_exception_if_processing_interrupted()
             try:
                 payload["seed"] = current_seed + _attempt
-                response = requests.post(
+                response = self.http.post(
                     f"{self.base_url}/chat/completions",
                     headers=self.headers,
                     json=payload,
@@ -169,7 +169,7 @@ class OpenRouterClient:
             except Exception as e:
                 # print(f"Attempt {attempt + 1} failed: {str(e)}")
                 last_exception = e
-                time.sleep(3)
+                self.http.sleep(3)
         raise last_exception or Exception("All retry attempts failed")
 
     def generate_image(
@@ -267,7 +267,7 @@ class OpenRouterClient:
             model_management.throw_exception_if_processing_interrupted()
             try:
                 payload["seed"] = current_seed + attempt
-                response = requests.post(
+                response = self.http.post(
                     f"{self.base_url}/chat/completions",
                     headers=self.headers,
                     json=payload,
@@ -325,7 +325,7 @@ class OpenRouterClient:
 
             except Exception as e:
                 last_exception = e
-                time.sleep(3)
+                self.http.sleep(3)
 
         raise last_exception or Exception("All retry attempts failed")
 
@@ -383,7 +383,7 @@ class OpenRouterClient:
     def get_models(self) -> List[Dict[str, Any]]:
         """获取可用模型列表"""
         try:
-            response = requests.get(
+            response = self.http.get(
                 f"{self.base_url}/models", headers=self.headers, timeout=self.timeout if self.timeout > 0 else None, proxies=self.proxies
             )
 
@@ -432,7 +432,7 @@ class OpenRouterClient:
     def get_generation_info(self, generation_id: str) -> Dict[str, Any]:
         """获取生成信息（费用、tokens等）"""
         try:
-            response = requests.get(
+            response = self.http.get(
                 f"{self.base_url}/generation/{generation_id}",
                 headers=self.headers,
                 timeout=self.timeout if self.timeout > 0 else None,

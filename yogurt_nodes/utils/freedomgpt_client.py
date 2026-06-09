@@ -2,13 +2,13 @@ import io
 import json
 import os
 import random
-import time
 from typing import Any, Dict, List, Optional
 
 import requests
 from PIL import Image
 import comfy.model_management as model_management
 from .api_keys import load_api_keys
+from .cancellable_http import CancellableHttpClient
 
 from .openai_client import build_messages, image_to_base64
 
@@ -66,6 +66,7 @@ class FreedomGPTClient:
             }
         else:
             self.proxies = None
+        self.http = CancellableHttpClient(proxy_url=self.proxy_url, timeout=self.timeout)
 
     def split_system(self, messages):
         """将系统消息和用户消息分开"""
@@ -163,7 +164,7 @@ class FreedomGPTClient:
         for _attempt in range(retry_count):
             model_management.throw_exception_if_processing_interrupted()
             try:
-                response = requests.post(
+                response = self.http.post(
                     f"{self.base_url}/chat/completions",
                     headers=self.headers,
                     json=payload,
@@ -188,10 +189,10 @@ class FreedomGPTClient:
                 requests.RequestException,
             ) as exception:
                 last_exception = exception
-                time.sleep(3)
+                self.http.sleep(3)
             except Exception as exception:
                 last_exception = exception
-                time.sleep(3)
+                self.http.sleep(3)
 
         raise last_exception or Exception("All retry attempts failed")
 
@@ -199,7 +200,7 @@ class FreedomGPTClient:
         """获取可用模型列表"""
         cache_file = os.path.join(self.current_dir, "freedomgpt-models.json")
         try:
-            response = requests.get(
+            response = self.http.get(
                 f"{self.base_url}/models",
                 headers=self.headers,
                 timeout=self.timeout if self.timeout > 0 else None,
@@ -357,7 +358,7 @@ class FreedomGPTClient:
         for _attempt in range(retry_count):
             model_management.throw_exception_if_processing_interrupted()
             try:
-                response = requests.post(
+                response = self.http.post(
                     f"{self.base_url}/images/generations",
                     headers=self.headers,
                     json=payload,
@@ -375,7 +376,7 @@ class FreedomGPTClient:
                             if "url" in image_data:
                                 try:
                                     # 下载图像
-                                    img_response = requests.get(
+                                    img_response = self.http.get(
                                         image_data["url"],
                                         timeout=self.timeout if self.timeout > 0 else None,
                                         proxies=self.proxies,
@@ -409,9 +410,9 @@ class FreedomGPTClient:
                 requests.RequestException,
             ) as exception:
                 last_exception = exception
-                time.sleep(3)
+                self.http.sleep(3)
             except Exception as exception:
                 last_exception = exception
-                time.sleep(3)
+                self.http.sleep(3)
 
         raise last_exception or Exception("All retry attempts failed")

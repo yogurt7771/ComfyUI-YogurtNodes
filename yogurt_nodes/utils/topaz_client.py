@@ -12,6 +12,7 @@ from PIL import Image
 
 import comfy.model_management as model_management
 from .api_keys import load_api_keys
+from .cancellable_http import CancellableHttpClient
 
 
 DEFAULT_TOPAZ_BASE_URL = "https://api.topazlabs.com/image/v1"
@@ -158,6 +159,7 @@ class TopazClient:
         self.retry_base_delay = max(float(retry_base_delay), 0.0)
         self.retry_max_delay = max(float(retry_max_delay), self.retry_base_delay)
         self.headers = {"X-API-Key": self.api_key}
+        self.http = CancellableHttpClient(proxy_url=self.proxy_url, timeout=self.timeout)
 
     def _load_api_keys(self) -> Dict[str, Any]:
         if self._api_keys_cache is None:
@@ -218,7 +220,7 @@ class TopazClient:
         for attempt in range(self.retry_count):
             model_management.throw_exception_if_processing_interrupted()
             try:
-                response = requests.request(
+                response = self.http.request(
                     method,
                     url,
                     headers=headers if headers is not None else self.headers,
@@ -229,7 +231,7 @@ class TopazClient:
             except requests.RequestException as exception:
                 last_exception = exception
                 if attempt < self.retry_count - 1:
-                    time.sleep(self._retry_delay(attempt))
+                    self.http.sleep(self._retry_delay(attempt))
                     continue
                 raise
 
@@ -237,7 +239,7 @@ class TopazClient:
                 response.status_code in RETRYABLE_STATUS_CODES
                 and attempt < self.retry_count - 1
             ):
-                time.sleep(self._retry_delay(attempt, response=response))
+                self.http.sleep(self._retry_delay(attempt, response=response))
                 continue
 
             if response.status_code >= 400:
@@ -283,7 +285,7 @@ class TopazClient:
                 raise RuntimeError(
                     f"Topaz task ended with status={status}: process_id={process_id}"
                 )
-            time.sleep(max(float(poll_interval), 0.1))
+            self.http.sleep(max(float(poll_interval), 0.1))
 
     def _download_result(self, process_id: str) -> Image.Image:
         response = self._request("GET", f"{self.base_url}/download/{process_id}")

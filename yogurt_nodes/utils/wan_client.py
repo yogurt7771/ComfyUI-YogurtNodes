@@ -2,7 +2,6 @@ import base64
 import io
 import json
 import os
-import time
 from typing import Any, Dict, List, Optional
 
 import requests
@@ -10,6 +9,7 @@ from PIL import Image
 
 import comfy.model_management as model_management
 from .api_keys import load_api_keys
+from .cancellable_http import CancellableHttpClient
 from .qwen_client import (
     DEFAULT_DASHSCOPE_BASE_URL,
     build_prompt,
@@ -119,6 +119,7 @@ class WanClient:
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
+        self.http = CancellableHttpClient(proxy_url=self.proxy_url, timeout=self.timeout)
 
     def _load_api_keys(self) -> Dict[str, Any]:
         if self._api_keys_cache is None:
@@ -163,7 +164,7 @@ class WanClient:
         return {"http": self.proxy_url, "https": self.proxy_url}
 
     def _download_image(self, url: str) -> Image.Image:
-        response = requests.get(
+        response = self.http.get(
             url,
             proxies=self.proxies,
             timeout=self.timeout if self.timeout > 0 else None,
@@ -222,7 +223,7 @@ class WanClient:
         for _attempt in range(attempt_count):
             model_management.throw_exception_if_processing_interrupted()
             try:
-                response = requests.post(
+                response = self.http.post(
                     endpoint,
                     headers=self.headers,
                     json=request_body,
@@ -236,7 +237,7 @@ class WanClient:
                         and is_retryable_status(response.status_code)
                     ):
                         last_exception = error
-                        time.sleep(RETRY_DELAY_SECONDS)
+                        self.http.sleep(RETRY_DELAY_SECONDS)
                         continue
                     raise error
 
@@ -265,7 +266,7 @@ class WanClient:
             except Exception as exception:  # noqa: BLE001
                 last_exception = exception
                 if _attempt < attempt_count - 1 and is_retryable_exception(exception):
-                    time.sleep(RETRY_DELAY_SECONDS)
+                    self.http.sleep(RETRY_DELAY_SECONDS)
                     continue
                 raise
 

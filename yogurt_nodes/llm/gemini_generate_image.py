@@ -1,4 +1,3 @@
-import asyncio
 import json
 from typing import Optional
 from typing_extensions import List
@@ -259,8 +258,7 @@ async def generate_image(
                 img = img[0]
             img = img.permute(2, 0, 1)
             images.append(torchvision.transforms.ToPILImage()(img))
-    images, text, thought, history = await asyncio.to_thread(
-        client.generate_image,
+    images, text, thought, history = await client.generate_image_async(
         model_name=model_name,
         prompt=prompt,
         system_prompt=system_prompt,
@@ -378,33 +376,36 @@ class GeminiGenerateImage:
             base_url=base_url,
             timeout=timeout,
         )
-        return await generate_image(
-            client=client,
-            model_name=model_name,
-            system_prompt=system_prompt,
-            prompt=prompt,
-            temperature=temperature,
-            top_p=top_p,
-            top_k=top_k,
-            max_output_tokens=max_output_tokens,
-            retry_count=retry_count,
-            disable_safety_settings=disable_safety_settings,
-            disable_system_prompt=disable_system_prompt,
-            safety_level=safety_level,
-            thinking_budget=thinking_budget,
-            thinking_level=thinking_level,
-            chat_template=chat_template,
-            seed=seed,
-            aspect_ratio=None if aspect_ratio == "auto" else aspect_ratio,
-            image_size=image_size,
-            extra=extra_dict,
-            image=image,
-            image1=image1,
-            image2=image2,
-            image3=image3,
-            image4=image4,
-            history=history,
-        )
+        try:
+            return await generate_image(
+                client=client,
+                model_name=model_name,
+                system_prompt=system_prompt,
+                prompt=prompt,
+                temperature=temperature,
+                top_p=top_p,
+                top_k=top_k,
+                max_output_tokens=max_output_tokens,
+                retry_count=retry_count,
+                disable_safety_settings=disable_safety_settings,
+                disable_system_prompt=disable_system_prompt,
+                safety_level=safety_level,
+                thinking_budget=thinking_budget,
+                thinking_level=thinking_level,
+                chat_template=chat_template,
+                seed=seed,
+                aspect_ratio=None if aspect_ratio == "auto" else aspect_ratio,
+                image_size=image_size,
+                extra=extra_dict,
+                image=image,
+                image1=image1,
+                image2=image2,
+                image3=image3,
+                image4=image4,
+                history=history,
+            )
+        finally:
+            await client.close_async()
 
 
 class VertexAIGenerateImage:
@@ -508,30 +509,33 @@ class VertexAIGenerateImage:
             base_url=base_url,
             timeout=timeout,
         )
-        return await generate_image(
-            client=client,
-            model_name=model_name,
-            system_prompt=system_prompt,
-            prompt=prompt,
-            temperature=temperature,
-            top_p=top_p,
-            top_k=top_k,
-            max_output_tokens=max_output_tokens,
-            retry_count=retry_count,
-            disable_safety_settings=disable_safety_settings,
-            disable_system_prompt=disable_system_prompt,
-            safety_level=safety_level,
-            thinking_budget=thinking_budget,
-            thinking_level=thinking_level,
-            chat_template=chat_template,
-            seed=seed,
-            aspect_ratio=None if aspect_ratio == "auto" else aspect_ratio,
-            image_size=image_size,
-            extra=extra_dict,
-            image=image,
-            image1=image1,
-            image2=image2,
-            image3=image3,
-            image4=image4,
-            history=history,
-        )
+        try:
+            return await generate_image(
+                client=client,
+                model_name=model_name,
+                system_prompt=system_prompt,
+                prompt=prompt,
+                temperature=temperature,
+                top_p=top_p,
+                top_k=top_k,
+                max_output_tokens=max_output_tokens,
+                retry_count=retry_count,
+                disable_safety_settings=disable_safety_settings,
+                disable_system_prompt=disable_system_prompt,
+                safety_level=safety_level,
+                thinking_budget=thinking_budget,
+                thinking_level=thinking_level,
+                chat_template=chat_template,
+                seed=seed,
+                aspect_ratio=None if aspect_ratio == "auto" else aspect_ratio,
+                image_size=image_size,
+                extra=extra_dict,
+                image=image,
+                image1=image1,
+                image2=image2,
+                image3=image3,
+                image4=image4,
+                history=history,
+            )
+        finally:
+            await client.close_async()

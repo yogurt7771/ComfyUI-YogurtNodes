@@ -1,4 +1,3 @@
-import asyncio
 import json
 from typing import List
 
@@ -232,7 +231,6 @@ class GeminiGenerateTextBase:
         history = None,
         **kwargs,
     ):
-        client = self.create_client(**kwargs)
         images = []
         for img in [image, image1, image2, image3, image4]:
             if img is not None:
@@ -246,28 +244,31 @@ class GeminiGenerateTextBase:
         except (json.JSONDecodeError, TypeError):
             raise ValueError(f"Invalid JSON of extra parameters: {extra_str}")
 
-        text, thought, history = await asyncio.to_thread(
-            client.generate_text,
-            model_name=kwargs.get("model_name", ""),
-            system_prompt=kwargs.get("system_prompt", ""),
-            prompt=kwargs.get("prompt", ""),
-            temperature=kwargs.get("temperature", 1),
-            top_p=kwargs.get("top_p", 0),
-            top_k=kwargs.get("top_k", 0),
-            max_output_tokens=kwargs.get("max_output_tokens", 65535),
-            retry_count=kwargs.get("retry_count", 1),
-            disable_safety_settings=kwargs.get("disable_safety_settings", False),
-            disable_system_prompt=kwargs.get("disable_system_prompt", False),
-            safety_level=kwargs.get("safety_level", "BLOCK_NONE"),
-            thinking_budget=kwargs.get("thinking_budget", 0),
-            thinking_level=kwargs.get("thinking_level", "OFF"),
-            chat_template=kwargs.get("chat_template", ""),
-            history=history,
-            seed=kwargs.get("seed", -1),
-            images=images,
-            extra=extra,
-        )
-        return (text, history, thought)
+        client = self.create_client(**kwargs)
+        try:
+            text, thought, history = await client.generate_text_async(
+                model_name=kwargs.get("model_name", ""),
+                system_prompt=kwargs.get("system_prompt", ""),
+                prompt=kwargs.get("prompt", ""),
+                temperature=kwargs.get("temperature", 1),
+                top_p=kwargs.get("top_p", 0),
+                top_k=kwargs.get("top_k", 0),
+                max_output_tokens=kwargs.get("max_output_tokens", 65535),
+                retry_count=kwargs.get("retry_count", 1),
+                disable_safety_settings=kwargs.get("disable_safety_settings", False),
+                disable_system_prompt=kwargs.get("disable_system_prompt", False),
+                safety_level=kwargs.get("safety_level", "BLOCK_NONE"),
+                thinking_budget=kwargs.get("thinking_budget", 0),
+                thinking_level=kwargs.get("thinking_level", "OFF"),
+                chat_template=kwargs.get("chat_template", ""),
+                history=history,
+                seed=kwargs.get("seed", -1),
+                images=images,
+                extra=extra,
+            )
+            return (text, history, thought)
+        finally:
+            await client.close_async()
 
 
 class GeminiGenerateText(GeminiGenerateTextBase):

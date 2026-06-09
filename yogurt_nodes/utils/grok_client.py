@@ -3,14 +3,13 @@ import io
 import os
 import random
 import re
-import time
 from typing import Any, Dict, List, Optional
 
-import requests
 from PIL import Image
 
 import comfy.model_management as model_management
 from .api_keys import load_api_keys
+from .cancellable_http import CancellableHttpClient
 from .openai_client import build_messages, image_to_base64
 
 
@@ -70,6 +69,7 @@ class GrokClient:
             }
         else:
             self.proxies = None
+        self.http = CancellableHttpClient(proxy_url=self.proxy_url, timeout=self.timeout)
 
     @staticmethod
     def _normalize_image_payload(image: Image.Image) -> Dict[str, str]:
@@ -107,7 +107,7 @@ class GrokClient:
             image.load()
             return image
 
-        response = requests.get(
+        response = self.http.get(
             url,
             timeout=self.timeout if self.timeout > 0 else None,
             proxies=self.proxies,
@@ -214,7 +214,7 @@ class GrokClient:
             try:
                 if seed >= 0:
                     payload["seed"] = current_seed + attempt
-                response = requests.post(
+                response = self.http.post(
                     f"{self.base_url}/chat/completions",
                     headers=self.headers,
                     json=payload,
@@ -236,7 +236,7 @@ class GrokClient:
                 return content, history, payload
             except Exception as exception:
                 last_exception = exception
-                time.sleep(3)
+                self.http.sleep(3)
 
         raise RuntimeError(
             f"Failed to generate text after {retry_count} retries. "
@@ -349,7 +349,7 @@ class GrokClient:
                 if seed >= 0:
                     payload["seed"] = current_seed + attempt
 
-                response = requests.post(
+                response = self.http.post(
                     endpoint,
                     headers=self.headers,
                     json=payload,
@@ -391,7 +391,7 @@ class GrokClient:
 
             except Exception as exception:
                 last_exception = exception
-                time.sleep(3)
+                self.http.sleep(3)
 
         raise RuntimeError(
             f"Failed to generate image after {retry_count} retries. "

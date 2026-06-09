@@ -1,4 +1,5 @@
 import base64
+import asyncio
 import importlib.util
 import io
 import os
@@ -103,6 +104,10 @@ class DashScopeImageClientTests(unittest.TestCase):
         cls.gemini_node_module = load_module(
             "yogurt_nodes.llm.gemini_generate_image",
             LLM_DIR / "gemini_generate_image.py",
+        )
+        cls.gemini_text_node_module = load_module(
+            "yogurt_nodes.llm.gemini_generate_text",
+            LLM_DIR / "gemini_generate_text.py",
         )
 
     def test_build_qwen_request_for_text_only_generation(self):
@@ -365,14 +370,7 @@ class DashScopeImageClientTests(unittest.TestCase):
             def json():
                 return {"choices": [{"message": {"content": "ok"}}]}
 
-        with (
-            mock.patch.object(
-                self.openai_client_module.requests,
-                "post",
-                return_value=FakeResponse(),
-            ) as mock_post,
-            mock.patch.object(self.openai_client_module.time, "sleep"),
-        ):
+        with mock.patch.object(client.http, "post", return_value=FakeResponse()) as mock_post:
             text, _, _ = client.generate_text(
                 model_name="gpt-4o-mini",
                 prompt="ping",
@@ -390,7 +388,6 @@ class DashScopeImageClientTests(unittest.TestCase):
         self.assertIsNotNone(client_class, "缺少 OpenAIClient 类")
 
         proxy_url = "http://127.0.0.1:7890"
-        created_clients = []
         image_buffer = io.BytesIO()
         Image.new("RGB", (8, 8), color="red").save(image_buffer, format="PNG")
         encoded_image = base64.b64encode(image_buffer.getvalue()).decode("ascii")
@@ -403,29 +400,8 @@ class DashScopeImageClientTests(unittest.TestCase):
             def json():
                 return {"data": [{"b64_json": encoded_image}]}
 
-        class FakeHTTPXClient:
-            def __init__(self, **kwargs):
-                self.kwargs = kwargs
-                created_clients.append(self)
-
-            def __enter__(self):
-                return self
-
-            def __exit__(self, exc_type, exc_val, exc_tb):
-                return None
-
-            def post(self, *args, **kwargs):
-                return FakeResponse()
-
         client = client_class(api_key="test-key", proxy_url=proxy_url)
-        with (
-            mock.patch.object(
-                self.openai_client_module.httpx,
-                "Client",
-                FakeHTTPXClient,
-            ),
-            mock.patch.object(self.openai_client_module.time, "sleep"),
-        ):
+        with mock.patch.object(client.http, "post", return_value=FakeResponse()):
             images, _, _ = client.generate_image(
                 model_name="gpt-image-1",
                 prompt="test",
@@ -435,7 +411,7 @@ class DashScopeImageClientTests(unittest.TestCase):
             )
 
         self.assertEqual(len(images), 1)
-        self.assertEqual(created_clients[0].kwargs["proxy"], proxy_url)
+        self.assertEqual(client.http.proxy_url, proxy_url)
 
     def test_gemini_node_uses_single_and_list_outputs_with_count(self):
         node_class = getattr(self.gemini_node_module, "GeminiGenerateImage", None)
@@ -475,6 +451,467 @@ class DashScopeImageClientTests(unittest.TestCase):
         self.assertEqual(http_options.client_args["proxy"], proxy_url)
         self.assertEqual(http_options.async_client_args["proxy"], proxy_url)
         self.assertEqual(http_options.timeout, 11000)
+
+    def test_gemini_generate_text_async_uses_sdk_async_generate_content(self):
+        client_class = getattr(self.gemini_client_module, "GeminiClient", None)
+        self.assertIsNotNone(client_class, "缺少 GeminiClient 类")
+
+        calls = []
+
+        class FakePart:
+            text = "ok"
+
+        class FakeContent:
+            parts = [FakePart()]
+
+        class FakeCandidate:
+            content = FakeContent()
+
+        class FakeResponse:
+            candidates = [FakeCandidate()]
+
+        class FakeAsyncModels:
+            async def generate_content(self, **kwargs):
+                calls.append(kwargs)
+                return FakeResponse()
+
+        class FakeAioClient:
+            def __init__(self):
+                self.models = FakeAsyncModels()
+
+        class FakeGenAIClient:
+            def __init__(self, **kwargs):
+                self.aio = FakeAioClient()
+
+        async def run():
+            with mock.patch.object(
+                self.gemini_client_module.genai,
+                "Client",
+                FakeGenAIClient,
+            ):
+                client = client_class(api_key="test-key")
+            return await client.generate_text_async(
+                model_name="gemini-test",
+                prompt="ping",
+                retry_count=1,
+            )
+
+        text, thought, history = asyncio.run(run())
+
+        self.assertEqual(text, "ok")
+        self.assertEqual(thought, "")
+        self.assertEqual(history, [("user", "ping"), ("assistant", "ok")])
+        self.assertEqual(calls[0]["model"], "gemini-test")
+
+    def test_gemini_generate_image_async_uses_sdk_async_generate_content(self):
+        client_class = getattr(self.gemini_client_module, "GeminiClient", None)
+        self.assertIsNotNone(client_class, "缺少 GeminiClient 类")
+
+        calls = []
+        image_buffer = io.BytesIO()
+        Image.new("RGB", (6, 4), color="cyan").save(image_buffer, format="PNG")
+
+        class FakeTextPart:
+            text = "caption"
+
+        class FakeInlineData:
+            data = image_buffer.getvalue()
+
+        class FakeImagePart:
+            inline_data = FakeInlineData()
+
+        class FakeContent:
+            parts = [FakeTextPart(), FakeImagePart()]
+
+        class FakeCandidate:
+            content = FakeContent()
+
+        class FakeResponse:
+            candidates = [FakeCandidate()]
+
+        class FakeAsyncModels:
+            async def generate_content(self, **kwargs):
+                calls.append(kwargs)
+                return FakeResponse()
+
+        class FakeAioClient:
+            def __init__(self):
+                self.models = FakeAsyncModels()
+
+        class FakeGenAIClient:
+            def __init__(self, **kwargs):
+                self.aio = FakeAioClient()
+
+        async def run():
+            with mock.patch.object(
+                self.gemini_client_module.genai,
+                "Client",
+                FakeGenAIClient,
+            ):
+                client = client_class(api_key="test-key")
+            return await client.generate_image_async(
+                model_name="gemini-image-test",
+                prompt="paint",
+                retry_count=1,
+            )
+
+        images, text, thought, history = asyncio.run(run())
+
+        self.assertEqual(len(images), 1)
+        self.assertEqual(images[0].size, (6, 4))
+        self.assertEqual(text, "caption")
+        self.assertEqual(thought, "")
+        self.assertEqual(history, [("user", "paint"), ("assistant", "caption")])
+        self.assertEqual(calls[0]["model"], "gemini-image-test")
+
+    def test_gemini_generate_text_async_cancels_and_closes_aio_on_interrupt(self):
+        client_class = getattr(self.gemini_client_module, "GeminiClient", None)
+        self.assertIsNotNone(client_class, "缺少 GeminiClient 类")
+
+        class TestInterrupt(BaseException):
+            pass
+
+        state = {"interrupted": False}
+
+        def processing_interrupted():
+            return state["interrupted"]
+
+        def throw_exception_if_processing_interrupted():
+            if state["interrupted"]:
+                raise TestInterrupt()
+
+        async def run():
+            started = asyncio.Event()
+
+            class FakeAsyncModels:
+                def __init__(self):
+                    self.cancelled = False
+
+                async def generate_content(self, **kwargs):
+                    started.set()
+                    try:
+                        await asyncio.Event().wait()
+                    except asyncio.CancelledError:
+                        self.cancelled = True
+                        raise
+
+            class FakeAioClient:
+                def __init__(self):
+                    self.models = FakeAsyncModels()
+                    self.closed = False
+
+                async def aclose(self):
+                    self.closed = True
+
+            class FakeGenAIClient:
+                def __init__(self, **kwargs):
+                    self.aio = FakeAioClient()
+
+            with mock.patch.object(
+                self.gemini_client_module.genai,
+                "Client",
+                FakeGenAIClient,
+            ):
+                client = client_class(api_key="test-key")
+            client.cancel_check_interval = 0.01
+
+            with (
+                mock.patch.object(
+                    self.gemini_client_module.model_management,
+                    "processing_interrupted",
+                    processing_interrupted,
+                    create=True,
+                ),
+                mock.patch.object(
+                    self.gemini_client_module.model_management,
+                    "throw_exception_if_processing_interrupted",
+                    throw_exception_if_processing_interrupted,
+                ),
+            ):
+                task = asyncio.create_task(
+                    client.generate_text_async(
+                        model_name="gemini-test",
+                        prompt="ping",
+                        retry_count=1,
+                    )
+                )
+                await asyncio.wait_for(started.wait(), timeout=1)
+                state["interrupted"] = True
+                with self.assertRaises(TestInterrupt):
+                    await asyncio.wait_for(task, timeout=1)
+
+            return client.client.aio.closed, client.client.aio.models.cancelled
+
+        closed, cancelled = asyncio.run(run())
+
+        self.assertTrue(closed)
+        self.assertTrue(cancelled)
+
+    def test_gemini_generate_text_async_closes_aio_when_cancel_task_raises_error(self):
+        client_class = getattr(self.gemini_client_module, "GeminiClient", None)
+        self.assertIsNotNone(client_class, "缺少 GeminiClient 类")
+
+        class TestInterrupt(BaseException):
+            pass
+
+        state = {"interrupted": False}
+
+        def processing_interrupted():
+            return state["interrupted"]
+
+        def throw_exception_if_processing_interrupted():
+            if state["interrupted"]:
+                raise TestInterrupt()
+
+        async def run():
+            started = asyncio.Event()
+
+            class FakeAsyncModels:
+                def __init__(self):
+                    self.cancelled = False
+
+                async def generate_content(self, **kwargs):
+                    started.set()
+                    try:
+                        await asyncio.Event().wait()
+                    except asyncio.CancelledError as exception:
+                        self.cancelled = True
+                        raise RuntimeError("transport failed while cancelling") from exception
+
+            class FakeAioClient:
+                def __init__(self):
+                    self.models = FakeAsyncModels()
+                    self.closed = False
+
+                async def aclose(self):
+                    self.closed = True
+
+            class FakeGenAIClient:
+                def __init__(self, **kwargs):
+                    self.aio = FakeAioClient()
+
+            with mock.patch.object(
+                self.gemini_client_module.genai,
+                "Client",
+                FakeGenAIClient,
+            ):
+                client = client_class(api_key="test-key")
+            client.cancel_check_interval = 0.01
+
+            with (
+                mock.patch.object(
+                    self.gemini_client_module.model_management,
+                    "processing_interrupted",
+                    processing_interrupted,
+                    create=True,
+                ),
+                mock.patch.object(
+                    self.gemini_client_module.model_management,
+                    "throw_exception_if_processing_interrupted",
+                    throw_exception_if_processing_interrupted,
+                ),
+            ):
+                task = asyncio.create_task(
+                    client.generate_text_async(
+                        model_name="gemini-test",
+                        prompt="ping",
+                        retry_count=1,
+                    )
+                )
+                await asyncio.wait_for(started.wait(), timeout=1)
+                state["interrupted"] = True
+                with self.assertRaises(TestInterrupt):
+                    await asyncio.wait_for(task, timeout=1)
+
+            return client.client.aio.closed, client.client.aio.models.cancelled
+
+        closed, cancelled = asyncio.run(run())
+
+        self.assertTrue(closed)
+        self.assertTrue(cancelled)
+
+    def test_gemini_text_node_closes_owned_client_after_success(self):
+        node_class = getattr(self.gemini_text_node_module, "GeminiGenerateText", None)
+        self.assertIsNotNone(node_class, "缺少 GeminiGenerateText 节点类")
+
+        closed = []
+
+        class FakeClient:
+            def __init__(self, **kwargs):
+                self.kwargs = kwargs
+
+            async def generate_text_async(self, **kwargs):
+                return "ok", "", [("assistant", "ok")]
+
+            async def close_async(self):
+                closed.append(True)
+
+        async def run():
+            with mock.patch.object(
+                self.gemini_text_node_module,
+                "GeminiClient",
+                FakeClient,
+            ):
+                return await node_class().generate_text(
+                    model_name="gemini-test",
+                    prompt="ping",
+                    retry_count=1,
+                    extra="{}",
+                )
+
+        result = asyncio.run(run())
+
+        self.assertEqual(result, ("ok", [("assistant", "ok")], ""))
+        self.assertEqual(closed, [True])
+
+    def test_gemini_text_node_closes_owned_client_when_cancelled(self):
+        node_class = getattr(self.gemini_text_node_module, "GeminiGenerateText", None)
+        self.assertIsNotNone(node_class, "缺少 GeminiGenerateText 节点类")
+
+        closed = []
+
+        async def run():
+            started = asyncio.Event()
+
+            class FakeClient:
+                def __init__(self, **kwargs):
+                    self.kwargs = kwargs
+
+                async def generate_text_async(self, **kwargs):
+                    started.set()
+                    await asyncio.Event().wait()
+
+                async def close_async(self):
+                    closed.append(True)
+
+            with mock.patch.object(
+                self.gemini_text_node_module,
+                "GeminiClient",
+                FakeClient,
+            ):
+                task = asyncio.create_task(
+                    node_class().generate_text(
+                        model_name="gemini-test",
+                        prompt="ping",
+                        retry_count=1,
+                        extra="{}",
+                    )
+                )
+                await asyncio.wait_for(started.wait(), timeout=1)
+                task.cancel()
+                with self.assertRaises(asyncio.CancelledError):
+                    await asyncio.wait_for(task, timeout=1)
+
+        asyncio.run(run())
+
+        self.assertEqual(closed, [True])
+
+    def test_gemini_text_node_does_not_create_client_for_invalid_extra_json(self):
+        node_class = getattr(self.gemini_text_node_module, "GeminiGenerateText", None)
+        self.assertIsNotNone(node_class, "缺少 GeminiGenerateText 节点类")
+
+        created = []
+
+        class FakeClient:
+            def __init__(self, **kwargs):
+                created.append(True)
+
+        async def run():
+            with mock.patch.object(
+                self.gemini_text_node_module,
+                "GeminiClient",
+                FakeClient,
+            ):
+                with self.assertRaisesRegex(ValueError, "Invalid JSON"):
+                    await node_class().generate_text(
+                        model_name="gemini-test",
+                        prompt="ping",
+                        retry_count=1,
+                        extra="{invalid",
+                    )
+
+        asyncio.run(run())
+
+        self.assertEqual(created, [])
+
+    def test_gemini_image_node_closes_owned_client_after_success(self):
+        node_class = getattr(self.gemini_node_module, "GeminiGenerateImage", None)
+        self.assertIsNotNone(node_class, "缺少 GeminiGenerateImage 节点类")
+
+        closed = []
+
+        class FakeClient:
+            def __init__(self, **kwargs):
+                self.kwargs = kwargs
+
+            async def generate_image_async(self, **kwargs):
+                return [], "caption", "", [("assistant", "caption")]
+
+            async def close_async(self):
+                closed.append(True)
+
+        async def run():
+            with mock.patch.object(
+                self.gemini_node_module,
+                "GeminiClient",
+                FakeClient,
+            ):
+                return await node_class().generate_image(
+                    model_name="gemini-image-test",
+                    prompt="paint",
+                    retry_count=1,
+                    extra="{}",
+                )
+
+        _image, _images, count, text, history, thought = asyncio.run(run())
+
+        self.assertEqual(count, 0)
+        self.assertEqual(text, "caption")
+        self.assertEqual(history, [("assistant", "caption")])
+        self.assertEqual(thought, "")
+        self.assertEqual(closed, [True])
+
+    def test_gemini_image_node_closes_owned_client_when_cancelled(self):
+        node_class = getattr(self.gemini_node_module, "GeminiGenerateImage", None)
+        self.assertIsNotNone(node_class, "缺少 GeminiGenerateImage 节点类")
+
+        closed = []
+
+        async def run():
+            started = asyncio.Event()
+
+            class FakeClient:
+                def __init__(self, **kwargs):
+                    self.kwargs = kwargs
+
+                async def generate_image_async(self, **kwargs):
+                    started.set()
+                    await asyncio.Event().wait()
+
+                async def close_async(self):
+                    closed.append(True)
+
+            with mock.patch.object(
+                self.gemini_node_module,
+                "GeminiClient",
+                FakeClient,
+            ):
+                task = asyncio.create_task(
+                    node_class().generate_image(
+                        model_name="gemini-image-test",
+                        prompt="paint",
+                        retry_count=1,
+                        extra="{}",
+                    )
+                )
+                await asyncio.wait_for(started.wait(), timeout=1)
+                task.cancel()
+                with self.assertRaises(asyncio.CancelledError):
+                    await asyncio.wait_for(task, timeout=1)
+
+        asyncio.run(run())
+
+        self.assertEqual(closed, [True])
 
     def test_gemini_vertex_credentials_refresh_uses_proxy_env(self):
         client_class = getattr(self.gemini_client_module, "GeminiClient", None)
@@ -717,11 +1154,7 @@ class OpenRouterImageNodeTests(unittest.TestCase):
                     ]
                 }
 
-        with mock.patch.object(
-            self.openrouter_client_module.requests,
-            "post",
-            return_value=FakeResponse(),
-        ) as mock_post:
+        with mock.patch.object(client.http, "post", return_value=FakeResponse()) as mock_post:
             client.generate_image(
                 model_name="google/gemini-2.5-flash-image-preview",
                 prompt="test",

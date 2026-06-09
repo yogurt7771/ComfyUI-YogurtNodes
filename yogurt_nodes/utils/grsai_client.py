@@ -5,11 +5,11 @@ import re
 import time
 from typing import Any, Dict, List, Optional
 
-import requests
 from PIL import Image
 
 import comfy.model_management as model_management
 from .api_keys import load_api_keys
+from .cancellable_http import CancellableHttpClient
 
 
 class GRSAIClient:
@@ -90,6 +90,7 @@ class GRSAIClient:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
+        self.http = CancellableHttpClient(proxy_url=proxy_url, timeout=self.timeout)
         self.proxies = (
             {
                 "http": proxy_url,
@@ -129,7 +130,7 @@ class GRSAIClient:
             image.load()
             return image
 
-        response = requests.get(
+        response = self.http.get(
             url,
             timeout=self.timeout if self.timeout > 0 else None,
             proxies=self.proxies,
@@ -186,7 +187,7 @@ class GRSAIClient:
         payload: Dict[str, Any],
         draw_type: str,
     ) -> Dict[str, Any]:
-        response = requests.post(
+        response = self.http.post(
             f"{self.base_url}/v1/draw/{draw_type}",
             headers=self.headers,
             json=payload,
@@ -220,7 +221,7 @@ class GRSAIClient:
 
         while time.monotonic() <= deadline:
             model_management.throw_exception_if_processing_interrupted()
-            response = requests.post(
+            response = self.http.post(
                 f"{self.base_url}/v1/draw/result",
                 headers=self.headers,
                 json={"id": task_id},
@@ -262,7 +263,7 @@ class GRSAIClient:
 
             last_status = status or last_status
             last_error = str(data.get("error", "") or last_error)
-            time.sleep(max(poll_interval_ms, 100) / 1000.0)
+            self.http.sleep(max(poll_interval_ms, 100) / 1000.0)
 
         raise TimeoutError(
             "GRSAI generation timed out"
@@ -399,6 +400,6 @@ class GRSAIClient:
             except Exception as exception:
                 last_exception = exception
                 if attempt + 1 < retry_count:
-                    time.sleep(3)
+                    self.http.sleep(3)
 
         raise last_exception or Exception("All retry attempts failed")

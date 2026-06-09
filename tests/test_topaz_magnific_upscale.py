@@ -186,8 +186,8 @@ class TopazMagnificUpscaleTests(unittest.TestCase):
 
         client = self.topaz_module.TopazClient(api_key="", retry_count=2, timeout=5)
         with (
-            mock.patch.object(self.topaz_module.requests, "request", fake_request),
-            mock.patch.object(self.topaz_module.time, "sleep"),
+            mock.patch.object(client.http, "request", fake_request),
+            mock.patch.object(client.http, "sleep"),
         ):
             output = client.upscale_image(
                 image=make_image(),
@@ -266,8 +266,8 @@ class TopazMagnificUpscaleTests(unittest.TestCase):
             timeout=5,
         )
         with (
-            mock.patch.object(self.magnific_module.requests, "request", fake_request),
-            mock.patch.object(self.magnific_module.time, "sleep"),
+            mock.patch.object(client.http, "request", fake_request),
+            mock.patch.object(client.http, "sleep"),
         ):
             output = client.upscale_image(
                 image=make_image(),

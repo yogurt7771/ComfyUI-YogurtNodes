@@ -4,16 +4,15 @@ import io
 import os
 import random
 import re
-import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import httpx
 import requests
 from PIL import Image
 
 import comfy.model_management as model_management
 from .api_keys import load_api_keys
+from .cancellable_http import CancellableHttpClient
 
 
 def image_to_base64(image: Image.Image) -> str:
@@ -230,6 +229,7 @@ class OpenAIClient:
         }
         self.proxy_url = proxy_url if proxy_url else None
         self.timeout = timeout
+        self.http = CancellableHttpClient(proxy_url=self.proxy_url, timeout=self.timeout)
 
     @property
     def proxies(self) -> Optional[Dict[str, str]]:
@@ -311,7 +311,7 @@ class OpenAIClient:
             model_management.throw_exception_if_processing_interrupted()
             try:
                 payload["seed"] = random.randint(0, 2**31 - 1)
-                response = requests.post(
+                response = self.http.post(
                     f"{self.base_url}/chat/completions",
                     headers=self.headers,
                     json=payload,
@@ -343,10 +343,10 @@ class OpenAIClient:
                 requests.RequestException,
             ) as exception:
                 last_exception = exception
-                time.sleep(3)
+                self.http.sleep(3)
             except Exception as exception:
                 last_exception = exception
-                time.sleep(3)
+                self.http.sleep(3)
 
         raise last_exception or Exception("All retry attempts failed")
 
@@ -407,7 +407,7 @@ class OpenAIClient:
     def get_models(self) -> List[Dict[str, Any]]:
         """获取可用模型列表"""
         try:
-            response = requests.get(
+            response = self.http.get(
                 f"{self.base_url}/models",
                 headers=self.headers,
                 timeout=self.timeout if self.timeout > 0 else None,
@@ -685,107 +685,103 @@ class OpenAIClient:
             else f"{self.base_url}/images/generations"
         )
 
-        with httpx.Client(
-            proxy=self.proxy_url,
-            timeout=self.timeout if self.timeout > 0 else None,
-        ) as client:
-            for _attempt in range(retry_count):
-                model_management.throw_exception_if_processing_interrupted()
-                try:
-                    if len(upload_files) > 0:
-                        # 编辑 / 变体：采用 multipart/form-data
-                        files_to_send = []
-                        for i, buf in enumerate(upload_files):
-                            buf.seek(0)
-                            files_to_send.append(
-                                (
-                                    "image",
-                                    (
-                                        getattr(buf, "name", f"image_{i}.png"),
-                                        buf,
-                                        "image/png",
-                                    ),
-                                )
-                            )
-
-                        data_fields = dict(image_kwargs)
-                        data_fields.pop("image", None)
-                        # multipart 只接受字符串，转换一下
-                        for key, value in list(data_fields.items()):
-                            if isinstance(value, (int, float)):
-                                data_fields[key] = str(value)
-                        print(f"Yogurt: OpenAI Images API - body: {data_fields}, files: {len(files_to_send)}")
-                        response = client.post(
-                            url,
-                            headers=multipart_headers,
-                            data=data_fields,
-                            files=files_to_send,
-                        )
-                        action = "Edited"
-                    else:
-                        image_kwargs_print = deepcopy(image_kwargs)
-                        if "image" in image_kwargs_print:
-                            for image_info in image_kwargs_print["image"]:
-                                if isinstance(image_info, dict) and "url" in image_info and image_info["url"].startswith("data:image"):
-                                    url = image_info["url"]
-                                    image_info["url"] = f"{url[:10]}...{url[-10:]}"  # 只显示前后部分，隐藏中间的base64数据
-                        print(f"Yogurt: OpenAI Images API - body: {image_kwargs_print}")
-                        # 纯生成或base64图像编辑：使用 application/json
-                        response = client.post(
-                            url, headers=json_headers, json=image_kwargs
-                        )
-                        action = "Edited" if has_input_images else "Generated"
-
-                    if response.status_code not in (200, 201):
-                        raise Exception(
-                            f"Images API failed: {response.status_code} {response.text}"
-                        )
-
-                    result = response.json()
-                    out_images: List[Image.Image] = []
-                    revised_prompt = prompt
-
-                    for image_data in result.get("data", []):
-                        img = None
-                        if (
-                            response_format == "url"
-                            and isinstance(image_data, dict)
-                            and image_data.get("url")
-                        ):
-                            img_response = client.get(image_data["url"])
-                            if img_response.status_code == 200:
-                                img = Image.open(io.BytesIO(img_response.content))
-                        elif isinstance(image_data, dict) and image_data.get(
-                            "b64_json"
-                        ):
-                            img_bytes = base64.b64decode(image_data["b64_json"])
-                            img = Image.open(io.BytesIO(img_bytes))
-
-                        if img is not None:
-                            img.load()  # 防止关闭前数据丢失
-                            out_images.append(img)
-
-                        if isinstance(image_data, dict) and image_data.get(
-                            "revised_prompt"
-                        ):
-                            revised_prompt = image_data["revised_prompt"]
-
-                    history.append(("user", prompt.split("\n\n")[-1]))
-                    history.append(
-                        (
-                            "assistant",
+        for _attempt in range(retry_count):
+            model_management.throw_exception_if_processing_interrupted()
+            try:
+                if len(upload_files) > 0:
+                    # 编辑 / 变体：采用 multipart/form-data
+                    files_to_send = []
+                    for i, buf in enumerate(upload_files):
+                        buf.seek(0)
+                        files_to_send.append(
                             (
-                                f"{action} {len(out_images)} image(s). "
-                                f"Revised: {revised_prompt}"
-                            ),
+                                "image",
+                                (
+                                    getattr(buf, "name", f"image_{i}.png"),
+                                    buf,
+                                    "image/png",
+                                ),
+                            )
                         )
+
+                    data_fields = dict(image_kwargs)
+                    data_fields.pop("image", None)
+                    # multipart 只接受字符串，转换一下
+                    for key, value in list(data_fields.items()):
+                        if isinstance(value, (int, float)):
+                            data_fields[key] = str(value)
+                    print(f"Yogurt: OpenAI Images API - body: {data_fields}, files: {len(files_to_send)}")
+                    response = self.http.post(
+                        url,
+                        headers=multipart_headers,
+                        data=data_fields,
+                        files=files_to_send,
+                    )
+                    action = "Edited"
+                else:
+                    image_kwargs_print = deepcopy(image_kwargs)
+                    if "image" in image_kwargs_print:
+                        for image_info in image_kwargs_print["image"]:
+                            if isinstance(image_info, dict) and "url" in image_info and image_info["url"].startswith("data:image"):
+                                image_url = image_info["url"]
+                                image_info["url"] = f"{image_url[:10]}...{image_url[-10:]}"  # 只显示前后部分，隐藏中间的base64数据
+                    print(f"Yogurt: OpenAI Images API - body: {image_kwargs_print}")
+                    # 纯生成或base64图像编辑：使用 application/json
+                    response = self.http.post(
+                        url, headers=json_headers, json=image_kwargs
+                    )
+                    action = "Edited" if has_input_images else "Generated"
+
+                if response.status_code not in (200, 201):
+                    raise Exception(
+                        f"Images API failed: {response.status_code} {response.text}"
                     )
 
-                    return out_images, revised_prompt, history
+                result = response.json()
+                out_images: List[Image.Image] = []
+                revised_prompt = prompt
 
-                except Exception as exception:
-                    last_exception = exception
-                    time.sleep(3)
+                for image_data in result.get("data", []):
+                    img = None
+                    if (
+                        response_format == "url"
+                        and isinstance(image_data, dict)
+                        and image_data.get("url")
+                    ):
+                        img_response = self.http.get(image_data["url"])
+                        if img_response.status_code == 200:
+                            img = Image.open(io.BytesIO(img_response.content))
+                    elif isinstance(image_data, dict) and image_data.get(
+                        "b64_json"
+                    ):
+                        img_bytes = base64.b64decode(image_data["b64_json"])
+                        img = Image.open(io.BytesIO(img_bytes))
+
+                    if img is not None:
+                        img.load()  # 防止关闭前数据丢失
+                        out_images.append(img)
+
+                    if isinstance(image_data, dict) and image_data.get(
+                        "revised_prompt"
+                    ):
+                        revised_prompt = image_data["revised_prompt"]
+
+                history.append(("user", prompt.split("\n\n")[-1]))
+                history.append(
+                    (
+                        "assistant",
+                        (
+                            f"{action} {len(out_images)} image(s). "
+                            f"Revised: {revised_prompt}"
+                        ),
+                    )
+                )
+
+                return out_images, revised_prompt, history
+
+            except Exception as exception:
+                last_exception = exception
+                self.http.sleep(3)
 
         raise last_exception or Exception("All retry attempts failed")
 
@@ -809,13 +805,9 @@ class OpenAIClient:
 
         url = f"{self.base_url}/responses"
 
-        with httpx.Client(
-            proxy=self.proxy_url,
-            timeout=self.timeout if self.timeout > 0 else None,
-        ) as client:
-            for _attempt in range(retry_count):
-                model_management.throw_exception_if_processing_interrupted()
-                try:
+        for _attempt in range(retry_count):
+            model_management.throw_exception_if_processing_interrupted()
+            try:
                     # 构建输入内容
                     if images:
                         content = [{"type": "input_text", "text": prompt}]
@@ -840,7 +832,7 @@ class OpenAIClient:
                     if extra:
                         payload.update(extra)
 
-                    response = client.post(url, headers=headers, json=payload)
+                    response = self.http.post(url, headers=headers, json=payload)
 
                     if response.status_code not in (200, 201):
                         raise Exception(
@@ -911,8 +903,8 @@ class OpenAIClient:
 
                     return out_images, response_text, history
 
-                except Exception as exception:
-                    last_exception = exception
-                    time.sleep(3)
+            except Exception as exception:
+                last_exception = exception
+                self.http.sleep(3)
 
         raise last_exception or Exception("All retry attempts failed")

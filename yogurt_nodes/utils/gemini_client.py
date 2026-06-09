@@ -1,7 +1,10 @@
+import asyncio
+import inspect
 import io
 import json
 import random
 import time
+from contextlib import suppress
 from io import BytesIO
 from typing import List, Optional
 
@@ -59,6 +62,8 @@ class GeminiClient:
         如API Key未设置，将抛出异常。
         """
         self.proxy_url = proxy_url
+        self.cancel_check_interval = 0.25
+        self._client_closed = False
         self.use_vertex_ai = use_vertex_ai
         self.credentials = None
         api_keys = None
@@ -383,6 +388,88 @@ class GeminiClient:
             config.image_config = image_config
         return config, contents, history
 
+    @staticmethod
+    def _processing_interrupted() -> bool:
+        checker = getattr(model_management, "processing_interrupted", None)
+        if callable(checker):
+            return bool(checker())
+        return False
+
+    async def _sleep_async(self, seconds: float) -> None:
+        deadline = time.monotonic() + max(float(seconds), 0.0)
+        while True:
+            if self._processing_interrupted():
+                model_management.throw_exception_if_processing_interrupted()
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return
+            await asyncio.sleep(min(self.cancel_check_interval, remaining))
+
+    async def _close_aio_client(self) -> None:
+        if self._client_closed:
+            return
+        aio_client = getattr(self.client, "aio", None)
+        aclose = getattr(aio_client, "aclose", None)
+        if callable(aclose):
+            close_result = aclose()
+            if inspect.isawaitable(close_result):
+                await close_result
+            self._client_closed = True
+            return
+
+        close = getattr(self.client, "close", None)
+        if callable(close):
+            close()
+        self._client_closed = True
+
+    async def close_async(self) -> None:
+        await self._close_aio_client()
+
+    @staticmethod
+    async def _cancel_and_drain_task(task: asyncio.Task) -> None:
+        if not task.done():
+            task.cancel()
+        with suppress(asyncio.CancelledError, Exception):
+            await task
+
+    async def _cancel_task_and_close(self, task: asyncio.Task) -> None:
+        try:
+            await self._cancel_and_drain_task(task)
+        finally:
+            await self._close_aio_client()
+
+    async def _generate_content_async(self, model_name: str, contents, config):
+        model_management.throw_exception_if_processing_interrupted()
+
+        aio_client = getattr(self.client, "aio", None)
+        aio_models = getattr(aio_client, "models", None)
+        generate_content = getattr(aio_models, "generate_content", None)
+        if not callable(generate_content):
+            raise RuntimeError("Gemini async client is unavailable.")
+
+        task = asyncio.create_task(
+            generate_content(
+                model=model_name,
+                contents=contents,
+                config=config,
+            )
+        )
+        try:
+            while True:
+                done, _pending = await asyncio.wait(
+                    {task},
+                    timeout=self.cancel_check_interval,
+                )
+                if task in done:
+                    return task.result()
+                if self._processing_interrupted():
+                    await self._cancel_task_and_close(task)
+                    model_management.throw_exception_if_processing_interrupted()
+                    raise asyncio.CancelledError("Gemini request cancelled")
+        except asyncio.CancelledError:
+            await self._cancel_task_and_close(task)
+            raise
+
     def generate_text(
         self,
         model_name: str = "",
@@ -487,6 +574,89 @@ class GeminiClient:
                 # print(f"Unexpected error in attempt {attempt + 1}/{retry_count} for model {model_name}: {exception}")
                 last_exception = exception
                 time.sleep(3)
+
+        raise RuntimeError(
+            f"Failed to generate text after {retry_count} retries. "
+            f"Last error: {last_exception}. Response: {response}"
+        )
+
+    async def generate_text_async(
+        self,
+        model_name: str = "",
+        prompt: str = "",
+        system_prompt: str = "",
+        images: Optional[List[Image.Image]] = None,
+        history: List[tuple[str, str]] | None = None,
+        temperature: float = 1,
+        top_p: float = 0,
+        top_k: int = 0,
+        max_output_tokens: int = 8192,
+        retry_count: int = 3,
+        disable_safety_settings: bool = False,
+        disable_system_prompt: bool = False,
+        safety_level: str = "BLOCK_NONE",
+        thinking_budget: int = 0,
+        thinking_level: str = "OFF",
+        chat_template: str = "",
+        seed: int = -1,
+        extra: dict | None = None,
+    ) -> tuple[str, str, List[tuple[str, str]]]:
+        config, contents, history = self._build_params(
+            model_name=model_name,
+            prompt=prompt,
+            system_prompt=system_prompt,
+            images=images,
+            history=history,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            max_output_tokens=max_output_tokens,
+            disable_safety_settings=disable_safety_settings,
+            disable_system_prompt=disable_system_prompt,
+            safety_level=safety_level,
+            thinking_budget=thinking_budget,
+            thinking_level=thinking_level,
+            chat_template=chat_template,
+            extra=extra,
+        )
+        last_exception = None
+        response = None
+        for _attempt in range(retry_count):
+            model_management.throw_exception_if_processing_interrupted()
+            try:
+                if seed < 0:
+                    seed = random.randint(0, 2**31 - 1)
+                config.seed = seed
+
+                self._ensure_vertex_credentials()
+                response = await self._generate_content_async(
+                    model_name,
+                    contents,
+                    config,
+                )
+                if (
+                    response.candidates is None
+                    or response.candidates[0].content is None
+                    or response.candidates[0].content.parts is None
+                ):
+                    raise ValueError(f"Model {model_name} returned no candidates.")
+                last_thought = ""
+                last_text = ""
+                for part in response.candidates[0].content.parts:
+                    if hasattr(part, 'thought') and part.thought is True:
+                        last_thought += part.text
+                    else:
+                        last_text += part.text
+                if last_text is not None and len(last_text) > 0:
+                    history.append(("assistant", last_text))
+                    return last_text, last_thought, history
+                raise ValueError(f"Model {model_name} returned empty text response.")
+            except (ValueError, ConnectionError, TimeoutError) as exception:
+                last_exception = exception
+                await self._sleep_async(3)
+            except Exception as exception:
+                last_exception = exception
+                await self._sleep_async(3)
 
         raise RuntimeError(
             f"Failed to generate text after {retry_count} retries. "
@@ -609,6 +779,113 @@ class GeminiClient:
                 # print(f"Unexpected error in attempt {attempt + 1}/{retry_count} for model {model_name}: {exception}")
                 last_exception = exception
                 time.sleep(3)
+
+        raise RuntimeError(
+            f"Failed to generate image after {retry_count} retries. "
+            f"Last error: {last_exception}. Response: {response}"
+        )
+
+    async def generate_image_async(
+        self,
+        model_name: str,
+        prompt: str = "",
+        system_prompt: str = "",
+        images: Optional[List[Image.Image]] = None,
+        history: List[tuple[str, str]] | None = None,
+        temperature: float = 1,
+        top_p: float = 0,
+        top_k: int = 0,
+        max_output_tokens: int = 8192,
+        retry_count: int = 3,
+        disable_safety_settings: bool = False,
+        disable_system_prompt: bool = False,
+        safety_level: str = "BLOCK_NONE",
+        thinking_budget: int = 0,
+        thinking_level: str = "OFF",
+        chat_template: str = "",
+        seed: int = -1,
+        aspect_ratio: str | None = None,
+        image_size: str | None = None,
+        extra: dict | None = None,
+    ) -> tuple[List[Image.Image], str, str, List[tuple[str, str]]]:
+        config, contents, history = self._build_params(
+            model_name=model_name,
+            prompt=prompt,
+            system_prompt=system_prompt,
+            images=images,
+            history=history,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            max_output_tokens=max_output_tokens,
+            disable_safety_settings=disable_safety_settings,
+            disable_system_prompt=disable_system_prompt,
+            safety_level=safety_level,
+            thinking_budget=thinking_budget,
+            thinking_level=thinking_level,
+            chat_template=chat_template,
+            is_image_generation=True,
+            aspect_ratio=aspect_ratio,
+            image_size=image_size,
+            extra=extra,
+        )
+
+        images = []
+        last_exception = None
+        response = None
+        response_logged = False
+        for _attempt in range(retry_count):
+            last_text = ""
+            last_thought = ""
+            model_management.throw_exception_if_processing_interrupted()
+            try:
+                if seed < 0:
+                    seed = random.randint(0, 2**31 - 1)
+                config.seed = seed
+                self._ensure_vertex_credentials()
+                response = await self._generate_content_async(
+                    model_name,
+                    contents,
+                    config,
+                )
+                if not response_logged:
+                    response_logged = True
+                if (
+                    response.candidates is None
+                    or not response.candidates
+                    or response.candidates[0].content is None
+                    or response.candidates[0].content.parts is None
+                ):
+                    raise ValueError(f"Model {model_name} returned no candidates.")
+
+                for part in response.candidates[0].content.parts:
+                    if hasattr(part, "thought") and part.thought is True:
+                        if hasattr(part, "text") and part.text:
+                            last_thought += part.text
+                    elif hasattr(part, "text") and part.text:
+                        last_text += part.text
+
+                    if hasattr(part, "inline_data") and part.inline_data:
+                        inline_data = part.inline_data
+                        if inline_data is not None and hasattr(inline_data, "data"):
+                            data_buffer = inline_data.data
+                            if data_buffer is not None:
+                                try:
+                                    image = Image.open(BytesIO(data_buffer)).convert("RGB")
+                                    images.append(image)
+                                except Exception as e:
+                                    print(f"Image processing error: {e}")
+
+                if last_text:
+                    history.append(("assistant", last_text))
+
+                return images, last_text, last_thought, history
+            except (ValueError, ConnectionError, TimeoutError) as exception:
+                last_exception = exception
+                await self._sleep_async(3)
+            except Exception as exception:
+                last_exception = exception
+                await self._sleep_async(3)
 
         raise RuntimeError(
             f"Failed to generate image after {retry_count} retries. "
