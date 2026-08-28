@@ -31,7 +31,7 @@ class OpenRouterGenerateImage:
                 "model_name": (
                     "STRING",
                     {
-                        "default": "google/gemini-2.5-flash-image-preview",
+                        "default": "openai/gpt-image-2",
                         "tooltip": "OpenRouter model name for image generation",
                     },
                 ),
@@ -166,10 +166,10 @@ class OpenRouterGenerateImage:
                     },
                 ),
                 "image_size": (
-                    ["1k", "2k", "4k"],
+                    ["auto", "1k", "2k", "4k"],
                     {
-                        "default": "1k",
-                        "tooltip": "Image size for the generated image (gemini only for now)",
+                        "default": "auto",
+                        "tooltip": "Normalized image size tier (model dependent)",
                     },
                 ),
             },
@@ -193,6 +193,62 @@ class OpenRouterGenerateImage:
                     {
                         "default": True,
                         "tooltip": "Whether to request/return text output (controls modalities: image+text vs image only)",
+                    },
+                ),
+                "size": (
+                    "STRING",
+                    {
+                        "default": "auto",
+                        "multiline": False,
+                        "tooltip": "Exact Images API size, such as 2048x2048; overrides image_size",
+                    },
+                ),
+                "quality": (
+                    ["auto", "low", "medium", "high"],
+                    {
+                        "default": "auto",
+                        "tooltip": "Image rendering quality (model dependent)",
+                    },
+                ),
+                "background": (
+                    ["auto", "transparent", "opaque"],
+                    {
+                        "default": "auto",
+                        "tooltip": "Image background mode (model/provider dependent)",
+                    },
+                ),
+                "output_format": (
+                    ["auto", "png", "jpeg", "webp"],
+                    {
+                        "default": "auto",
+                        "tooltip": "Generated image format (model/provider dependent)",
+                    },
+                ),
+                "output_compression": (
+                    "INT",
+                    {
+                        "default": -1,
+                        "min": -1,
+                        "max": 100,
+                        "step": 1,
+                        "tooltip": "JPEG/WebP compression from 0 to 100; -1 uses the provider default",
+                    },
+                ),
+                "n": (
+                    "INT",
+                    {
+                        "default": 1,
+                        "min": 1,
+                        "max": 10,
+                        "step": 1,
+                        "tooltip": "Number of images requested from the Images API",
+                    },
+                ),
+                "moderation": (
+                    ["auto", "low"],
+                    {
+                        "default": "auto",
+                        "tooltip": "OpenAI image moderation level",
                     },
                 ),
             },
@@ -237,15 +293,24 @@ class OpenRouterGenerateImage:
         image3: Optional[torch.Tensor] = None,
         image4: Optional[torch.Tensor] = None,
         history: List[tuple[str, str]] | None = None,
+        size: str = "auto",
+        quality: str = "auto",
+        background: str = "auto",
+        output_format: str = "auto",
+        output_compression: int = -1,
+        n: int = 1,
+        moderation: str = "auto",
     ):
         # 收集所有非空图像
         images = []
         for img in [image, image1, image2, image3, image4]:
             if img is not None:
-                if len(img.shape) == 4:
-                    img = img[0]
-                img = img.permute(2, 0, 1)
-                images.append(torchvision.transforms.ToPILImage()(img))
+                image_batch = img if len(img.shape) == 4 else img.unsqueeze(0)
+                for batch_image in image_batch:
+                    batch_image = batch_image.permute(2, 0, 1)
+                    images.append(
+                        torchvision.transforms.ToPILImage()(batch_image)
+                    )
 
         try:
             extra_dict = json.loads(extra)
@@ -282,6 +347,13 @@ class OpenRouterGenerateImage:
             return_text=return_text,
             history=history,
             extra=extra_dict,
+            size=size,
+            quality=quality,
+            background=background,
+            output_format=output_format,
+            output_compression=output_compression,
+            n=n,
+            moderation=moderation,
         )
 
         image_output, image_list, num_images = build_image_outputs(images)

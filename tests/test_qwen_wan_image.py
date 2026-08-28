@@ -1058,6 +1058,26 @@ class OpenRouterImageNodeTests(unittest.TestCase):
         )
         self.assertTrue(hasattr(node_class, "generate_image"))
 
+    def test_openrouter_node_exposes_gpt_image_2_configuration(self):
+        node_class = self.openrouter_node_module.OpenRouterGenerateImage
+        input_types = node_class.INPUT_TYPES()
+
+        self.assertEqual(
+            input_types["required"]["model_name"][1]["default"],
+            "openai/gpt-image-2",
+        )
+        optional = input_types["optional"]
+        self.assertEqual(optional["quality"][0], ["auto", "low", "medium", "high"])
+        self.assertEqual(
+            optional["background"][0],
+            ["auto", "transparent", "opaque"],
+        )
+        self.assertEqual(optional["output_format"][0], ["auto", "png", "jpeg", "webp"])
+        self.assertEqual(optional["output_compression"][1]["min"], -1)
+        self.assertEqual(optional["output_compression"][1]["max"], 100)
+        self.assertEqual(optional["n"][1]["max"], 10)
+        self.assertEqual(optional["moderation"][0], ["auto", "low"])
+
     def test_openrouter_formats_multiple_images_as_list_output(self):
         build_image_outputs = getattr(
             self.openrouter_node_module,
@@ -1164,6 +1184,82 @@ class OpenRouterImageNodeTests(unittest.TestCase):
 
         sent_payload = mock_post.call_args.kwargs["json"]
         self.assertEqual(sent_payload["image_config"]["image_size"], "2K")
+
+    def test_openrouter_gpt_image_2_uses_images_api_with_all_configuration(self):
+        client = self.openrouter_client_module.OpenRouterClient(api_key="test-key")
+
+        output_buffer = io.BytesIO()
+        make_test_image("purple").save(output_buffer, format="PNG")
+        encoded_output = base64.b64encode(output_buffer.getvalue()).decode("ascii")
+
+        class FakeResponse:
+            status_code = 200
+
+            @staticmethod
+            def json():
+                return {"data": [{"b64_json": encoded_output, "media_type": "image/png"}]}
+
+        template = (
+            "<-system->\n{{system_instruction}}\n<-/system->\n"
+            "<-user->\n{{prompt}}\n<-/user->"
+        )
+        reference = make_test_image("orange")
+        with mock.patch.object(client.http, "post", return_value=FakeResponse()) as mock_post:
+            images, text, history = client.generate_image(
+                model_name="openai/gpt-image-2",
+                prompt="draw a poster",
+                system_prompt="precise typography",
+                images=[reference],
+                retry_count=1,
+                provider="openai",
+                chat_template=template,
+                seed=123,
+                aspect_ratio="16:9",
+                image_size="1k",
+                size="2048x1152",
+                quality="high",
+                background="opaque",
+                output_format="webp",
+                output_compression=72,
+                n=2,
+                moderation="low",
+                extra={"custom_flag": True},
+            )
+
+        self.assertEqual(mock_post.call_args.args[0], f"{client.base_url}/images")
+        sent_payload = mock_post.call_args.kwargs["json"]
+        self.assertEqual(sent_payload["model"], "openai/gpt-image-2")
+        self.assertIn("precise typography", sent_payload["prompt"])
+        self.assertIn("draw a poster", sent_payload["prompt"])
+        self.assertEqual(sent_payload["size"], "2048x1152")
+        self.assertEqual(sent_payload["aspect_ratio"], "16:9")
+        self.assertEqual(sent_payload["quality"], "high")
+        self.assertEqual(sent_payload["background"], "opaque")
+        self.assertEqual(sent_payload["output_format"], "webp")
+        self.assertEqual(sent_payload["output_compression"], 72)
+        self.assertEqual(sent_payload["n"], 2)
+        self.assertTrue(sent_payload["custom_flag"])
+        self.assertEqual(sent_payload["provider"]["order"], ["openai"])
+        self.assertFalse(sent_payload["provider"]["allow_fallbacks"])
+        self.assertEqual(
+            sent_payload["provider"]["options"]["openai"]["moderation"],
+            "low",
+        )
+        reference_url = sent_payload["input_references"][0]["image_url"]["url"]
+        self.assertTrue(reference_url.startswith("data:image/png;base64,"))
+        self.assertNotIn("messages", sent_payload)
+        self.assertNotIn("modalities", sent_payload)
+        self.assertNotIn("seed", sent_payload)
+        self.assertEqual(len(images), 1)
+        self.assertEqual(images[0].size, (8, 8))
+        self.assertEqual(text, "")
+        self.assertEqual(
+            history,
+            [
+                ("user", "draw a poster"),
+                ("assistant", "Generated 1 image(s)"),
+            ],
+        )
 
 
 if __name__ == "__main__":

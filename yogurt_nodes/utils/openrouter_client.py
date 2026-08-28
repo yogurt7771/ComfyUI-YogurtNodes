@@ -1,6 +1,9 @@
+import base64
+import io
 import json
 import os
 import random
+import re
 from pprint import pprint
 from typing import Any, Dict, List, Optional
 
@@ -13,12 +16,44 @@ from .openai_client import build_messages
 
 
 def normalize_image_size(image_size: str) -> str | None:
-    if not image_size or image_size == "auto":
+    if not image_size:
         return None
-    size = str(image_size).strip().upper()
+    raw_size = str(image_size).strip()
+    if not raw_size or raw_size.lower() == "auto":
+        return None
+    size = raw_size.upper()
     if size in {"0.5K", "1K", "2K", "4K"}:
         return size
-    return str(image_size)
+    return raw_size
+
+
+def uses_openrouter_images_api(model_name: str) -> bool:
+    """Return whether a model must use OpenRouter's dedicated Images API."""
+    return str(model_name).strip().lower().startswith("openai/gpt-image-")
+
+
+def image_to_data_url(image: Image.Image) -> str:
+    """Encode a PIL image as a lossless data URL for ``input_references``."""
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
+    return f"data:image/png;base64,{encoded}"
+
+
+def render_image_prompt(
+    prompt: str,
+    system_prompt: str = "",
+    chat_template: str = "",
+) -> str:
+    """Flatten the node prompt fields for the prompt-only Images API."""
+    if chat_template and system_prompt:
+        rendered = chat_template.replace("{{system_instruction}}", system_prompt)
+        rendered = rendered.replace("{{prompt}}", prompt)
+        rendered = re.sub(r"<-/?\w+->", "", rendered)
+        return rendered.strip()
+    if system_prompt:
+        return f"{system_prompt}\n\n{prompt}".strip()
+    return prompt
 
 
 class OpenRouterClient:
@@ -187,9 +222,16 @@ class OpenRouterClient:
         chat_template: str = "",
         seed: int = -1,
         aspect_ratio: str = "auto",
-        image_size: str = "1k",
+        image_size: str = "auto",
         return_text: bool = True,
         extra: dict | None = None,
+        size: str = "auto",
+        quality: str = "auto",
+        background: str = "auto",
+        output_format: str = "auto",
+        output_compression: int = -1,
+        n: int = 1,
+        moderation: str = "auto",
     ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
         """
         使用OpenRouter API生成图像
@@ -216,6 +258,28 @@ class OpenRouterClient:
             history = []
         if images is None:
             images = []
+
+        if uses_openrouter_images_api(model_name):
+            return self._generate_image_with_images_api(
+                model_name=model_name,
+                prompt=prompt,
+                system_prompt=system_prompt,
+                images=images,
+                history=history,
+                retry_count=retry_count,
+                provider=provider,
+                chat_template=chat_template,
+                aspect_ratio=aspect_ratio,
+                image_size=image_size,
+                size=size,
+                quality=quality,
+                background=background,
+                output_format=output_format,
+                output_compression=output_compression,
+                n=n,
+                moderation=moderation,
+                extra=extra,
+            )
 
         messages, history = build_messages(
             system_prompt=system_prompt,
@@ -252,6 +316,17 @@ class OpenRouterClient:
         normalized_image_size = normalize_image_size(image_size)
         if normalized_image_size:
             payload.setdefault("image_config", {})["image_size"] = normalized_image_size
+
+        if quality != "auto":
+            payload.setdefault("image_config", {})["quality"] = quality
+        if background != "auto":
+            payload.setdefault("image_config", {})["background"] = background
+        if output_format != "auto":
+            payload.setdefault("image_config", {})["output_format"] = output_format
+        if output_compression >= 0:
+            payload.setdefault("image_config", {})[
+                "output_compression"
+            ] = output_compression
 
         # 合并额外参数
         if extra:
@@ -299,9 +374,7 @@ class OpenRouterClient:
                                 if isinstance(img_url, str) and img_url.startswith("data:image"):
                                     # 解析data URL格式: data:image/png;base64,xxxxx
                                     try:
-                                        import base64
-                                        import io
-                                        header, img_base64 = img_url.split(",", 1)
+                                        _, img_base64 = img_url.split(",", 1)
                                         img_bytes = base64.b64decode(img_base64)
                                         img = Image.open(io.BytesIO(img_bytes))
                                         generated_images.append(img)
@@ -326,6 +399,135 @@ class OpenRouterClient:
             except Exception as e:
                 last_exception = e
                 self.http.sleep(3)
+
+        raise last_exception or Exception("All retry attempts failed")
+
+    def _generate_image_with_images_api(
+        self,
+        model_name: str,
+        prompt: str,
+        system_prompt: str,
+        images: List[Image.Image],
+        history: List[tuple[str, str]],
+        retry_count: int,
+        provider: Optional[str | List[str]],
+        chat_template: str,
+        aspect_ratio: str,
+        image_size: str,
+        size: str,
+        quality: str,
+        background: str,
+        output_format: str,
+        output_compression: int,
+        n: int,
+        moderation: str,
+        extra: dict | None,
+    ) -> tuple[List[Image.Image], str, List[tuple[str, str]]]:
+        """Generate images through OpenRouter's dedicated ``/images`` API."""
+        if not 1 <= n <= 10:
+            raise ValueError("OpenRouter Images API supports n from 1 to 10")
+        if not -1 <= output_compression <= 100:
+            raise ValueError("output_compression must be -1 or between 0 and 100")
+        if len(images) > 16:
+            raise ValueError("GPT Image models support at most 16 reference images")
+
+        final_prompt = render_image_prompt(prompt, system_prompt, chat_template)
+        payload: Dict[str, Any] = {
+            "model": model_name,
+            "prompt": final_prompt,
+            "n": n,
+        }
+
+        if provider and provider != "auto":
+            if isinstance(provider, list):
+                payload["provider"] = {"order": provider}
+            else:
+                payload["provider"] = {
+                    "allow_fallbacks": False,
+                    "order": [provider],
+                }
+
+        effective_size = size if size and size != "auto" else image_size
+        normalized_size = normalize_image_size(effective_size)
+        if normalized_size:
+            payload["size"] = normalized_size
+        if aspect_ratio != "auto":
+            payload["aspect_ratio"] = aspect_ratio
+        if quality != "auto":
+            payload["quality"] = quality
+        if background != "auto":
+            payload["background"] = background
+        if output_format != "auto":
+            payload["output_format"] = output_format
+        if output_compression >= 0:
+            payload["output_compression"] = output_compression
+
+        if images:
+            payload["input_references"] = [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": image_to_data_url(image)},
+                }
+                for image in images
+            ]
+
+        if moderation != "auto":
+            provider_config = payload.setdefault("provider", {})
+            provider_options = provider_config.setdefault("options", {})
+            provider_options.setdefault("openai", {})[
+                "moderation"
+            ] = moderation
+
+        if extra:
+            payload.update(extra)
+
+        history.append(("user", prompt))
+        last_exception = None
+
+        for attempt in range(retry_count):
+            model_management.throw_exception_if_processing_interrupted()
+            try:
+                response = self.http.post(
+                    f"{self.base_url}/images",
+                    headers=self.headers,
+                    json=payload,
+                    timeout=self.timeout if self.timeout > 0 else None,
+                    proxies=self.proxies,
+                )
+
+                if response.status_code not in (200, 201):
+                    raise Exception(
+                        "API request failed with status "
+                        f"{response.status_code}: {response.text}"
+                    )
+
+                result = response.json()
+                generated_images: List[Image.Image] = []
+                for image_data in result.get("data", []) or []:
+                    if not isinstance(image_data, dict):
+                        continue
+                    encoded = image_data.get("b64_json")
+                    if not isinstance(encoded, str) or not encoded:
+                        continue
+                    if encoded.startswith("data:"):
+                        encoded = encoded.split(",", 1)[-1]
+                    image_bytes = base64.b64decode(encoded)
+                    generated_image = Image.open(io.BytesIO(image_bytes))
+                    generated_image.load()
+                    generated_images.append(generated_image)
+
+                if not generated_images:
+                    raise ValueError("No image data generated by OpenRouter Images API")
+
+                history.append(
+                    ("assistant", f"Generated {len(generated_images)} image(s)")
+                )
+                return generated_images, "", history
+
+            except Exception as exception:
+                last_exception = exception
+                if attempt + 1 < retry_count:
+                    self.http.sleep(3)
 
         raise last_exception or Exception("All retry attempts failed")
 
