@@ -8,6 +8,7 @@ from contextlib import suppress
 from io import BytesIO
 from typing import List, Optional
 
+import httpx
 from google import genai
 from google.genai import types
 from PIL import Image
@@ -62,6 +63,7 @@ class GeminiClient:
         如API Key未设置，将抛出异常。
         """
         self.proxy_url = proxy_url
+        self.timeout = timeout
         self.cancel_check_interval = 0.25
         self._client_closed = False
         self.use_vertex_ai = use_vertex_ai
@@ -155,7 +157,13 @@ class GeminiClient:
             http_options.timeout = timeout * 1000
         if self.proxy_url:
             http_options.client_args = {"proxy": self.proxy_url}
-            http_options.async_client_args = {"proxy": self.proxy_url}
+            if self.proxy_url.lower().startswith("socks"):
+                # aiohttp 不支持 socks 代理；传入 transport 后 SDK 改用 httpx（socksio）
+                http_options.async_client_args = {
+                    "transport": httpx.AsyncHTTPTransport(proxy=self.proxy_url)
+                }
+            else:
+                http_options.async_client_args = {"proxy": self.proxy_url}
         return http_options
 
     def _ensure_vertex_credentials(self):
@@ -395,6 +403,16 @@ class GeminiClient:
             return bool(checker())
         return False
 
+    def _describe_exception(self, exception: Exception | None) -> str:
+        """异常描述：保留类型名，aiohttp 超时等异常的 str() 为空"""
+        if exception is None:
+            return "none"
+        message = str(exception)
+        if not message and isinstance(exception, TimeoutError) and self.timeout > 0:
+            message = f"request exceeded timeout of {self.timeout}s"
+        name = type(exception).__name__
+        return f"{name}: {message}" if message else name
+
     async def _sleep_async(self, seconds: float) -> None:
         deadline = time.monotonic() + max(float(seconds), 0.0)
         while True:
@@ -577,8 +595,9 @@ class GeminiClient:
 
         raise RuntimeError(
             f"Failed to generate text after {retry_count} retries. "
-            f"Last error: {last_exception}. Response: {response}"
-        )
+            f"Last error: {self._describe_exception(last_exception)}. "
+            f"Response: {response}"
+        ) from last_exception
 
     async def generate_text_async(
         self,
@@ -660,8 +679,9 @@ class GeminiClient:
 
         raise RuntimeError(
             f"Failed to generate text after {retry_count} retries. "
-            f"Last error: {last_exception}. Response: {response}"
-        )
+            f"Last error: {self._describe_exception(last_exception)}. "
+            f"Response: {response}"
+        ) from last_exception
 
     def generate_image(
         self,
@@ -782,8 +802,9 @@ class GeminiClient:
 
         raise RuntimeError(
             f"Failed to generate image after {retry_count} retries. "
-            f"Last error: {last_exception}. Response: {response}"
-        )
+            f"Last error: {self._describe_exception(last_exception)}. "
+            f"Response: {response}"
+        ) from last_exception
 
     async def generate_image_async(
         self,
@@ -889,5 +910,6 @@ class GeminiClient:
 
         raise RuntimeError(
             f"Failed to generate image after {retry_count} retries. "
-            f"Last error: {last_exception}. Response: {response}"
-        )
+            f"Last error: {self._describe_exception(last_exception)}. "
+            f"Response: {response}"
+        ) from last_exception
