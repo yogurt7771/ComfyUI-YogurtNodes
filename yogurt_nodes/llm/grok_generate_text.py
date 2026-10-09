@@ -6,7 +6,7 @@ from ..utils import GrokClient
 
 
 class GrokGenerateText:
-    """Grok Generate Text node.
+    """Grok Generate Text (Legacy) node.
 
     Generate text using xAI API
     """
@@ -178,7 +178,8 @@ class GrokGenerateText:
 
     FUNCTION = "generate_text"
 
-    _NODE_NAME = "Grok Generate Text"
+    _NODE_NAME = "Grok Generate Text (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "Generate text using xAI API"
 
     async def generate_text(

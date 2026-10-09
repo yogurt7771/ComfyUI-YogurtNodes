@@ -10,7 +10,7 @@ from ..utils import GrokClient
 
 
 class GrokGenerateImage:
-    """Grok Generate Image node.
+    """Grok Generate Image (Legacy) node.
 
     Generate image using xAI Grok API and return as torch.Tensor (h,w,c) and text
     """
@@ -179,7 +179,8 @@ class GrokGenerateImage:
 
     FUNCTION = "generate_image"
 
-    _NODE_NAME = "Grok Generate Image"
+    _NODE_NAME = "Grok Generate Image (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "Generate image using xAI Grok API and return as torch.Tensor (h,w,c) and text"
 
     async def generate_image(

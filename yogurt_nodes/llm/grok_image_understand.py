@@ -9,7 +9,7 @@ from ..utils import GrokClient
 
 
 class GrokImageUnderstand:
-    """Grok Image Understand node.
+    """Grok Image Understand (Legacy) node.
 
     Understand image content using xAI vision models
     """
@@ -200,7 +200,8 @@ class GrokImageUnderstand:
 
     FUNCTION = "understand_image"
 
-    _NODE_NAME = "Grok Image Understand"
+    _NODE_NAME = "Grok Image Understand (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "Understand image content using xAI vision models"
 
     async def understand_image(

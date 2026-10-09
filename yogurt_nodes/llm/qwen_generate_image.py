@@ -23,7 +23,7 @@ def collect_input_images(*images: Optional[torch.Tensor]):
 
 
 class QwenGenerateImage:
-    """Qwen Generate/Edit Image node.
+    """Qwen Generate/Edit Image (Legacy) node.
 
     使用阿里云百炼 Qwen 图片模型进行文生图或多图编辑
     """
@@ -177,7 +177,8 @@ class QwenGenerateImage:
 
     FUNCTION = "generate_image"
 
-    _NODE_NAME = "Qwen Generate/Edit Image"
+    _NODE_NAME = "Qwen Generate/Edit Image (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "使用阿里云百炼 Qwen 图片模型进行文生图或多图编辑"
 
     async def generate_image(

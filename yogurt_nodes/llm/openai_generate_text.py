@@ -6,7 +6,7 @@ from ..utils import OpenAIClient
 
 
 class OpenAIGenerateText:
-    """OpenAI Generate Text node.
+    """OpenAI Generate Text (Legacy) node.
 
     Generate text using OpenAI API
     """
@@ -168,7 +168,8 @@ class OpenAIGenerateText:
 
     FUNCTION = "generate_text"
 
-    _NODE_NAME = "OpenAI Generate Text"
+    _NODE_NAME = "OpenAI Generate Text (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "Generate text using OpenAI API"
 
     async def generate_text(

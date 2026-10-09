@@ -6,7 +6,7 @@ from ..utils import FreedomGPTClient
 
 
 class FreedomGPTGenerateText:
-    """FreedomGPT Generate Text node.
+    """FreedomGPT Generate Text (Legacy) node.
 
     Generate text using FreedomGPT API
     """
@@ -160,7 +160,8 @@ class FreedomGPTGenerateText:
 
     FUNCTION = "generate_text"
 
-    _NODE_NAME = "FreedomGPT Generate Text"
+    _NODE_NAME = "FreedomGPT Generate Text (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "Generate text using FreedomGPT API"
 
     async def generate_text(

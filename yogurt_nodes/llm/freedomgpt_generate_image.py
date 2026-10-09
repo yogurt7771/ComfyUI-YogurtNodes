@@ -10,7 +10,7 @@ from ..utils import FreedomGPTClient
 
 
 class FreedomGPTGenerateImage:
-    """FreedomGPT Generate Image node.
+    """FreedomGPT Generate Image (Legacy) node.
 
     Generate images using FreedomGPT API
     """
@@ -124,7 +124,8 @@ class FreedomGPTGenerateImage:
 
     FUNCTION = "generate_image"
 
-    _NODE_NAME = "FreedomGPT Generate Image"
+    _NODE_NAME = "FreedomGPT Generate Image (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "Generate images using FreedomGPT API"
 
     async def generate_image(

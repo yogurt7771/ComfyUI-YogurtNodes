@@ -19,3 +19,15 @@ from .wan_generate_image import WanGenerateImage  # noqa
 from .topaz_image_upscale import TopazImageUpscaleAPI  # noqa
 from .magnific_image_upscale import MagnificImageUpscaleAPI  # noqa
 from .history_builder import HistoryBuilder  # noqa
+
+from .provider_nodes import (  # noqa
+    GoogleAIStudioProvider, GoogleGenAICompatibleProvider, VertexAIProvider, OpenAIProvider,
+    OpenAICompatibleProvider, OpenRouterProvider, XAIProvider, GRSAIProvider, FreedomGPTProvider,
+    VolcengineArkProvider, BytePlusArkProvider, DashScopeProvider, TopazProvider, MagnificProvider,
+)
+from .image_nodes import (  # noqa
+    NanoBananaGenerateImage, GPTImageGenerateImage, GrokImagineGenerateImage, SeedreamGenerateImage,
+    QwenImageGenerateImage, WanImageGenerateImage, CustomModelGenerateImage,
+)
+from .text_nodes import GeminiChat, GPTChat, GrokChat, ClaudeChat, CustomModelChat  # noqa
+from .upscale_nodes import TopazUpscale, TopazGenerativeUpscale, MagnificCreativeUpscale, MagnificPrecisionUpscale  # noqa

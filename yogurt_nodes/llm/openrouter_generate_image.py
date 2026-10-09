@@ -11,7 +11,7 @@ from .image_output_utils import build_image_outputs
 
 
 class OpenRouterGenerateImage:
-    """OpenRouter Generate Image node.
+    """OpenRouter Generate Image (Legacy) node.
 
     Generate image using OpenRouter API and return as torch.Tensor (h,w,c) and text
     """
@@ -264,7 +264,8 @@ class OpenRouterGenerateImage:
 
     FUNCTION = "generate_image"
 
-    _NODE_NAME = "OpenRouter Generate Image"
+    _NODE_NAME = "OpenRouter Generate Image (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "Generate image using OpenRouter API and return as torch.Tensor (h,w,c) and text"
 
     async def generate_image(

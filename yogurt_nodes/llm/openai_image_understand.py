@@ -9,7 +9,7 @@ from ..utils import OpenAIClient
 
 
 class OpenAIImageUnderstand:
-    """OpenAI Image Understand node.
+    """OpenAI Image Understand (Legacy) node.
 
     Understand image content using OpenAI vision models
     """
@@ -183,7 +183,8 @@ class OpenAIImageUnderstand:
 
     FUNCTION = "understand_image"
 
-    _NODE_NAME = "OpenAI Image Understand"
+    _NODE_NAME = "OpenAI Image Understand (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "Understand image content using OpenAI vision models"
 
     async def understand_image(

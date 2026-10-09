@@ -31,7 +31,7 @@ def _parse_reference_urls(image_urls: str) -> List[str]:
 
 
 class GRSAIGenerateImage:
-    """GRSAI Generate Image node.
+    """GRSAI Generate Image (Legacy) node.
 
     Generate or edit images with the GRSAI API and return torch tensors
     """
@@ -195,7 +195,8 @@ class GRSAIGenerateImage:
 
     FUNCTION = "generate_image"
 
-    _NODE_NAME = "GRSAI Generate Image"
+    _NODE_NAME = "GRSAI Generate Image (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "Generate or edit images with the GRSAI API and return torch tensors"
 
     async def generate_image(

@@ -58,18 +58,18 @@ All exported nodes are listed here. ComfyUI display names keep the " (Yogurt Nod
 
 This section is auto-generated from exported node classes and their docstrings. Run `python tools/generate_readme.py` to refresh.
 
-Total exported nodes: **152**.
+Total exported nodes: **183**.
 
 | Group | Count |
 | --- | ---: |
-| Image Processing Nodes | 10 |
+| Image Processing Nodes | 11 |
 | Mask Nodes | 5 |
 | Number Processing Nodes | 2 |
 | String Processing Nodes | 8 |
 | Logic Processing Nodes | 41 |
 | Model Nodes | 17 |
 | I/O Operation Nodes | 36 |
-| Language Model Nodes | 25 |
+| Language Model Nodes | 55 |
 | Network Nodes | 8 |
 
 ### Image Processing Nodes
@@ -79,6 +79,7 @@ Total exported nodes: **152**.
 | Add Text To Image | `YogurtAddTextToImage` | `YogurtNodes/Image` | Add text to image. |
 | Batch Images | `YogurtBatchImages` | `YogurtNodes/Image` | Batch images. |
 | Get Image Size | `YogurtGetImageSize` | `YogurtNodes/Image` | Get image size information. |
+| H/L Frequency Detail Restore Threshold | `YogurtHLFrequencyDetailRestoreThreshold` | `YogurtNodes/Image` | H/L frequency detail restore with independent high/low delta thresholds. |
 | Image Crop By Mask | `YogurtImageCropByMask` | `YogurtNodes/Image` | Crop image to the minimum bounding box of the mask above threshold. |
 | Image Scale To Total Pixels Advanced | `YogurtImageScaleToTotalPixelsAdvanced` | `YogurtNodes/Image` | Image Scale To Total Pixels Advanced. |
 | Image Tile (Seam Mask) | `YogurtImageTileWithSeamMask` | `YogurtNodes/Image` | Split image into overlapped tiles and generate inpaint masks (white=inpaint, black=reference). |
@@ -237,31 +238,61 @@ Total exported nodes: **152**.
 
 | Node | Class ID | Category | Description |
 | --- | --- | --- | --- |
-| FreedomGPT Generate Image | `YogurtFreedomGPTGenerateImage` | `YogurtNodes/LLM` | Generate images using FreedomGPT API |
-| FreedomGPT Generate Text | `YogurtFreedomGPTGenerateText` | `YogurtNodes/LLM` | Generate text using FreedomGPT API |
-| FreedomGPT Image Understand | `YogurtFreedomGPTImageUnderstand` | `YogurtNodes/LLM` | Understand image content using FreedomGPT vision models |
-| GRSAI Generate Image | `YogurtGRSAIGenerateImage` | `YogurtNodes/LLM` | Generate or edit images with the GRSAI API and return torch tensors |
-| Gemini Generate Image | `YogurtGeminiGenerateImage` | `YogurtNodes/LLM` | Generate image using Gemini API and return as torch.Tensor (h,w,c) and text |
-| Gemini Generate Text | `YogurtGeminiGenerateText` | `YogurtNodes/LLM` | Generate text using Gemini API |
-| Gemini Image Understand | `YogurtGeminiImageUnderstand` | `YogurtNodes/LLM` | Understand images using Gemini API |
-| Grok Generate Image | `YogurtGrokGenerateImage` | `YogurtNodes/LLM` | Generate image using xAI Grok API and return as torch.Tensor (h,w,c) and text |
-| Grok Generate Text | `YogurtGrokGenerateText` | `YogurtNodes/LLM` | Generate text using xAI API |
-| Grok Image Understand | `YogurtGrokImageUnderstand` | `YogurtNodes/LLM` | Understand image content using xAI vision models |
+| Chat (Custom Model) | `YogurtCustomModelChat` | `YogurtNodes/LLM` | Chat with any model id on the connected provider. |
+| Claude Chat | `YogurtClaudeChat` | `YogurtNodes/LLM` | Anthropic Claude via OpenRouter or an OpenAI-compatible relay. |
+| FreedomGPT Generate Image (Legacy) | `YogurtFreedomGPTGenerateImage` | `YogurtNodes/LLM` | Generate images using FreedomGPT API |
+| FreedomGPT Generate Text (Legacy) | `YogurtFreedomGPTGenerateText` | `YogurtNodes/LLM` | Generate text using FreedomGPT API |
+| FreedomGPT Image Understand (Legacy) | `YogurtFreedomGPTImageUnderstand` | `YogurtNodes/LLM` | Understand image content using FreedomGPT vision models |
+| GPT Chat | `YogurtGPTChat` | `YogurtNodes/LLM` | OpenAI GPT text generation with optional image understanding and chat history. |
+| GPT Image | `YogurtGPTImageGenerateImage` | `YogurtNodes/LLM` | OpenAI GPT Image generation and editing (2.5 / 2 / 1.5 / 1 / 1 Mini). |
+| GRSAI Generate Image (Legacy) | `YogurtGRSAIGenerateImage` | `YogurtNodes/LLM` | Generate or edit images with the GRSAI API and return torch tensors |
+| Gemini Chat | `YogurtGeminiChat` | `YogurtNodes/LLM` | Gemini text generation with optional image understanding and chat history. |
+| Gemini Generate Image (Legacy) | `YogurtGeminiGenerateImage` | `YogurtNodes/LLM` | Generate image using Gemini API and return as torch.Tensor (h,w,c) and text |
+| Gemini Generate Text (Legacy) | `YogurtGeminiGenerateText` | `YogurtNodes/LLM` | Generate text using Gemini API |
+| Gemini Image Understand (Legacy) | `YogurtGeminiImageUnderstand` | `YogurtNodes/LLM` | Understand images using Gemini API |
+| Grok Chat | `YogurtGrokChat` | `YogurtNodes/LLM` | xAI Grok text generation with optional image understanding and chat history. |
+| Grok Generate Image (Legacy) | `YogurtGrokGenerateImage` | `YogurtNodes/LLM` | Generate image using xAI Grok API and return as torch.Tensor (h,w,c) and text |
+| Grok Generate Text (Legacy) | `YogurtGrokGenerateText` | `YogurtNodes/LLM` | Generate text using xAI API |
+| Grok Image Understand (Legacy) | `YogurtGrokImageUnderstand` | `YogurtNodes/LLM` | Understand image content using xAI vision models |
+| Grok Imagine | `YogurtGrokImagineGenerateImage` | `YogurtNodes/LLM` | xAI Grok Imagine image generation and editing. |
 | History Builder | `YogurtHistoryBuilder` | `YogurtNodes/LLM` | 构建与 LLM 节点兼容的会话历史 |
-| Magnific Image Upscale API | `YogurtMagnificImageUpscaleAPI` | `YogurtNodes/LLM` | Call the Magnific image upscaler API, wait for completion, and return an IMAGE batch. |
-| OpenAI Generate Image | `YogurtOpenAIGenerateImage` | `YogurtNodes/LLM` | Generate image using OpenAI API and return as torch.Tensor (h,w,c) and text |
-| OpenAI Generate Text | `YogurtOpenAIGenerateText` | `YogurtNodes/LLM` | Generate text using OpenAI API |
-| OpenAI Image Understand | `YogurtOpenAIImageUnderstand` | `YogurtNodes/LLM` | Understand image content using OpenAI vision models |
-| OpenRouter Generate Image | `YogurtOpenRouterGenerateImage` | `YogurtNodes/LLM` | Generate image using OpenRouter API and return as torch.Tensor (h,w,c) and text |
-| OpenRouter Generate Text | `YogurtOpenRouterGenerateText` | `YogurtNodes/LLM` | Generate text using OpenRouter API |
-| OpenRouter Image Understand | `YogurtOpenRouterImageUnderstand` | `YogurtNodes/LLM` | Understand image content using OpenRouter API |
-| Qwen Generate/Edit Image | `YogurtQwenGenerateImage` | `YogurtNodes/LLM` | 使用阿里云百炼 Qwen 图片模型进行文生图或多图编辑 |
-| SeeDream Generate Image | `YogurtSeeDreamGenerateImage` | `YogurtNodes/LLM` | 使用豆包SeeDream API生成图像，支持文生图、图生图、多图生图和序列图像生成 |
-| Topaz Image Upscale API | `YogurtTopazImageUpscaleAPI` | `YogurtNodes/LLM` | Call the Topaz Labs Image API, wait for completion, and return an IMAGE batch. |
-| Vertex AI Generate Image | `YogurtVertexAIGenerateImage` | `YogurtNodes/LLM` | Generate image using Vertex AI API and return as torch.Tensor (h,w,c) and text |
-| Vertex AI Generate Text | `YogurtVertexAIGenerateText` | `YogurtNodes/LLM` | Generate text using Vertex AI |
-| Vertex Image Understand | `YogurtVertexAIImageUnderstand` | `YogurtNodes/LLM` | Understand images using Vertex AI |
-| Wan Generate/Edit Image | `YogurtWanGenerateImage` | `YogurtNodes/LLM` | 使用阿里云百炼 Wan 图片模型进行文生图或图像编辑 |
+| Image Generation (Custom Model) | `YogurtCustomModelGenerateImage` | `YogurtNodes/LLM` | Image generation with any model id on the connected provider. |
+| Magnific Creative Upscale | `YogurtMagnificCreativeUpscale` | `YogurtNodes/LLM` | Magnific creative upscaling with prompt, creativity and engine controls. |
+| Magnific Image Upscale API (Legacy) | `YogurtMagnificImageUpscaleAPI` | `YogurtNodes/LLM` | Call the Magnific image upscaler API, wait for completion, and return an IMAGE batch. |
+| Magnific Precision Upscale | `YogurtMagnificPrecisionUpscale` | `YogurtNodes/LLM` | Magnific precision upscaling (V2 with flavors, or V1). |
+| Nano Banana | `YogurtNanoBananaGenerateImage` | `YogurtNodes/LLM` | Nano Banana image generation and editing (2.1 / 2 / 2 Lite / Pro / 1). |
+| OpenAI Generate Image (Legacy) | `YogurtOpenAIGenerateImage` | `YogurtNodes/LLM` | Generate image using OpenAI API and return as torch.Tensor (h,w,c) and text |
+| OpenAI Generate Text (Legacy) | `YogurtOpenAIGenerateText` | `YogurtNodes/LLM` | Generate text using OpenAI API |
+| OpenAI Image Understand (Legacy) | `YogurtOpenAIImageUnderstand` | `YogurtNodes/LLM` | Understand image content using OpenAI vision models |
+| OpenRouter Generate Image (Legacy) | `YogurtOpenRouterGenerateImage` | `YogurtNodes/LLM` | Generate image using OpenRouter API and return as torch.Tensor (h,w,c) and text |
+| OpenRouter Generate Text (Legacy) | `YogurtOpenRouterGenerateText` | `YogurtNodes/LLM` | Generate text using OpenRouter API |
+| OpenRouter Image Understand (Legacy) | `YogurtOpenRouterImageUnderstand` | `YogurtNodes/LLM` | Understand image content using OpenRouter API |
+| Provider: Alibaba DashScope | `YogurtDashScopeProvider` | `YogurtNodes/LLM` | Alibaba Cloud DashScope (Bailian) provider for Qwen Image and Wan. |
+| Provider: BytePlus ModelArk | `YogurtBytePlusArkProvider` | `YogurtNodes/LLM` | BytePlus ModelArk (international) provider for Seedream models. |
+| Provider: FreedomGPT | `YogurtFreedomGPTProvider` | `YogurtNodes/LLM` | FreedomGPT provider; use with the custom-model chat and image nodes. |
+| Provider: GRSAI | `YogurtGRSAIProvider` | `YogurtNodes/LLM` | GRSAI drawing relay provider (Nano Banana / GPT Image). |
+| Provider: Google AI Studio | `YogurtGoogleAIStudioProvider` | `YogurtNodes/LLM` | Google AI Studio (Gemini API) provider; connect to Gemini / Nano Banana nodes. |
+| Provider: Google GenAI Compatible | `YogurtGoogleGenAICompatibleProvider` | `YogurtNodes/LLM` | Any Gemini-API-compatible endpoint with a custom base URL. |
+| Provider: Magnific | `YogurtMagnificProvider` | `YogurtNodes/LLM` | Magnific upscaler API provider. |
+| Provider: OpenAI | `YogurtOpenAIProvider` | `YogurtNodes/LLM` | Official OpenAI API provider. |
+| Provider: OpenAI Compatible | `YogurtOpenAICompatibleProvider` | `YogurtNodes/LLM` | Any OpenAI-compatible endpoint (chat completions / images) with a custom base URL. |
+| Provider: OpenRouter | `YogurtOpenRouterProvider` | `YogurtNodes/LLM` | OpenRouter provider with optional upstream provider routing. |
+| Provider: Topaz Labs | `YogurtTopazProvider` | `YogurtNodes/LLM` | Topaz Labs Image API provider. |
+| Provider: Vertex AI | `YogurtVertexAIProvider` | `YogurtNodes/LLM` | Vertex AI provider (express-mode API key or service-account credentials). |
+| Provider: Volcengine Ark | `YogurtVolcengineArkProvider` | `YogurtNodes/LLM` | Volcengine Ark (China) provider for Seedream and Doubao models. |
+| Provider: xAI | `YogurtXAIProvider` | `YogurtNodes/LLM` | xAI (Grok) API provider. |
+| Qwen Generate/Edit Image (Legacy) | `YogurtQwenGenerateImage` | `YogurtNodes/LLM` | 使用阿里云百炼 Qwen 图片模型进行文生图或多图编辑 |
+| Qwen Image | `YogurtQwenImageGenerateImage` | `YogurtNodes/LLM` | Alibaba Qwen Image generation and editing. |
+| SeeDream Generate Image (Legacy) | `YogurtSeeDreamGenerateImage` | `YogurtNodes/LLM` | 使用豆包SeeDream API生成图像，支持文生图、图生图、多图生图和序列图像生成 |
+| Seedream | `YogurtSeedreamGenerateImage` | `YogurtNodes/LLM` | ByteDance Seedream image generation and editing (5.0 Pro / Flash / Lite, 4.5, 4.0). |
+| Topaz Generative Upscale | `YogurtTopazGenerativeUpscale` | `YogurtNodes/LLM` | Topaz generative upscaling (Wonder 3.5, Bloom 2, Reimagine, Redefine, Recovery V2). |
+| Topaz Image Upscale API (Legacy) | `YogurtTopazImageUpscaleAPI` | `YogurtNodes/LLM` | Call the Topaz Labs Image API, wait for completion, and return an IMAGE batch. |
+| Topaz Upscale | `YogurtTopazUpscale` | `YogurtNodes/LLM` | Topaz precision upscaling (Standard V2, Low Resolution V2, High Fidelity V2, CGI, Text Refine). |
+| Vertex AI Generate Image (Legacy) | `YogurtVertexAIGenerateImage` | `YogurtNodes/LLM` | Generate image using Vertex AI API and return as torch.Tensor (h,w,c) and text |
+| Vertex AI Generate Text (Legacy) | `YogurtVertexAIGenerateText` | `YogurtNodes/LLM` | Generate text using Vertex AI |
+| Vertex Image Understand (Legacy) | `YogurtVertexAIImageUnderstand` | `YogurtNodes/LLM` | Understand images using Vertex AI |
+| Wan Generate/Edit Image (Legacy) | `YogurtWanGenerateImage` | `YogurtNodes/LLM` | 使用阿里云百炼 Wan 图片模型进行文生图或图像编辑 |
+| Wan Image | `YogurtWanImageGenerateImage` | `YogurtNodes/LLM` | Alibaba Wan image generation and editing. |
 
 
 ### Network Nodes
@@ -364,6 +395,43 @@ Before using OpenRouter-related nodes, you must obtain and configure your OpenRo
      ```
 
 If the API Key is not configured correctly, OpenRouter nodes will not work. You can obtain your API Key from [OpenRouter Platform](https://openrouter.ai/keys).
+
+## 🧩 LLM / Image / Upscale Nodes: Providers and Models
+
+LLM-related nodes come in two kinds that are wired together:
+
+- **Model nodes** (`YogurtNodes/LLM/Image`, `Text`, `Upscale`): one node per model family, e.g. Nano Banana, GPT Image, Seedream, Gemini Chat, Claude Chat, Topaz Upscale. The `model` dropdown switches versions, and the inputs below it change to show only what that version supports.
+- **Provider nodes** (`YogurtNodes/LLM/Providers`): hold the connection settings (key, base URL, proxy, timeout) and output a `provider` that you connect to a model node. The same model can be called through different providers, e.g. Nano Banana via Google AI Studio, Vertex AI, OpenRouter or GRSAI.
+
+Notes:
+
+- When a model node's `provider` input is not connected, the family's default official provider is used, with the key read from the `api_key.json` key or environment variable listed below.
+- Connecting a provider that does not offer the selected model fails with an error listing the supported providers.
+- **OpenAI Compatible** and **Google GenAI Compatible** are for custom base URLs (relays). Their `api_key` must be filled in the node; they never fall back to the official keys in `api_key.json`.
+- Reference image inputs are dynamic: connecting one adds the next slot.
+- `timeout` 0 means no limit; image generation usually takes tens of seconds to minutes.
+- Use the advanced `extra` input (a JSON object) to pass parameters that are not exposed yet.
+- For models that are not built in yet, use `Custom model` in a family's dropdown, or the `Chat (Custom Model)` / `Image Generation (Custom Model)` nodes with a model id.
+- The previous nodes remain under `YogurtNodes/LLM/Legacy` with a `(Legacy)` suffix, so existing workflows keep working.
+
+| Provider node | `api_key.json` key | Environment variable | Default for model nodes |
+| --- | --- | --- | --- |
+| Google AI Studio | `gemini` | `GEMINI_API_KEY` | Nano Banana, Gemini Chat |
+| Vertex AI | `vertex_ai_json`, `vertex_ai_project`, `vertex_ai_region` | `GOOGLE_APPLICATION_CREDENTIALS` | — |
+| Google GenAI Compatible | must be set in the node | — | — |
+| OpenAI | `openai`, `openai_base_url` | `OPENAI_API_KEY`, `OPENAI_BASE_URL` | GPT Image, GPT Chat, custom-model nodes |
+| OpenAI Compatible | must be set in the node | — | — |
+| OpenRouter | `openrouter` | `OPENROUTER_API_KEY` | Claude Chat |
+| xAI | `xai` (or `grok`), `xai_base_url` | `XAI_API_KEY` (or `GROK_API_KEY`) | Grok Imagine, Grok Chat |
+| GRSAI | `grsai`, `grsai_base_url` | `GRSAI_API_KEY` | — |
+| FreedomGPT | `freedomgpt` | `FREEDOMGPT_API_KEY` | — |
+| Volcengine Ark | `seedream` (or `ark`) | `ARK_API_KEY` | Seedream |
+| BytePlus ModelArk | `byteplus` | `BYTEPLUS_API_KEY` | — |
+| Alibaba DashScope | `dashscope` (or `qwen`, `wan`), `dashscope_base_url` | `DASHSCOPE_API_KEY` | Qwen Image, Wan Image |
+| Topaz Labs | `topaz`, `topaz_base_url` | `TOPAZ_API_KEY` | Topaz Upscale, Topaz Generative Upscale |
+| Magnific | `magnific`, `magnific_base_url` | `MAGNIFIC_API_KEY` | Magnific Creative / Precision Upscale |
+
+See [yogurt_nodes/llm/EXTENDING.md](yogurt_nodes/llm/EXTENDING.md) for adding providers and models.
 
 ## 🤝 Contributing
 

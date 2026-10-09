@@ -272,7 +272,7 @@ class GeminiGenerateTextBase:
 
 
 class GeminiGenerateText(GeminiGenerateTextBase):
-    """Gemini Generate Text node.
+    """Gemini Generate Text (Legacy) node.
 
     Generate text using Gemini API
     """
@@ -304,7 +304,8 @@ class GeminiGenerateText(GeminiGenerateTextBase):
             },
         }
 
-    _NODE_NAME = "Gemini Generate Text"
+    _NODE_NAME = "Gemini Generate Text (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "Generate text using Gemini API"
 
     def create_client(self, /, **kwargs):
@@ -323,7 +324,7 @@ class GeminiGenerateText(GeminiGenerateTextBase):
 
 
 class GeminiImageUnderstand(GeminiGenerateText):
-    """Gemini Image Understand node.
+    """Gemini Image Understand (Legacy) node.
 
     Understand images using Gemini API
     """
@@ -344,12 +345,13 @@ class GeminiImageUnderstand(GeminiGenerateText):
             },
         }
 
-    _NODE_NAME = "Gemini Image Understand"
+    _NODE_NAME = "Gemini Image Understand (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "Understand images using Gemini API"
 
 
 class VertexAIGenerateText(GeminiGenerateTextBase):
-    """Vertex AI Generate Text node.
+    """Vertex AI Generate Text (Legacy) node.
 
     Generate text using Vertex AI
     """
@@ -388,7 +390,8 @@ class VertexAIGenerateText(GeminiGenerateTextBase):
             },
         }
 
-    _NODE_NAME = "Vertex AI Generate Text"
+    _NODE_NAME = "Vertex AI Generate Text (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "Generate text using Vertex AI"
 
     def create_client(self, /, **kwargs):
@@ -410,7 +413,7 @@ class VertexAIGenerateText(GeminiGenerateTextBase):
 
 
 class VertexAIImageUnderstand(VertexAIGenerateText):
-    """Vertex Image Understand node.
+    """Vertex Image Understand (Legacy) node.
 
     Understand images using Vertex AI
     """
@@ -431,5 +434,6 @@ class VertexAIImageUnderstand(VertexAIGenerateText):
             },
         }
 
-    _NODE_NAME = "Vertex Image Understand"
+    _NODE_NAME = "Vertex Image Understand (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "Understand images using Vertex AI"

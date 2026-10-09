@@ -11,7 +11,7 @@ from .image_output_utils import build_image_outputs
 
 
 class OpenAIGenerateImage:
-    """OpenAI Generate Image node.
+    """OpenAI Generate Image (Legacy) node.
 
     Generate image using OpenAI API and return as torch.Tensor (h,w,c) and text
     """
@@ -224,7 +224,8 @@ class OpenAIGenerateImage:
 
     FUNCTION = "generate_image"
 
-    _NODE_NAME = "OpenAI Generate Image"
+    _NODE_NAME = "OpenAI Generate Image (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = (
         "Generate image using OpenAI API and return as torch.Tensor (h,w,c) and text"
     )

@@ -54,7 +54,9 @@ def build_node_mappings(
         class_name = getattr(obj, "__name__", obj.__class__.__name__)
         public_class_name = strip_v3_suffix(class_name)
         node_name = f"Yogurt{public_class_name}"
-        obj.CATEGORY = category_from_module_name(getattr(obj, "__module__", ""))
+        category = category_from_module_name(getattr(obj, "__module__", ""))
+        subcategory = getattr(obj, "_SUBCATEGORY", "")
+        obj.CATEGORY = f"{category}/{subcategory}" if subcategory else category
 
         if class_name.endswith(V3_CLASS_SUFFIX):
             wrapped_cls = wrap_node_to_v3(node_name, obj)

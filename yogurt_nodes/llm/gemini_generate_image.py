@@ -285,7 +285,7 @@ async def generate_image(
 
 
 class GeminiGenerateImage:
-    """Gemini Generate Image node.
+    """Gemini Generate Image (Legacy) node.
 
     Generate image using Gemini API and return as torch.Tensor (h,w,c) and text
     """
@@ -327,7 +327,8 @@ class GeminiGenerateImage:
 
     FUNCTION = "generate_image"
 
-    _NODE_NAME = "Gemini Generate Image"
+    _NODE_NAME = "Gemini Generate Image (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = (
         "Generate image using Gemini API and return as torch.Tensor (h,w,c) and text"
     )
@@ -409,7 +410,7 @@ class GeminiGenerateImage:
 
 
 class VertexAIGenerateImage:
-    """Vertex AI Generate Image node.
+    """Vertex AI Generate Image (Legacy) node.
 
     Generate image using Vertex AI API and return as torch.Tensor (h,w,c) and text
     """
@@ -457,7 +458,8 @@ class VertexAIGenerateImage:
 
     FUNCTION = "generate_image"
 
-    _NODE_NAME = "Vertex AI Generate Image"
+    _NODE_NAME = "Vertex AI Generate Image (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = (
         "Generate image using Vertex AI API and return as torch.Tensor (h,w,c) and text"
     )

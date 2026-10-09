@@ -11,7 +11,10 @@ from .image_upscale_utils import (
 
 
 class TopazImageUpscaleAPI:
-    """Topaz Image Upscale API node."""
+    """Topaz Image Upscale API (Legacy) node.
+
+    Call the Topaz Labs Image API, wait for completion, and return an IMAGE batch.
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -281,7 +284,8 @@ class TopazImageUpscaleAPI:
     RETURN_NAMES = ("image",)
     FUNCTION = "upscale_image"
 
-    _NODE_NAME = "Topaz Image Upscale API"
+    _NODE_NAME = "Topaz Image Upscale API (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "Call the Topaz Labs Image API, wait for completion, and return an IMAGE batch."
 
     def upscale_image(

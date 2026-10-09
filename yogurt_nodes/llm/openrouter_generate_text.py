@@ -6,7 +6,7 @@ from ..utils import OpenRouterClient
 
 
 class OpenRouterGenerateText:
-    """OpenRouter Generate Text node.
+    """OpenRouter Generate Text (Legacy) node.
 
     Generate text using OpenRouter API
     """
@@ -168,7 +168,8 @@ class OpenRouterGenerateText:
 
     FUNCTION = "generate_text"
 
-    _NODE_NAME = "OpenRouter Generate Text"
+    _NODE_NAME = "OpenRouter Generate Text (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "Generate text using OpenRouter API"
 
     async def generate_text(

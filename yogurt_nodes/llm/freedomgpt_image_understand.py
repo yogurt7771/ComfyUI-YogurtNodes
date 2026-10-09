@@ -9,7 +9,7 @@ from ..utils import FreedomGPTClient
 
 
 class FreedomGPTImageUnderstand:
-    """FreedomGPT Image Understand node.
+    """FreedomGPT Image Understand (Legacy) node.
 
     Understand image content using FreedomGPT vision models
     """
@@ -169,7 +169,8 @@ class FreedomGPTImageUnderstand:
 
     FUNCTION = "understand_image"
 
-    _NODE_NAME = "FreedomGPT Image Understand"
+    _NODE_NAME = "FreedomGPT Image Understand (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "Understand image content using FreedomGPT vision models"
 
     async def understand_image(

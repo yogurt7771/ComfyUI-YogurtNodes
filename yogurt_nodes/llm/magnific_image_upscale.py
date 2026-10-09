@@ -11,7 +11,10 @@ from .image_upscale_utils import (
 
 
 class MagnificImageUpscaleAPI:
-    """Magnific Image Upscale API node."""
+    """Magnific Image Upscale API (Legacy) node.
+
+    Call the Magnific image upscaler API, wait for completion, and return an IMAGE batch.
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -231,7 +234,8 @@ class MagnificImageUpscaleAPI:
     RETURN_NAMES = ("image",)
     FUNCTION = "upscale_image"
 
-    _NODE_NAME = "Magnific Image Upscale API"
+    _NODE_NAME = "Magnific Image Upscale API (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "Call the Magnific image upscaler API, wait for completion, and return an IMAGE batch."
 
     def upscale_image(

@@ -9,7 +9,7 @@ from ..utils import OpenRouterClient
 
 
 class OpenRouterImageUnderstand:
-    """OpenRouter Image Understand node.
+    """OpenRouter Image Understand (Legacy) node.
 
     Understand image content using OpenRouter API
     """
@@ -176,7 +176,8 @@ class OpenRouterImageUnderstand:
 
     FUNCTION = "understand_image"
 
-    _NODE_NAME = "OpenRouter Image Understand"
+    _NODE_NAME = "OpenRouter Image Understand (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = "Understand image content using OpenRouter API"
 
     async def understand_image(

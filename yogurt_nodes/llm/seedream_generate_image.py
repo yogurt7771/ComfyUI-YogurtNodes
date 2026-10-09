@@ -9,7 +9,7 @@ from ..utils import SeeDreamClient
 
 
 class SeeDreamGenerateImage:
-    """SeeDream Generate Image node.
+    """SeeDream Generate Image (Legacy) node.
 
     使用豆包SeeDream API生成图像，支持文生图、图生图、多图生图和序列图像生成
     """
@@ -155,7 +155,8 @@ class SeeDreamGenerateImage:
 
     FUNCTION = "generate_image"
 
-    _NODE_NAME = "SeeDream Generate Image"
+    _NODE_NAME = "SeeDream Generate Image (Legacy)"
+    _SUBCATEGORY = "Legacy"
     DESCRIPTION = (
         "使用豆包SeeDream API生成图像，支持文生图、图生图、多图生图和序列图像生成"
     )
