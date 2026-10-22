@@ -10,6 +10,10 @@ from .yogurt_nodes.v3_node_adapter import (
     get_v3_node_adapter_status,
     wrap_node_to_v3,
 )
+from .yogurt_nodes.view_subfolder import install_view_subfolder_middleware
+
+
+install_view_subfolder_middleware()
 
 
 NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS, _wrap_stats = build_node_mappings(
