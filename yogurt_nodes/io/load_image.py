@@ -16,7 +16,7 @@ class LoadImage:
     def INPUT_TYPES(s):
         input_dir = folder_paths.get_input_directory()
         files = [
-            str(f.relative_to(input_dir))
+            f.relative_to(input_dir).as_posix()
             for f in Path(input_dir).rglob("*.*")
             if f.is_file()
         ]
