@@ -5,12 +5,14 @@
 只有遇到全新的 API 格式时才需要在 protocols 中注册新协议。
 """
 
-from .nodes import CUSTOM_MODEL_LABEL, ModelFamilyNode, ProviderNode  # noqa: F401
+from .nodes import CUSTOM_MODEL_LABEL, ExtraNode, ModelFamilyNode, ProviderNode  # noqa: F401
 from .params import Param, boolean, combo, images, integer, number, seed, text  # noqa: F401
-from .runtime import cancellable_sleep, describe_exception  # noqa: F401
+from .runtime import cancellable_sleep, describe_exception, parse_extra  # noqa: F401
 from .specs import (  # noqa: F401
+    EXTRA_IO_TYPE,
     PROTOCOLS,
     PROVIDERS,
+    ExtraParams,
     FamilySpec,
     GenerationRequest,
     GenerationResult,

@@ -225,6 +225,29 @@ DASHSCOPE = register_provider(
     )
 )
 
+SDCPP = register_provider(
+    ProviderSpec(
+        kind="sdcpp",
+        display_name="stable-diffusion.cpp",
+        route_key="sdcpp",
+        fields=(
+            base_url_field(tooltip="sd-server root URL (without /v1); default http://127.0.0.1:1234."),
+            text("api_key", tooltip="Optional Bearer token, only for a reverse proxy in front of sd-server."),
+            integer("task_timeout", 1800, min=30, max=7200,
+                    tooltip="Maximum time to wait for a queued or running job before cancelling it."),
+            proxy_field(),
+            timeout_field(),
+        ),
+        custom_protocols={"image": "sdcpp_img_gen"},
+        connection={
+            "base_url": "http://127.0.0.1:1234",
+            "base_url_json": ("sdcpp_base_url",),
+            "base_url_env": ("SDCPP_BASE_URL",),
+            "key_optional": True,
+        },
+    )
+)
+
 
 def _task_timeout():
     return integer("task_timeout", 900, min=30, max=7200, tooltip="Maximum time to wait for the upscale task.")

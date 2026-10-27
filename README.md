@@ -58,7 +58,7 @@ All exported nodes are listed here. ComfyUI display names keep the " (Yogurt Nod
 
 This section is auto-generated from exported node classes and their docstrings. Run `python tools/generate_readme.py` to refresh.
 
-Total exported nodes: **183**.
+Total exported nodes: **186**.
 
 | Group | Count |
 | --- | ---: |
@@ -69,7 +69,7 @@ Total exported nodes: **183**.
 | Logic Processing Nodes | 41 |
 | Model Nodes | 17 |
 | I/O Operation Nodes | 36 |
-| Language Model Nodes | 55 |
+| Language Model Nodes | 58 |
 | Network Nodes | 8 |
 
 ### Image Processing Nodes
@@ -280,6 +280,7 @@ Total exported nodes: **183**.
 | Provider: Topaz Labs | `YogurtTopazProvider` | `YogurtNodes/LLM` | Topaz Labs Image API provider. |
 | Provider: Vertex AI | `YogurtVertexAIProvider` | `YogurtNodes/LLM` | Vertex AI provider (express-mode API key or service-account credentials). |
 | Provider: Volcengine Ark | `YogurtVolcengineArkProvider` | `YogurtNodes/LLM` | Volcengine Ark (China) provider for Seedream and Doubao models. |
+| Provider: stable-diffusion.cpp | `YogurtSDCPPProvider` | `YogurtNodes/LLM` | Local or remote stable-diffusion.cpp sd-server (native /sdcpp/v1 API, no key required). |
 | Provider: xAI | `YogurtXAIProvider` | `YogurtNodes/LLM` | xAI (Grok) API provider. |
 | Qwen Generate/Edit Image (Legacy) | `YogurtQwenGenerateImage` | `YogurtNodes/LLM` | 使用阿里云百炼 Qwen 图片模型进行文生图或多图编辑 |
 | Qwen Image | `YogurtQwenImageGenerateImage` | `YogurtNodes/LLM` | Alibaba Qwen Image generation and editing. |
@@ -293,6 +294,8 @@ Total exported nodes: **183**.
 | Vertex Image Understand (Legacy) | `YogurtVertexAIImageUnderstand` | `YogurtNodes/LLM` | Understand images using Vertex AI |
 | Wan Generate/Edit Image (Legacy) | `YogurtWanGenerateImage` | `YogurtNodes/LLM` | 使用阿里云百炼 Wan 图片模型进行文生图或图像编辑 |
 | Wan Image | `YogurtWanImageGenerateImage` | `YogurtNodes/LLM` | Alibaba Wan image generation and editing. |
+| stable-diffusion.cpp | `YogurtSDCPPGenerateImage` | `YogurtNodes/LLM` | Image generation with the model loaded on a stable-diffusion.cpp sd-server. |
+| stable-diffusion.cpp Extra | `YogurtSDCPPExtra` | `YogurtNodes/LLM` | stable-diffusion.cpp sampling, LoRA, img2img / inpaint, ControlNet, IP-Adapter and hires settings for extra_params. |
 
 
 ### Network Nodes

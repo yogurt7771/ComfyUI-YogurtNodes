@@ -1,7 +1,7 @@
 """生图节点：每个模型系列一个节点，版本差异由 catalog 中的声明决定。"""
 
 from . import protocols  # noqa: F401
-from .catalog import alibaba, bytedance, gemini, generic, openai, xai
+from .catalog import alibaba, bytedance, gemini, generic, openai, sdcpp, xai
 from .framework import ModelFamilyNode
 
 
@@ -63,6 +63,16 @@ class WanImageGenerateImage(ModelFamilyNode):
     _NODE_NAME = "Wan Image"
     DESCRIPTION = "Alibaba Wan image generation and editing."
     FAMILY = alibaba.WAN_IMAGE
+
+
+class SDCPPGenerateImage(ModelFamilyNode):
+    """stable-diffusion.cpp node.
+
+    Image generation with the model loaded on a stable-diffusion.cpp sd-server.
+    """
+    _NODE_NAME = "stable-diffusion.cpp"
+    DESCRIPTION = "Image generation with the model loaded on a stable-diffusion.cpp sd-server."
+    FAMILY = sdcpp.SDCPP_IMAGE
 
 
 class CustomModelGenerateImage(ModelFamilyNode):

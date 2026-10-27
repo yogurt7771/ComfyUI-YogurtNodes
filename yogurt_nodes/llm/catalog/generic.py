@@ -18,6 +18,7 @@ CUSTOM_IMAGE = FamilySpec(
         text("size", default="auto", tooltip="Explicit size such as 1024x1024, where supported."),
         combo("quality", ("auto", "low", "medium", "high"), tooltip="Quality, where supported."),
     ),
+    extra_input=True,
 )
 
 CUSTOM_CHAT = FamilySpec(

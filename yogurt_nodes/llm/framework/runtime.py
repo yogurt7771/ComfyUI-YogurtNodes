@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import time
 from typing import Any, Iterable
 
@@ -16,12 +17,46 @@ from ..image_upscale_utils import tensor_batch_to_pil_images
 from .specs import (
     PROTOCOLS,
     PROVIDERS,
+    ExtraParams,
     GenerationRequest,
     GenerationResult,
     ModelSpec,
     ProviderConfig,
     Route,
 )
+
+
+def parse_extra(value: Any) -> dict[str, Any]:
+    """节点上的 extra（JSON 字符串）→ dict，用于透传新参数。"""
+    if isinstance(value, dict):
+        return value
+    if not value or not str(value).strip():
+        return {}
+    parsed = json.loads(value)
+    if not isinstance(parsed, dict):
+        raise ValueError("extra must be a JSON object")
+    return parsed
+
+
+def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    merged = dict(base)
+    for key, value in override.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _deep_merge(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
+def merge_extra(extra: ExtraParams, text: Any, route: Route, provider: ProviderConfig) -> dict[str, Any]:
+    """extra 端口的参数为底，节点上的 extra JSON 覆盖其上；协议不符时报错。"""
+    if extra.protocol and extra.protocol != route.protocol:
+        provider_name = PROVIDERS[provider.kind].display_name if provider.kind in PROVIDERS else provider.kind
+        raise ValueError(
+            f"{extra.source} only applies to the '{extra.protocol}' API, but provider '{provider_name}' "
+            f"uses '{route.protocol}'. Disconnect it or switch the provider."
+        )
+    return _deep_merge(extra.data, parse_extra(text))
 
 
 def default_provider(kind: str) -> ProviderConfig:

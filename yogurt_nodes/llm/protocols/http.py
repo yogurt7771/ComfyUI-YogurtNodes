@@ -3,6 +3,7 @@
 ProviderSpec.connection 支持的键：
 - base_url：默认地址；base_url_json / base_url_env：api_key.json 键名与环境变量
 - key_json / key_env：api_key.json 键名与环境变量（元组，按顺序取第一个非空值）
+- key_optional：为 True 时允许不填 key（如本地服务），协议自行决定是否发送鉴权头
 兼容渠道不声明 key_json / key_env，因此必须在节点里显式填写，避免把官方 key 发给第三方。
 """
 
@@ -20,7 +21,7 @@ from PIL import Image
 
 from ...utils.api_keys import load_api_keys
 from ...utils.cancellable_http import CancellableHttpClient, CancellableResponse
-from ..framework import PROVIDERS, ProviderConfig
+from ..framework import PROVIDERS, ProviderConfig, parse_extra  # noqa: F401 - 协议模块从这里导入 parse_extra
 
 
 @dataclass
@@ -55,7 +56,7 @@ def connect(provider: ProviderConfig) -> Connection:
         + [stored.get(key, "") for key in conn.get("key_json", ())]
         + [os.getenv(name, "") for name in conn.get("key_env", ())]
     )
-    if not api_key:
+    if not api_key and not conn.get("key_optional"):
         sources = ", ".join([f"api_key.json '{k}'" for k in conn.get("key_json", ())] + list(conn.get("key_env", ())))
         hint = f" or set {sources}" if sources else ""
         raise ValueError(f"{spec.display_name}: API key is not set. Fill it in the provider node{hint}.")
@@ -119,18 +120,6 @@ async def download_image(conn: Connection, url: str) -> Image.Image:
     image = Image.open(io.BytesIO(response.content))
     image.load()
     return image
-
-
-def parse_extra(value: Any) -> dict[str, Any]:
-    """节点上的 extra（JSON 字符串）→ dict，用于透传新参数。"""
-    if isinstance(value, dict):
-        return value
-    if not value or not str(value).strip():
-        return {}
-    parsed = json.loads(value)
-    if not isinstance(parsed, dict):
-        raise ValueError("extra must be a JSON object")
-    return parsed
 
 
 def is_set(value: Any) -> bool:

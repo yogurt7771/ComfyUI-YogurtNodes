@@ -1,0 +1,641 @@
+{
+  "id": "709da750-6b3a-49ec-9ff2-8aba5227ee20",
+  "revision": 0,
+  "last_node_id": 5,
+  "last_link_id": 3,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "YogurtSDCPPProvider",
+      "pos": [
+        40,
+        60
+      ],
+      "size": [
+        296.378515625,
+        154
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "base_url",
+          "name": "base_url",
+          "type": "STRING",
+          "widget": {
+            "name": "base_url"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "api_key",
+          "name": "api_key",
+          "type": "STRING",
+          "widget": {
+            "name": "api_key"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "task_timeout",
+          "name": "task_timeout",
+          "type": "INT",
+          "widget": {
+            "name": "task_timeout"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "proxy_url",
+          "name": "proxy_url",
+          "type": "STRING",
+          "widget": {
+            "name": "proxy_url"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "timeout",
+          "name": "timeout",
+          "type": "INT",
+          "widget": {
+            "name": "timeout"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "provider",
+          "name": "provider",
+          "type": "YOGURT_LLM_PROVIDER",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "YogurtSDCPPProvider"
+      },
+      "widgets_values": [
+        "",
+        "",
+        1800,
+        "",
+        0
+      ],
+      "widgets_values_named": {
+        "base_url": "",
+        "api_key": "",
+        "task_timeout": 1800,
+        "proxy_url": "",
+        "timeout": 0
+      }
+    },
+    {
+      "id": 2,
+      "type": "YogurtSDCPPExtra",
+      "pos": [
+        40,
+        340
+      ],
+      "size": [
+        400,
+        634
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "init_image",
+          "name": "init_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "localized_name": "control_image",
+          "name": "control_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "ip_adapter_image",
+          "name": "ip_adapter_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "negative_prompt",
+          "name": "negative_prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "negative_prompt"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "steps",
+          "name": "steps",
+          "type": "INT",
+          "widget": {
+            "name": "steps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "cfg",
+          "name": "cfg",
+          "type": "FLOAT",
+          "widget": {
+            "name": "cfg"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sampler",
+          "name": "sampler",
+          "type": "COMBO",
+          "widget": {
+            "name": "sampler"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "scheduler",
+          "name": "scheduler",
+          "type": "COMBO",
+          "widget": {
+            "name": "scheduler"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "distilled_guidance",
+          "name": "distilled_guidance",
+          "type": "FLOAT",
+          "widget": {
+            "name": "distilled_guidance"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "loras",
+          "name": "loras",
+          "type": "STRING",
+          "widget": {
+            "name": "loras"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength",
+          "name": "strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "control_strength",
+          "name": "control_strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "control_strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ip_adapter_strength",
+          "name": "ip_adapter_strength",
+          "type": "FLOAT",
+          "widget": {
+            "name": "ip_adapter_strength"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "clip_skip",
+          "name": "clip_skip",
+          "type": "INT",
+          "widget": {
+            "name": "clip_skip"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "eta",
+          "name": "eta",
+          "type": "FLOAT",
+          "widget": {
+            "name": "eta"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "flow_shift",
+          "name": "flow_shift",
+          "type": "FLOAT",
+          "widget": {
+            "name": "flow_shift"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "hires",
+          "name": "hires",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "hires"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "hires_upscaler",
+          "name": "hires_upscaler",
+          "type": "STRING",
+          "widget": {
+            "name": "hires_upscaler"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "hires_scale",
+          "name": "hires_scale",
+          "type": "FLOAT",
+          "widget": {
+            "name": "hires_scale"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "hires_steps",
+          "name": "hires_steps",
+          "type": "INT",
+          "widget": {
+            "name": "hires_steps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "hires_denoise",
+          "name": "hires_denoise",
+          "type": "FLOAT",
+          "widget": {
+            "name": "hires_denoise"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "vae_tiling",
+          "name": "vae_tiling",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "vae_tiling"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "cache_mode",
+          "name": "cache_mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "cache_mode"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "extra_params",
+          "name": "extra_params",
+          "type": "YOGURT_LLM_EXTRA",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "YogurtSDCPPExtra"
+      },
+      "widgets_values": [
+        "lowres, blurry, watermark",
+        20,
+        -1,
+        "default",
+        "default",
+        -1,
+        "",
+        -1,
+        -1,
+        -1,
+        0,
+        -1,
+        -1,
+        false,
+        "Latent",
+        2,
+        0,
+        0.7,
+        false,
+        "default"
+      ],
+      "widgets_values_named": {
+        "negative_prompt": "lowres, blurry, watermark",
+        "steps": 20,
+        "cfg": -1,
+        "sampler": "default",
+        "scheduler": "default",
+        "distilled_guidance": -1,
+        "loras": "",
+        "strength": -1,
+        "control_strength": -1,
+        "ip_adapter_strength": -1,
+        "clip_skip": 0,
+        "eta": -1,
+        "flow_shift": -1,
+        "hires": false,
+        "hires_upscaler": "Latent",
+        "hires_scale": 2,
+        "hires_steps": 0,
+        "hires_denoise": 0.7,
+        "vae_tiling": false,
+        "cache_mode": "default"
+      }
+    },
+    {
+      "id": 3,
+      "type": "YogurtSDCPPGenerateImage",
+      "pos": [
+        480,
+        60
+      ],
+      "size": [
+        400,
+        370
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image_1",
+          "name": "images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "extra_params",
+          "name": "extra_params",
+          "shape": 7,
+          "type": "YOGURT_LLM_EXTRA",
+          "link": 2
+        },
+        {
+          "localized_name": "provider",
+          "name": "provider",
+          "shape": 7,
+          "type": "YOGURT_LLM_PROVIDER",
+          "link": 1
+        },
+        {
+          "localized_name": "prompt",
+          "name": "prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "COMFY_DYNAMICCOMBO_V3",
+          "widget": {
+            "name": "model"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "width",
+          "name": "model.width",
+          "type": "INT",
+          "widget": {
+            "name": "model.width"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "height",
+          "name": "model.height",
+          "type": "INT",
+          "widget": {
+            "name": "model.height"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "n",
+          "name": "n",
+          "type": "INT",
+          "widget": {
+            "name": "n"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "extra",
+          "name": "extra",
+          "type": "STRING",
+          "widget": {
+            "name": "extra"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "retry_count",
+          "name": "retry_count",
+          "type": "INT",
+          "widget": {
+            "name": "retry_count"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            3
+          ]
+        },
+        {
+          "localized_name": "images",
+          "name": "images",
+          "shape": 6,
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "localized_name": "thought",
+          "name": "thought",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "YogurtSDCPPGenerateImage"
+      },
+      "widgets_values": [
+        "a lighthouse on a cliff at sunset, highly detailed",
+        "Loaded model",
+        0,
+        0,
+        1,
+        42,
+        "fixed",
+        "",
+        1
+      ],
+      "widgets_values_named": {
+        "prompt": "a lighthouse on a cliff at sunset, highly detailed",
+        "model": "Loaded model",
+        "model.width": 0,
+        "model.height": 0,
+        "n": 1,
+        "seed": 42,
+        "control_after_generate": "fixed",
+        "extra": "",
+        "retry_count": 1
+      }
+    },
+    {
+      "id": 4,
+      "type": "PreviewImage",
+      "pos": [
+        900,
+        60
+      ],
+      "size": [
+        140,
+        246
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 5,
+      "type": "Note",
+      "pos": [
+        900,
+        420
+      ],
+      "size": [
+        420,
+        300
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "stable-diffusion.cpp test workflow\n\n1. Start sd-server with a model, e.g.\n   sd-server -m <model.safetensors> --listen-port 1234\n2. base_url empty = http://127.0.0.1:1234.\n   If you start sd-server on another port, fill base_url,\n   e.g. http://127.0.0.1:7870 (server root, no /v1).\n3. width / height 0 = server or recipe default.\n   Extra node: -1 / 0 / 'default' = not sent.\n4. Interrupting in ComfyUI also cancels the sd-server job."
+      ],
+      "widgets_values_named": {
+        "text": "stable-diffusion.cpp test workflow\n\n1. Start sd-server with a model, e.g.\n   sd-server -m <model.safetensors> --listen-port 1234\n2. base_url empty = http://127.0.0.1:1234.\n   If you start sd-server on another port, fill base_url,\n   e.g. http://127.0.0.1:7870 (server root, no /v1).\n3. width / height 0 = server or recipe default.\n   Extra node: -1 / 0 / 'default' = not sent.\n4. Interrupting in ComfyUI also cancels the sd-server job."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      3,
+      3,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      1,
+      "YOGURT_LLM_EXTRA"
+    ],
+    [
+      1,
+      1,
+      0,
+      3,
+      2,
+      "YOGURT_LLM_PROVIDER"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1,
+      "offset": [
+        0,
+        0
+      ]
+    }
+  },
+  "version": 0.4
+}

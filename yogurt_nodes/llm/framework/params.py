@@ -64,6 +64,8 @@ class Param:
             )
         if self.kind == "image":
             return IO.Image.Input(self.id, **common)
+        if self.kind == "mask":
+            return IO.Mask.Input(self.id, **common)
         if self.kind == "custom":
             return IO.Custom(self.io_type).Input(self.id, **common)
         raise ValueError(f"Unknown param kind: {self.kind}")

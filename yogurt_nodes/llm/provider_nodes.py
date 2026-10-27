@@ -124,6 +124,16 @@ class DashScopeProvider(ProviderNode):
     PROVIDER = catalog.DASHSCOPE
 
 
+class SDCPPProvider(ProviderNode):
+    """Provider: stable-diffusion.cpp node.
+
+    Local or remote stable-diffusion.cpp sd-server (native /sdcpp/v1 API, no key required).
+    """
+    _NODE_NAME = "Provider: stable-diffusion.cpp"
+    DESCRIPTION = "Local or remote stable-diffusion.cpp sd-server (native /sdcpp/v1 API, no key required)."
+    PROVIDER = catalog.SDCPP
+
+
 class TopazProvider(ProviderNode):
     """Provider: Topaz Labs node.
 

@@ -9,11 +9,13 @@ from comfy_api.latest import IO
 
 from ...node_registry import category_from_module_name
 from .params import Param, integer, text
-from .runtime import default_provider, image_outputs, images_from_input, resolve_route, run_request
+from .runtime import default_provider, image_outputs, images_from_input, merge_extra, resolve_route, run_request
 from .specs import (
+    EXTRA_IO_TYPE,
     HISTORY_IO_TYPE,
     PROVIDER_IO_TYPE,
     PROVIDERS,
+    ExtraParams,
     FamilySpec,
     GenerationRequest,
     ModelSpec,
@@ -62,6 +64,33 @@ class ProviderNode(IO.ComfyNode):
     def execute(cls, **kwargs) -> IO.NodeOutput:
         spec = cls.PROVIDER
         return IO.NodeOutput(ProviderConfig(kind=spec.kind, route_key=spec.route_key, settings=dict(kwargs)))
+
+
+class ExtraNode(IO.ComfyNode):
+    """把某个协议的专有参数做成控件，输出连到模型节点的 extra_params 端口。子类实现 build。"""
+
+    PARAMS: tuple[Param, ...]
+    PROTOCOL = ""
+    _SUBCATEGORY = "Extra"
+
+    @classmethod
+    def define_schema(cls):
+        return IO.Schema(
+            node_id=_node_id(cls),
+            display_name=cls._NODE_NAME,
+            category=_category(cls),
+            description=_description(cls),
+            inputs=[param.to_input() for param in cls.PARAMS],
+            outputs=[IO.Custom(EXTRA_IO_TYPE).Output(display_name="extra_params")],
+        )
+
+    @classmethod
+    def execute(cls, **kwargs) -> IO.NodeOutput:
+        return IO.NodeOutput(ExtraParams(source=cls._NODE_NAME, data=cls.build(**kwargs), protocol=cls.PROTOCOL))
+
+    @classmethod
+    def build(cls, **kwargs) -> dict[str, Any]:
+        raise NotImplementedError
 
 
 class ModelFamilyNode(IO.ComfyNode):
@@ -121,6 +150,14 @@ class ModelFamilyNode(IO.ComfyNode):
             )
         if family.history:
             inputs.append(IO.Custom(HISTORY_IO_TYPE).Input("history", optional=True, tooltip="Previous turns."))
+        if family.extra_input:
+            inputs.append(
+                IO.Custom(EXTRA_IO_TYPE).Input(
+                    "extra_params",
+                    optional=True,
+                    tooltip="Settings node output merged into the request; the extra JSON overrides it.",
+                )
+            )
         inputs.append(
             IO.Custom(PROVIDER_IO_TYPE).Input(
                 "provider",
@@ -154,6 +191,8 @@ class ModelFamilyNode(IO.ComfyNode):
         params = {param.id: values.get(param.id, param.default) for param in spec.params}
         params.update({param.id: kwargs.get(param.id, param.default) for param in family.params})
         route = _resolve(spec, provider, params, family)
+        if kwargs.get("extra_params") is not None:
+            params["extra"] = merge_extra(kwargs["extra_params"], params.get("extra"), route, provider)
 
         images = images_from_input(kwargs.get("images"))
         limit = spec.max_images if spec.max_images is not None else family.max_images

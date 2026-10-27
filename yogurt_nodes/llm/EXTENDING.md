@@ -93,6 +93,16 @@ async def run_example(provider: ProviderConfig, route: Route, request: Generatio
 
 协议只负责把统一参数翻译成该 API 的请求并解析结果；重试、超时提示、报错格式由框架统一处理。HTTP 请求请使用 `protocols/http.py` 中的工具，这样 ComfyUI 的取消操作能中断请求。
 
+本地服务不需要 key 时，在 `connection` 中写 `"key_optional": True`（例如 `sdcpp`），协议自己决定是否发送鉴权头。
+
+## 专有参数节点（extra 端口）
+
+某个 API 独有的大量参数不放在通用生成节点上，而是做成单独的设置节点，经 `extra_params` 端口连入（参考 `extra_nodes.py` 中的 `SDCPPExtra`）：
+
+1. 继承 `ExtraNode`，声明 `PARAMS` 和 `PROTOCOL`（目标协议名），在 `build(**kwargs)` 中返回要合并进请求的 dict，未设置的值不要放进去，让服务端用默认值。
+2. 给需要接收的 `FamilySpec` 设置 `extra_input=True`。
+3. 框架把端口数据与节点上的 `extra` JSON 深度合并（JSON 优先），写回 `params["extra"]`，协议照常用 `parse_extra` 读取；`PROTOCOL` 与实际路由的协议不一致时直接报错，不会被静默忽略。
+
 ## 统一参数名
 
 模型声明使用下列参数名，各协议负责翻译成对应 API 的字段：

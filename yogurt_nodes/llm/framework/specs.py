@@ -18,6 +18,7 @@ from .params import Param
 
 PROVIDER_IO_TYPE = "YOGURT_LLM_PROVIDER"
 HISTORY_IO_TYPE = "HISTORY"
+EXTRA_IO_TYPE = "YOGURT_LLM_EXTRA"
 
 
 @dataclass(frozen=True)
@@ -42,6 +43,18 @@ class ProviderConfig:
     def get(self, key: str, default: Any = None) -> Any:
         value = self.settings.get(key, default)
         return default if value is None else value
+
+
+@dataclass(frozen=True)
+class ExtraParams:
+    """extra 端口传递的请求参数，与节点上的 extra JSON 深度合并（JSON 优先）。
+
+    protocol 非空时只能用于该协议，连到其他供应商会报错而不是被静默忽略。
+    """
+
+    source: str
+    data: dict[str, Any] = field(default_factory=dict)
+    protocol: str = ""
 
 
 @dataclass(frozen=True)
@@ -72,6 +85,7 @@ class FamilySpec:
     history: bool = False
     custom_params: tuple[Param, ...] | None = None
     custom_options: dict[str, Any] = field(default_factory=dict)
+    extra_input: bool = False
 
 
 @dataclass
