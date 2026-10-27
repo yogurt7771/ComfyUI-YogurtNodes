@@ -1,13 +1,11 @@
-"""stable-diffusion.cpp（sd-server 原生 /sdcpp/v1 API）：服务端当前加载的模型。
+"""stable-diffusion.cpp（sd-server 原生 /sdcpp/v1 API）的选项表，供 Extra 节点使用。
 
+生成走通用的 Custom Model 节点 + stable-diffusion.cpp 供应商，sdcpp 专有参数经 extra_params 端口传入。
 采样器 / 调度器名称与 sd-server 的 GET /sdcpp/v1/capabilities 一致，缓存模式取自 examples/server/routes_sdcpp.cpp
 （均为 2026-10 的 master）；新名称可通过 extra JSON 直接传入。
 """
 
 from __future__ import annotations
-
-from ..framework import FamilySpec, ModelSpec, Route, integer, seed
-from .common import EXTRA, count
 
 SAMPLERS = (
     "euler", "euler_a", "heun", "dpm2", "dpm++2s_a", "dpm++2m", "dpm++2mv2", "ipndm", "ipndm_v", "lcm",
@@ -21,29 +19,3 @@ SCHEDULERS = (
 CACHE_MODES = ("disabled", "easycache", "ucache", "dbcache", "taylorseer", "cache-dit", "spectrum")
 
 PROTOCOL = "sdcpp_img_gen"
-
-
-def _dimension(id: str):
-    return integer(id, 0, min=0, max=4096, step=8,
-                   tooltip="0 uses the init image size, else the server default. sd-server allows 64-4096.")
-
-
-SDCPP_IMAGE = FamilySpec(
-    task="image",
-    default_provider="sdcpp",
-    max_images=16,
-    params=(
-        count(8),
-        seed("0 picks a random seed on the server (sent as -1); changing it also forces a re-run."),
-        EXTRA,
-    ),
-    models=(
-        ModelSpec(
-            "Loaded model",
-            routes={"sdcpp": Route(PROTOCOL, "")},
-            params=(_dimension("width"), _dimension("height")),
-            description="Whatever model sd-server has loaded.",
-        ),
-    ),
-    extra_input=True,
-)

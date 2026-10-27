@@ -62,7 +62,7 @@ pip install -r requirements.txt
 
 这一节由导出节点类及其文档注释自动生成。执行 `python tools/generate_readme.py` 可重新生成。
 
-当前导出节点总数：**186**。
+当前导出节点总数：**185**。
 
 | 分组 | 数量 |
 | --- | ---: |
@@ -73,7 +73,7 @@ pip install -r requirements.txt
 | 逻辑处理节点 | 41 |
 | 模型节点 | 17 |
 | 输入/输出操作节点 | 36 |
-| 语言模型节点 | 58 |
+| 语言模型节点 | 57 |
 | 网络节点 | 8 |
 
 ### 图像处理节点
@@ -298,7 +298,6 @@ pip install -r requirements.txt
 | Vertex Image Understand (Legacy) | `YogurtVertexAIImageUnderstand` | `YogurtNodes/LLM` | Understand images using Vertex AI |
 | Wan Generate/Edit Image (Legacy) | `YogurtWanGenerateImage` | `YogurtNodes/LLM` | 使用阿里云百炼 Wan 图片模型进行文生图或图像编辑 |
 | Wan Image | `YogurtWanImageGenerateImage` | `YogurtNodes/LLM` | Alibaba Wan image generation and editing. |
-| stable-diffusion.cpp | `YogurtSDCPPGenerateImage` | `YogurtNodes/LLM` | Image generation with the model loaded on a stable-diffusion.cpp sd-server. |
 | stable-diffusion.cpp Extra | `YogurtSDCPPExtra` | `YogurtNodes/LLM` | stable-diffusion.cpp sampling, LoRA, img2img / inpaint, ControlNet, IP-Adapter and hires settings for extra_params. |
 
 

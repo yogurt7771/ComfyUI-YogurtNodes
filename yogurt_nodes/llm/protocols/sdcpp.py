@@ -21,15 +21,9 @@ _TERMINAL = ("completed", "failed", "cancelled")
 def img_gen_body(request: GenerationRequest) -> dict[str, Any]:
     params = request.params
     body: dict[str, Any] = {"prompt": image_prompt(request), "seed": request.seed or -1}
-    width, height = int(params.get("width") or 0), int(params.get("height") or 0)
-    if not (width or height):
-        match = re.fullmatch(r"(\d+)x(\d+)", resolve_size(params))
-        if match:
-            width, height = int(match.group(1)), int(match.group(2))
-    if width:
-        body["width"] = width
-    if height:
-        body["height"] = height
+    match = re.fullmatch(r"(\d+)x(\d+)", resolve_size(params))
+    if match:
+        body["width"], body["height"] = int(match.group(1)), int(match.group(2))
     if params.get("n"):
         body["batch_count"] = int(params["n"])
     if request.images:

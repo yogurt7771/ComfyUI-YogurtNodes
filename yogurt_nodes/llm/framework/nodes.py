@@ -244,7 +244,8 @@ def _outputs(task: str) -> list[Any]:
 
 def _custom_model_spec(family: FamilySpec) -> ModelSpec:
     params: tuple[Param, ...] = (
-        text("model_id", tooltip="Model id as the provider expects it."),
+        text("model_id", tooltip="Model id as the provider expects it; leave empty for single-model servers "
+                                 "such as stable-diffusion.cpp."),
     ) + tuple(family.custom_params or ())
     return ModelSpec(label=CUSTOM_MODEL_LABEL, routes={}, params=params)
 
@@ -253,9 +254,9 @@ def _resolve(spec: ModelSpec, provider: ProviderConfig, params: dict[str, Any], 
     if spec.label != CUSTOM_MODEL_LABEL:
         return resolve_route(spec, provider)
     model_id = str(params.pop("model_id", "") or "").strip()
-    if not model_id:
-        raise ValueError("model_id is required for a custom model")
     provider_spec = PROVIDERS.get(provider.kind)
+    if not model_id and not (provider_spec and provider_spec.connection.get("model_optional")):
+        raise ValueError("model_id is required for a custom model")
     protocol = provider_spec.custom_protocols.get(family.task) if provider_spec else None
     if not protocol:
         raise ValueError(f"Provider '{provider.kind}' does not support custom {family.task} models")

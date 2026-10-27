@@ -244,6 +244,7 @@ SDCPP = register_provider(
             "base_url_json": ("sdcpp_base_url",),
             "base_url_env": ("SDCPP_BASE_URL",),
             "key_optional": True,
+            "model_optional": True,
         },
     )
 )

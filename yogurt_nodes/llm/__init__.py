@@ -27,7 +27,7 @@ from .provider_nodes import (  # noqa
 )
 from .image_nodes import (  # noqa
     NanoBananaGenerateImage, GPTImageGenerateImage, GrokImagineGenerateImage, SeedreamGenerateImage,
-    QwenImageGenerateImage, WanImageGenerateImage, SDCPPGenerateImage, CustomModelGenerateImage,
+    QwenImageGenerateImage, WanImageGenerateImage, CustomModelGenerateImage,
 )
 from .extra_nodes import SDCPPExtra  # noqa
 from .text_nodes import GeminiChat, GPTChat, GrokChat, ClaudeChat, CustomModelChat  # noqa

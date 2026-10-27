@@ -4,6 +4,7 @@ ProviderSpec.connection 支持的键：
 - base_url：默认地址；base_url_json / base_url_env：api_key.json 键名与环境变量
 - key_json / key_env：api_key.json 键名与环境变量（元组，按顺序取第一个非空值）
 - key_optional：为 True 时允许不填 key（如本地服务），协议自行决定是否发送鉴权头
+- model_optional：为 True 时 Custom Model 节点可以不填 model_id（服务端只有一个已加载的模型）
 兼容渠道不声明 key_json / key_env，因此必须在节点里显式填写，避免把官方 key 发给第三方。
 """
 

@@ -1,5 +1,5 @@
 {
-  "id": "709da750-6b3a-49ec-9ff2-8aba5227ee20",
+  "id": "7c809031-7e9c-4ef9-94c0-7ee664b86450",
   "revision": 0,
   "last_node_id": 5,
   "last_link_id": 3,
@@ -102,7 +102,7 @@
       ],
       "size": [
         400,
-        634
+        838
       ],
       "flags": {},
       "order": 1,
@@ -377,14 +377,14 @@
     },
     {
       "id": 3,
-      "type": "YogurtSDCPPGenerateImage",
+      "type": "YogurtCustomModelGenerateImage",
       "pos": [
         480,
         60
       ],
       "size": [
         400,
-        370
+        496
       ],
       "flags": {},
       "order": 3,
@@ -421,29 +421,56 @@
           "link": null
         },
         {
+          "localized_name": "model_id",
+          "name": "model.model_id",
+          "type": "STRING",
+          "widget": {
+            "name": "model.model_id"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "aspect_ratio",
+          "name": "model.aspect_ratio",
+          "type": "COMBO",
+          "widget": {
+            "name": "model.aspect_ratio"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "resolution",
+          "name": "model.resolution",
+          "type": "COMBO",
+          "widget": {
+            "name": "model.resolution"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "size",
+          "name": "model.size",
+          "type": "STRING",
+          "widget": {
+            "name": "model.size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "quality",
+          "name": "model.quality",
+          "type": "COMBO",
+          "widget": {
+            "name": "model.quality"
+          },
+          "link": null
+        },
+        {
           "localized_name": "model",
           "name": "model",
           "type": "COMFY_DYNAMICCOMBO_V3",
           "widget": {
             "name": "model"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "width",
-          "name": "model.width",
-          "type": "INT",
-          "widget": {
-            "name": "model.width"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "height",
-          "name": "model.height",
-          "type": "INT",
-          "widget": {
-            "name": "model.height"
           },
           "link": null
         },
@@ -482,6 +509,16 @@
             "name": "retry_count"
           },
           "link": null
+        },
+        {
+          "localized_name": "system_prompt",
+          "name": "system_prompt",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "system_prompt"
+          },
+          "link": null
         }
       ],
       "outputs": [
@@ -514,29 +551,37 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "YogurtSDCPPGenerateImage"
+        "Node name for S&R": "YogurtCustomModelGenerateImage"
       },
       "widgets_values": [
         "a lighthouse on a cliff at sunset, highly detailed",
-        "Loaded model",
-        0,
-        0,
+        "Custom model",
+        "",
+        "auto",
+        "auto",
+        "auto",
+        "auto",
         1,
         42,
         "fixed",
         "",
-        1
+        1,
+        ""
       ],
       "widgets_values_named": {
         "prompt": "a lighthouse on a cliff at sunset, highly detailed",
-        "model": "Loaded model",
-        "model.width": 0,
-        "model.height": 0,
+        "model": "Custom model",
+        "model.model_id": "",
+        "model.aspect_ratio": "auto",
+        "model.resolution": "auto",
+        "model.size": "auto",
+        "model.quality": "auto",
         "n": 1,
         "seed": 42,
         "control_after_generate": "fixed",
         "extra": "",
-        "retry_count": 1
+        "retry_count": 1,
+        "system_prompt": ""
       }
     },
     {
@@ -548,7 +593,7 @@
       ],
       "size": [
         140,
-        246
+        26
       ],
       "flags": {},
       "order": 4,
@@ -581,7 +626,7 @@
         420
       ],
       "size": [
-        420,
+        440,
         300
       ],
       "flags": {},
@@ -591,10 +636,10 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "stable-diffusion.cpp test workflow\n\n1. Start sd-server with a model, e.g.\n   sd-server -m <model.safetensors> --listen-port 1234\n2. base_url empty = http://127.0.0.1:1234.\n   If you start sd-server on another port, fill base_url,\n   e.g. http://127.0.0.1:7870 (server root, no /v1).\n3. width / height 0 = server or recipe default.\n   Extra node: -1 / 0 / 'default' = not sent.\n4. Interrupting in ComfyUI also cancels the sd-server job."
+        "stable-diffusion.cpp example (ComfyUI-YogurtNodes)\n\n1. Start sd-server with a model, e.g.\n   sd-server -m <model.safetensors> --listen-port 1234\n2. base_url empty = http://127.0.0.1:1234 (server root, no /v1).\n3. Image Generation (Custom Model): leave model_id empty (sd-server\n   uses its loaded model); size WxH or auto = server default.\n4. sdcpp settings (sampler, steps, cfg, LoRA, img2img, ControlNet,\n   IP-Adapter, hires...) come from the Extra node via extra_params.\n   -1 / 0 / 'default' = not sent.\n5. Interrupting in ComfyUI also cancels the sd-server job."
       ],
       "widgets_values_named": {
-        "text": "stable-diffusion.cpp test workflow\n\n1. Start sd-server with a model, e.g.\n   sd-server -m <model.safetensors> --listen-port 1234\n2. base_url empty = http://127.0.0.1:1234.\n   If you start sd-server on another port, fill base_url,\n   e.g. http://127.0.0.1:7870 (server root, no /v1).\n3. width / height 0 = server or recipe default.\n   Extra node: -1 / 0 / 'default' = not sent.\n4. Interrupting in ComfyUI also cancels the sd-server job."
+        "text": "stable-diffusion.cpp example (ComfyUI-YogurtNodes)\n\n1. Start sd-server with a model, e.g.\n   sd-server -m <model.safetensors> --listen-port 1234\n2. base_url empty = http://127.0.0.1:1234 (server root, no /v1).\n3. Image Generation (Custom Model): leave model_id empty (sd-server\n   uses its loaded model); size WxH or auto = server default.\n4. sdcpp settings (sampler, steps, cfg, LoRA, img2img, ControlNet,\n   IP-Adapter, hires...) come from the Extra node via extra_params.\n   -1 / 0 / 'default' = not sent.\n5. Interrupting in ComfyUI also cancels the sd-server job."
       },
       "color": "#432",
       "bgcolor": "#653"
@@ -602,12 +647,12 @@
   ],
   "links": [
     [
-      3,
-      3,
+      1,
+      1,
       0,
-      4,
-      0,
-      "IMAGE"
+      3,
+      2,
+      "YOGURT_LLM_PROVIDER"
     ],
     [
       2,
@@ -618,22 +663,22 @@
       "YOGURT_LLM_EXTRA"
     ],
     [
-      1,
-      1,
-      0,
       3,
-      2,
-      "YOGURT_LLM_PROVIDER"
+      3,
+      0,
+      4,
+      0,
+      "IMAGE"
     ]
   ],
   "groups": [],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 1,
+      "scale": 0.9,
       "offset": [
-        0,
-        0
+        416,
+        110
       ]
     }
   },

@@ -109,7 +109,7 @@ class SDCPPTests(unittest.TestCase):
     def test_body_maps_node_fields_and_extra_overrides(self):
         body = self.sdcpp.img_gen_body(
             self.request(
-                params={"width": 512, "height": 768, "n": 2,
+                params={"size": "512x768", "n": 2,
                         "extra": {"seed": 7, "sample_params": {"sample_steps": 20}}},
                 images=[make_image()],
             )
@@ -129,11 +129,11 @@ class SDCPPTests(unittest.TestCase):
 
     def test_body_follows_init_image_size_when_no_size_given(self):
         init = self.http.data_url(make_image(size=(640, 384)))
-        body = self.sdcpp.img_gen_body(self.request(params={"width": 0, "height": 0, "extra": {"init_image": init}}))
+        body = self.sdcpp.img_gen_body(self.request(params={"size": "auto", "extra": {"init_image": init}}))
         self.assertEqual((body["width"], body["height"]), (640, 384))
 
         explicit = self.sdcpp.img_gen_body(
-            self.request(params={"width": 512, "height": 512, "extra": {"init_image": init}})
+            self.request(params={"size": "512x512", "extra": {"init_image": init}})
         )
         self.assertEqual((explicit["width"], explicit["height"]), (512, 512))
 
@@ -322,6 +322,18 @@ class SDCPPTests(unittest.TestCase):
 
     # --- node end to end ----------------------------------------------------
 
+    def custom_model(self, model_id="", size="512x768"):
+        return {"model": "Custom model", "model_id": model_id, "aspect_ratio": "auto", "resolution": "auto",
+                "size": size, "quality": "auto"}
+
+    def test_custom_model_node_needs_model_id_except_for_single_model_providers(self):
+        node = self.image_nodes.CustomModelGenerateImage
+        openai = self.framework.ProviderConfig(kind="openai_compatible", route_key="openai",
+                                               settings={"base_url": "http://x/v1", "api_key": "k"})
+        with self.assertRaisesRegex(ValueError, "model_id is required"):
+            asyncio.run(node.execute(model=self.custom_model(), prompt="a cat", n=1, seed=1, extra="",
+                                     images=None, retry_count=1, provider=openai))
+
     def test_generate_node_merges_extra_port_into_native_request(self):
         sent = {}
 
@@ -340,13 +352,13 @@ class SDCPPTests(unittest.TestCase):
             data={"negative_prompt": "low quality", "sample_params": {"sample_steps": 20}},
             protocol="sdcpp_img_gen",
         )
-        node = self.image_nodes.SDCPPGenerateImage
+        node = self.image_nodes.CustomModelGenerateImage
         with (
             mock.patch.object(self.sdcpp, "http_request", fake_request),
             mock.patch.object(self.sdcpp, "cancellable_sleep", no_sleep),
         ):
             output = asyncio.run(node.execute(
-                model={"model": "Loaded model", "width": 512, "height": 768},
+                model=self.custom_model(),
                 prompt="a lighthouse",
                 n=1,
                 seed=42,
@@ -354,6 +366,7 @@ class SDCPPTests(unittest.TestCase):
                 images=None,
                 retry_count=1,
                 extra_params=extra,
+                provider=self.provider(),
             ))
         self.assertEqual(sent["body"], {
             "prompt": "a lighthouse",
