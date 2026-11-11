@@ -86,6 +86,7 @@ class FamilySpec:
     custom_params: tuple[Param, ...] | None = None
     custom_options: dict[str, Any] = field(default_factory=dict)
     extra_input: bool = False
+    models_loader: Callable[[], tuple[ModelSpec, ...]] | None = None
 
 
 @dataclass

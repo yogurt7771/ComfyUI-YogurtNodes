@@ -100,9 +100,10 @@ class ModelFamilyNode(IO.ComfyNode):
     @classmethod
     def _models(cls) -> tuple[ModelSpec, ...]:
         family = cls.FAMILY
+        models = family.models_loader() if family.models_loader else family.models
         if family.custom_params is None:
-            return family.models
-        return family.models + (_custom_model_spec(family),)
+            return models
+        return models + (_custom_model_spec(family),)
 
     @classmethod
     def define_schema(cls):

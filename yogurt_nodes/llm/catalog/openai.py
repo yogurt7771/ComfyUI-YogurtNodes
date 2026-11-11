@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from ..framework import FamilySpec, ModelSpec, Route, combo, integer, seed
 from .common import EXTRA, count, temperature, top_p
 
+GPT_IMAGE_MODELS_PATH = Path(__file__).with_name("gpt_image_models.json")
 GPT_IMAGE_2_SIZES = (
     "auto", "1024x1024", "1024x1536", "1536x1024", "2048x2048",
     "2048x1152", "1152x2048", "3840x2160", "2160x3840", "Custom",
 )
-GPT_IMAGE_1_SIZES = ("auto", "1024x1024", "1024x1536", "1536x1024")
 
 
 def _image_routes(model_id: str, openrouter: bool = True, grsai: bool = False) -> dict[str, Route]:
@@ -36,8 +39,22 @@ def _image_params(sizes, qualities, backgrounds):
 
 
 _QUALITY_25 = ("auto", "low", "medium", "high", "xhigh", "max")
-_QUALITY = ("auto", "low", "medium", "high")
 _BG_ALL = ("auto", "opaque", "transparent")
+
+
+def _load_gpt_image_models() -> tuple[ModelSpec, ...]:
+    # 每次取节点定义都重读，改 JSON 后刷新页面即生效，不用重启 ComfyUI。
+    config = json.loads(GPT_IMAGE_MODELS_PATH.read_text(encoding="utf-8-sig"))
+    models = []
+    for entry in config["models"]:
+        profile = config["profiles"][entry["profile"]]
+        routes = _image_routes(
+            entry["model_id"], openrouter=entry.get("openrouter", True), grsai=entry.get("grsai", False)
+        )
+        params = _image_params(tuple(profile["sizes"]), tuple(profile["quality"]), tuple(profile["background"]))
+        models.append(ModelSpec(entry["label"], routes, params))
+    return tuple(models)
+
 
 GPT_IMAGE = FamilySpec(
     task="image",
@@ -52,19 +69,8 @@ GPT_IMAGE = FamilySpec(
         combo("moderation", ("auto", "low"), advanced=True, tooltip="Content moderation strictness."),
         EXTRA,
     ),
-    models=(
-        ModelSpec("GPT Image 2.5 Flare", _image_routes("gpt-image-2.5-flare"),
-                  _image_params(GPT_IMAGE_2_SIZES, _QUALITY_25, _BG_ALL)),
-        ModelSpec("GPT Image 2.5 Sunburst", _image_routes("gpt-image-2.5-sunburst"),
-                  _image_params(GPT_IMAGE_2_SIZES, _QUALITY_25, _BG_ALL)),
-        ModelSpec("GPT Image 2", _image_routes("gpt-image-2", grsai=True),
-                  _image_params(GPT_IMAGE_2_SIZES, _QUALITY, ("auto", "opaque"))),
-        ModelSpec("GPT Image 1.5", _image_routes("gpt-image-1.5", openrouter=False, grsai=True),
-                  _image_params(GPT_IMAGE_1_SIZES, _QUALITY, _BG_ALL)),
-        ModelSpec("GPT Image 1", _image_routes("gpt-image-1"), _image_params(GPT_IMAGE_1_SIZES, _QUALITY, _BG_ALL)),
-        ModelSpec("GPT Image 1 Mini", _image_routes("gpt-image-1-mini"),
-                  _image_params(GPT_IMAGE_1_SIZES, _QUALITY, _BG_ALL)),
-    ),
+    models=(),
+    models_loader=_load_gpt_image_models,
     custom_params=_image_params(GPT_IMAGE_2_SIZES, _QUALITY_25, _BG_ALL),
 )
 
