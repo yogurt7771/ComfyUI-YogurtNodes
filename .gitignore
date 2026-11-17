@@ -162,3 +162,6 @@ cython_debug/
 #.idea/
 .vscode/settings.json
 yogurt_nodes/utils/freedomgpt-models.json
+
+# Local test code, not shipped with the nodes
+tests/
