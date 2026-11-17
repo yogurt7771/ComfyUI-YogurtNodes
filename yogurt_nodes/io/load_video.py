@@ -1,18 +1,9 @@
 import os
-from pathlib import Path
 
 import folder_paths
 from comfy_api.input_impl import VideoFromFile
 
-
-def list_input_files(content_types):
-    input_dir = Path(folder_paths.get_input_directory())
-    files = [
-        file_path.relative_to(input_dir).as_posix()
-        for file_path in input_dir.rglob("*.*")
-        if file_path.is_file()
-    ]
-    return sorted(folder_paths.filter_files_content_types(files, content_types))
+from .input_files import list_input_files
 
 
 def time_range_inputs():

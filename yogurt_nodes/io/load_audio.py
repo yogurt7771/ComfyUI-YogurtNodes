@@ -1,10 +1,11 @@
 import hashlib
-from pathlib import Path
 
 import av
 import torch
 
 import folder_paths
+
+from .input_files import list_input_files
 
 
 def f32_pcm(wav: torch.Tensor) -> torch.Tensor:
@@ -98,14 +99,6 @@ def trim_waveform(
     return waveform[..., start_frame:end_frame]
 
 
-def list_input_files(content_types):
-    input_dir = Path(folder_paths.get_input_directory())
-    files = [
-        file_path.relative_to(input_dir).as_posix()
-        for file_path in input_dir.rglob("*.*")
-        if file_path.is_file()
-    ]
-    return sorted(folder_paths.filter_files_content_types(files, content_types))
 
 
 class LoadAudio__V3:

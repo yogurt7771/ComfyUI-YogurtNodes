@@ -29,7 +29,12 @@ def load_load_image_with_stubs(input_dir):
         }
     )
     try:
-        spec = importlib.util.spec_from_file_location("load_image_under_test", LOAD_IMAGE_PATH)
+        # A stub package lets load_image.py resolve its relative import of input_files
+        # without importing the whole yogurt_nodes package.
+        package = types.ModuleType("load_image_test_pkg")
+        package.__path__ = [str(LOAD_IMAGE_PATH.parent)]
+        sys.modules[package.__name__] = package
+        spec = importlib.util.spec_from_file_location("load_image_test_pkg.load_image", LOAD_IMAGE_PATH)
         if spec is None or spec.loader is None:
             raise AssertionError("无法加载 load_image.py")
         module = importlib.util.module_from_spec(spec)

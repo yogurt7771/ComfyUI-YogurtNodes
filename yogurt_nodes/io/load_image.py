@@ -1,6 +1,5 @@
 import os
 import hashlib
-from pathlib import Path
 
 import numpy as np
 import torch
@@ -9,20 +8,15 @@ from PIL import Image, ImageOps, ImageSequence
 import folder_paths
 import node_helpers
 
+from .input_files import list_input_files
+
 
 class LoadImage:
     """Load Image node."""
     @classmethod
     def INPUT_TYPES(s):
-        input_dir = folder_paths.get_input_directory()
-        files = [
-            f.relative_to(input_dir).as_posix()
-            for f in Path(input_dir).rglob("*.*")
-            if f.is_file()
-        ]
-        files = folder_paths.filter_files_content_types(files, ["image"])
         return {
-            "required": {"image": (sorted(files), {"image_upload": True})},
+            "required": {"image": (list_input_files(["image"]), {"image_upload": True})},
         }
 
     RETURN_TYPES = ("IMAGE", "MASK")
