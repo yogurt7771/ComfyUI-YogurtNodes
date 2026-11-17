@@ -1,0 +1,52 @@
+{
+  "profiles": {
+    "grok-imagine-2.0": [
+      {"id": "aspect_ratio", "kind": "combo", "options": ["auto", "1:1", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "9:19.5", "19.5:9", "9:20", "20:9", "1:2", "2:1"], "tooltip": "'auto' follows the reference image or model default."},
+      {"id": "resolution", "kind": "combo", "options": ["1K", "2K"], "tooltip": "Output resolution."},
+      {"id": "quality", "kind": "combo", "options": ["medium", "low"], "tooltip": "Generation quality."}
+    ],
+    "grok-imagine-quality": [
+      {"id": "aspect_ratio", "kind": "combo", "options": ["auto", "1:1", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "9:19.5", "19.5:9", "9:20", "20:9", "1:2", "2:1"], "tooltip": "'auto' follows the reference image or model default."},
+      {"id": "resolution", "kind": "combo", "options": ["1K", "2K"], "tooltip": "Output resolution."}
+    ]
+  },
+  "models": [
+    {
+      "label": "Grok Imagine 2.0",
+      "routes": {
+        "xai": {"protocol": "xai_images", "model": "grok-imagine-image-2.0"},
+        "openrouter": {"protocol": "openrouter_images", "model": "x-ai/grok-imagine-image-2.0"}
+      },
+      "params": "grok-imagine-2.0",
+      "max_images": 3
+    },
+    {
+      "label": "Grok Imagine Quality",
+      "routes": {
+        "xai": {"protocol": "xai_images", "model": "grok-imagine-image-quality"},
+        "openrouter": {"protocol": "openrouter_images", "model": "x-ai/grok-imagine-image-quality"}
+      },
+      "params": "grok-imagine-quality",
+      "max_images": 3
+    },
+    {
+      "label": "Grok Imagine Pro",
+      "routes": {
+        "xai": {"protocol": "xai_images", "model": "grok-imagine-image-pro"}
+      },
+      "params": "grok-imagine-quality",
+      "max_images": 1
+    },
+    {
+      "label": "Grok Imagine",
+      "routes": {
+        "xai": {"protocol": "xai_images", "model": "grok-imagine-image"}
+      },
+      "params": "grok-imagine-quality",
+      "max_images": 3
+    }
+  ],
+  "custom_model": {
+    "params": "grok-imagine-2.0"
+  }
+}

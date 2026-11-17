@@ -1,0 +1,11 @@
+{
+  "models": [],
+  "custom_model": {
+    "params": [
+      {"id": "aspect_ratio", "kind": "combo", "options": ["auto", "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9", "1:4", "4:1", "1:8", "8:1"], "tooltip": "Sent only when the protocol supports it."},
+      {"id": "resolution", "kind": "combo", "options": ["auto", "512", "1K", "2K", "4K"], "tooltip": "Resolution tier, where supported."},
+      {"id": "size", "kind": "string", "default": "auto", "tooltip": "Explicit size such as 1024x1024, where supported."},
+      {"id": "quality", "kind": "combo", "options": ["auto", "low", "medium", "high"], "tooltip": "Quality, where supported."}
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "models": [
+    {
+      "label": "Precision V2",
+      "routes": {
+        "magnific": {"protocol": "magnific", "model": "v1/ai/image-upscaler-precision-v2", "options": {"fields": ["scale_factor", "flavor", "sharpen", "smart_grain", "ultra_detail", "filter_nsfw"], "integer_scale": true}}
+      },
+      "params": [
+        {"id": "scale_factor", "kind": "combo", "options": ["2x", "4x", "8x", "16x"], "tooltip": "Upscale factor."},
+        {"id": "flavor", "kind": "combo", "options": ["sublime", "photo", "photo_denoiser"], "tooltip": "Processing style."},
+        {"id": "sharpen", "kind": "int", "default": 7, "min": 0, "max": 100, "tooltip": "Edge sharpness."},
+        {"id": "smart_grain", "kind": "int", "default": 7, "min": 0, "max": 100, "tooltip": "Grain to avoid an over-smooth look."},
+        {"id": "ultra_detail", "kind": "int", "default": 30, "min": 0, "max": 100, "tooltip": "Fine detail added during upscaling."}
+      ]
+    },
+    {
+      "label": "Precision V1",
+      "routes": {
+        "magnific": {"protocol": "magnific", "model": "v1/ai/image-upscaler-precision", "options": {"fields": ["sharpen", "smart_grain", "ultra_detail", "filter_nsfw"]}}
+      },
+      "params": [
+        {"id": "sharpen", "kind": "int", "default": 50, "min": 0, "max": 100, "tooltip": "Edge sharpness."},
+        {"id": "smart_grain", "kind": "int", "default": 7, "min": 0, "max": 100, "tooltip": "Grain to avoid an over-smooth look."},
+        {"id": "ultra_detail", "kind": "int", "default": 30, "min": 0, "max": 100, "tooltip": "Fine detail added during upscaling."}
+      ]
+    }
+  ]
+}

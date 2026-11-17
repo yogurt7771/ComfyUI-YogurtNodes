@@ -1,0 +1,20 @@
+{
+  "models": [
+    {
+      "label": "Creative",
+      "routes": {
+        "magnific": {"protocol": "magnific", "model": "v1/ai/image-upscaler", "options": {"fields": ["scale_factor", "optimized_for", "prompt", "creativity", "hdr", "resemblance", "fractality", "engine", "filter_nsfw"]}}
+      },
+      "params": [
+        {"id": "scale_factor", "kind": "combo", "options": ["2x", "4x", "8x", "16x"], "tooltip": "Upscale factor."},
+        {"id": "optimized_for", "kind": "combo", "options": ["standard", "soft_portraits", "hard_portraits", "art_n_illustration", "videogame_assets", "nature_n_landscapes", "films_n_photography", "3d_renders", "science_fiction_n_horror"], "tooltip": "Content type to optimize for."},
+        {"id": "prompt", "kind": "string", "multiline": true, "tooltip": "Optional guidance prompt."},
+        {"id": "creativity", "kind": "int", "default": 0, "min": -10, "max": 10, "tooltip": "How much new detail to invent."},
+        {"id": "hdr", "kind": "int", "default": 0, "min": -10, "max": 10, "tooltip": "Detail and contrast boost."},
+        {"id": "resemblance", "kind": "int", "default": 0, "min": -10, "max": 10, "tooltip": "Closeness to the original image."},
+        {"id": "fractality", "kind": "int", "default": 0, "min": -10, "max": 10, "tooltip": "Detail density per pixel."},
+        {"id": "engine", "kind": "combo", "options": ["automatic", "magnific_illusio", "magnific_sharpy", "magnific_sparkle"], "tooltip": "Upscaling engine."}
+      ]
+    }
+  ]
+}

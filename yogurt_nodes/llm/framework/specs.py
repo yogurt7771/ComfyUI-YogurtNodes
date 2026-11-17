@@ -75,18 +75,17 @@ class ModelSpec:
 
 @dataclass(frozen=True)
 class FamilySpec:
+    """节点上不随模型版本变化的部分。模型版本、路由、参数和 Custom model 选项在 catalog/models/<catalog>.json。"""
+
     task: str
-    models: tuple[ModelSpec, ...]
+    catalog: str
     default_provider: str
     params: tuple[Param, ...] = ()
     max_images: int = 0
     image_input: str = ""
     system_prompt: str | None = None
     history: bool = False
-    custom_params: tuple[Param, ...] | None = None
-    custom_options: dict[str, Any] = field(default_factory=dict)
     extra_input: bool = False
-    models_loader: Callable[[], tuple[ModelSpec, ...]] | None = None
 
 
 @dataclass

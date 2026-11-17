@@ -1,0 +1,80 @@
+{
+  "models": [
+    {
+      "label": "Wonder 3.5",
+      "routes": {
+        "topaz": {"protocol": "topaz", "model": "Wonder 3.5", "options": {"endpoint": "generative"}}
+      },
+      "params": [
+        {"id": "enhancement_strength", "kind": "combo", "options": ["high", "medium", "low"], "tooltip": "Enhancement level."},
+        {"id": "grain", "kind": "bool", "advanced": true, "tooltip": "Add film grain."},
+        {"id": "grain_model", "kind": "combo", "options": ["silver", "gaussian", "grey"], "advanced": true, "tooltip": "Ignored when grain is off."},
+        {"id": "grain_strength", "kind": "float", "default": 0.5, "min": 0.0, "max": 1.0, "step": 0.01, "advanced": true, "tooltip": "Grain strength."},
+        {"id": "grain_size", "kind": "float", "default": 1.0, "min": 1.0, "max": 5.0, "step": 0.1, "advanced": true, "tooltip": "Grain particle size."},
+        {"id": "grain_density", "kind": "float", "default": 0.5, "min": 0.0, "max": 1.0, "step": 0.01, "advanced": true, "tooltip": "Grain density."}
+      ]
+    },
+    {
+      "label": "Bloom 2",
+      "routes": {
+        "topaz": {"protocol": "topaz", "model": "Bloom 2", "options": {"endpoint": "generative", "autoprompt": true}}
+      },
+      "params": [
+        {"id": "prompt", "kind": "string", "multiline": true, "tooltip": "Optional guidance prompt; empty lets the model describe the image."},
+        {"id": "creativity", "kind": "int", "default": 3, "min": 1, "max": 9, "tooltip": "Higher adds more newly generated detail."},
+        {"id": "seed", "kind": "int", "default": 2, "min": 1, "max": 2000, "control_after_generate": true, "tooltip": "Seed for reproducible results."},
+        {"id": "color_preservation", "kind": "bool", "default": true, "advanced": true, "tooltip": "Preserve original colors."},
+        {"id": "grain", "kind": "bool", "advanced": true, "tooltip": "Add film grain."},
+        {"id": "grain_model", "kind": "combo", "options": ["silver", "gaussian", "grey"], "advanced": true, "tooltip": "Ignored when grain is off."},
+        {"id": "grain_strength", "kind": "float", "default": 0.5, "min": 0.0, "max": 1.0, "step": 0.01, "advanced": true, "tooltip": "Grain strength."},
+        {"id": "grain_size", "kind": "float", "default": 1.0, "min": 1.0, "max": 5.0, "step": 0.1, "advanced": true, "tooltip": "Grain particle size."},
+        {"id": "grain_density", "kind": "float", "default": 0.5, "min": 0.0, "max": 1.0, "step": 0.01, "advanced": true, "tooltip": "Grain density."}
+      ]
+    },
+    {
+      "label": "Reimagine",
+      "routes": {
+        "topaz": {"protocol": "topaz", "model": "Reimagine", "options": {"endpoint": "generative"}}
+      },
+      "params": [
+        {"id": "prompt", "kind": "string", "multiline": true, "tooltip": "Optional guidance prompt; empty lets the model describe the image."},
+        {"id": "creativity", "kind": "int", "default": 3, "min": 1, "max": 9, "tooltip": "Higher adds more newly generated detail."},
+        {"id": "subject_detection", "kind": "combo", "options": ["All", "Foreground", "Background"], "advanced": true, "tooltip": "Subjects to process."},
+        {"id": "face_enhancement", "kind": "bool", "default": true, "advanced": true, "tooltip": "Enhance faces."},
+        {"id": "face_enhancement_creativity", "kind": "float", "default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01, "advanced": true, "tooltip": "Face enhancement creativity."},
+        {"id": "face_enhancement_strength", "kind": "float", "default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01, "advanced": true, "tooltip": "Face sharpness relative to background."},
+        {"id": "face_preservation", "kind": "bool", "default": true, "advanced": true, "tooltip": "Preserve facial identity."},
+        {"id": "color_preservation", "kind": "bool", "default": true, "advanced": true, "tooltip": "Preserve original colors."}
+      ]
+    },
+    {
+      "label": "Redefine",
+      "routes": {
+        "topaz": {"protocol": "topaz", "model": "Redefine", "options": {"endpoint": "generative", "autoprompt": true}}
+      },
+      "params": [
+        {"id": "prompt", "kind": "string", "multiline": true, "tooltip": "Optional guidance prompt; empty lets the model describe the image."},
+        {"id": "creativity", "kind": "int", "default": 2, "min": 1, "max": 6, "tooltip": "Higher adds more newly generated detail."},
+        {"id": "texture", "kind": "int", "default": 1, "min": 1, "max": 5, "tooltip": "Amount of added texture."},
+        {"id": "sharpen", "kind": "float", "default": -1.0, "min": -1.0, "max": 1.0, "step": 0.01, "tooltip": "Sharpening amount (0-1). -1 uses the model default."},
+        {"id": "denoise", "kind": "float", "default": -1.0, "min": -1.0, "max": 1.0, "step": 0.01, "tooltip": "Noise reduction (0-1). -1 uses the model default."}
+      ]
+    },
+    {
+      "label": "Recovery V2",
+      "routes": {
+        "topaz": {"protocol": "topaz", "model": "Recovery V2", "options": {"endpoint": "generative"}}
+      },
+      "params": [
+        {"id": "detail", "kind": "float", "default": -1.0, "min": -1.0, "max": 1.0, "step": 0.01, "tooltip": "Detail level (0-1). -1 uses the model default."}
+      ]
+    }
+  ],
+  "custom_model": {
+    "params": [
+      {"id": "prompt", "kind": "string", "multiline": true, "tooltip": "Optional guidance prompt; empty lets the model describe the image."},
+      {"id": "creativity", "kind": "int", "default": 3, "min": 1, "max": 9, "tooltip": "Higher adds more newly generated detail."}
+    ],
+    "route_options": {"endpoint": "generative", "autoprompt": true}
+  }
+}

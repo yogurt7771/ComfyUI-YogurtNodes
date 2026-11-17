@@ -1,0 +1,172 @@
+{
+  "profiles": {
+    "gpt-6-sol": [
+      {"id": "reasoning_effort", "kind": "combo", "options": ["default", "none", "low", "medium", "high", "xhigh", "max"], "tooltip": "Reasoning effort; 'default' leaves it to the model."},
+      {"id": "verbosity", "kind": "combo", "options": ["default", "low", "medium", "high"], "advanced": true, "tooltip": "Answer length hint."},
+      {"id": "max_output_tokens", "kind": "int", "default": 16384, "min": 16, "max": 128000, "advanced": true, "tooltip": "Includes reasoning tokens; raise it if replies are empty or truncated."}
+    ],
+    "gpt-5": [
+      {"id": "reasoning_effort", "kind": "combo", "options": ["default", "minimal", "low", "medium", "high"], "tooltip": "Reasoning effort; 'default' leaves it to the model."},
+      {"id": "verbosity", "kind": "combo", "options": ["default", "low", "medium", "high"], "advanced": true, "tooltip": "Answer length hint."},
+      {"id": "max_output_tokens", "kind": "int", "default": 16384, "min": 16, "max": 128000, "advanced": true, "tooltip": "Includes reasoning tokens; raise it if replies are empty or truncated."}
+    ],
+    "gpt-4.1": [
+      {"id": "temperature", "kind": "float", "default": 1.0, "min": 0.0, "max": 2.0, "step": 0.01, "advanced": true, "tooltip": "Sampling randomness."},
+      {"id": "top_p", "kind": "float", "default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01, "advanced": true, "tooltip": "Nucleus sampling."},
+      {"id": "max_output_tokens", "kind": "int", "default": 16384, "min": 16, "max": 32768, "advanced": true, "tooltip": "Includes reasoning tokens; raise it if replies are empty or truncated."}
+    ],
+    "o4-mini": [
+      {"id": "reasoning_effort", "kind": "combo", "options": ["default", "low", "medium", "high"], "tooltip": "Reasoning effort; 'default' leaves it to the model."},
+      {"id": "max_output_tokens", "kind": "int", "default": 16384, "min": 16, "max": 128000, "advanced": true, "tooltip": "Includes reasoning tokens; raise it if replies are empty or truncated."}
+    ]
+  },
+  "models": [
+    {
+      "label": "GPT-6 Astra",
+      "routes": {
+        "openai": {"protocol": "openai_chat", "model": "gpt-6-astra"},
+        "openrouter": {"protocol": "openai_chat", "model": "openai/gpt-6-astra"}
+      },
+      "params": [
+        {"id": "reasoning_effort", "kind": "combo", "options": ["default", "low", "medium", "high", "xhigh", "max"], "tooltip": "Reasoning effort; 'default' leaves it to the model."},
+        {"id": "verbosity", "kind": "combo", "options": ["default", "low", "medium", "high"], "advanced": true, "tooltip": "Answer length hint."},
+        {"id": "max_output_tokens", "kind": "int", "default": 16384, "min": 16, "max": 128000, "advanced": true, "tooltip": "Includes reasoning tokens; raise it if replies are empty or truncated."}
+      ]
+    },
+    {
+      "label": "GPT-6 Sol",
+      "routes": {
+        "openai": {"protocol": "openai_chat", "model": "gpt-6-sol"},
+        "openrouter": {"protocol": "openai_chat", "model": "openai/gpt-6-sol"}
+      },
+      "params": "gpt-6-sol"
+    },
+    {
+      "label": "GPT-6 Luna",
+      "routes": {
+        "openai": {"protocol": "openai_chat", "model": "gpt-6-luna"},
+        "openrouter": {"protocol": "openai_chat", "model": "openai/gpt-6-luna"}
+      },
+      "params": "gpt-6-sol"
+    },
+    {
+      "label": "GPT-5.6 Sol",
+      "routes": {
+        "openai": {"protocol": "openai_chat", "model": "gpt-5.6-sol"},
+        "openrouter": {"protocol": "openai_chat", "model": "openai/gpt-5.6-sol"}
+      },
+      "params": "gpt-6-sol"
+    },
+    {
+      "label": "GPT-5.6 Terra",
+      "routes": {
+        "openai": {"protocol": "openai_chat", "model": "gpt-5.6-terra"},
+        "openrouter": {"protocol": "openai_chat", "model": "openai/gpt-5.6-terra"}
+      },
+      "params": "gpt-6-sol"
+    },
+    {
+      "label": "GPT-5.6 Luna",
+      "routes": {
+        "openai": {"protocol": "openai_chat", "model": "gpt-5.6-luna"},
+        "openrouter": {"protocol": "openai_chat", "model": "openai/gpt-5.6-luna"}
+      },
+      "params": "gpt-6-sol"
+    },
+    {
+      "label": "GPT-5.5 Pro",
+      "routes": {
+        "openai": {"protocol": "openai_chat", "model": "gpt-5.5-pro"},
+        "openrouter": {"protocol": "openai_chat", "model": "openai/gpt-5.5-pro"}
+      },
+      "params": [
+        {"id": "reasoning_effort", "kind": "combo", "options": ["default", "medium", "high", "xhigh"], "tooltip": "Reasoning effort; 'default' leaves it to the model."},
+        {"id": "verbosity", "kind": "combo", "options": ["default", "low", "medium", "high"], "advanced": true, "tooltip": "Answer length hint."},
+        {"id": "max_output_tokens", "kind": "int", "default": 16384, "min": 16, "max": 128000, "advanced": true, "tooltip": "Includes reasoning tokens; raise it if replies are empty or truncated."}
+      ]
+    },
+    {
+      "label": "GPT-5.5",
+      "routes": {
+        "openai": {"protocol": "openai_chat", "model": "gpt-5.5"},
+        "openrouter": {"protocol": "openai_chat", "model": "openai/gpt-5.5"}
+      },
+      "params": [
+        {"id": "reasoning_effort", "kind": "combo", "options": ["default", "none", "low", "medium", "high", "xhigh"], "tooltip": "Reasoning effort; 'default' leaves it to the model."},
+        {"id": "verbosity", "kind": "combo", "options": ["default", "low", "medium", "high"], "advanced": true, "tooltip": "Answer length hint."},
+        {"id": "max_output_tokens", "kind": "int", "default": 16384, "min": 16, "max": 128000, "advanced": true, "tooltip": "Includes reasoning tokens; raise it if replies are empty or truncated."}
+      ]
+    },
+    {
+      "label": "GPT-5",
+      "routes": {
+        "openai": {"protocol": "openai_chat", "model": "gpt-5"},
+        "openrouter": {"protocol": "openai_chat", "model": "openai/gpt-5"}
+      },
+      "params": "gpt-5"
+    },
+    {
+      "label": "GPT-5 Mini",
+      "routes": {
+        "openai": {"protocol": "openai_chat", "model": "gpt-5-mini"},
+        "openrouter": {"protocol": "openai_chat", "model": "openai/gpt-5-mini"}
+      },
+      "params": "gpt-5"
+    },
+    {
+      "label": "GPT-5 Nano",
+      "routes": {
+        "openai": {"protocol": "openai_chat", "model": "gpt-5-nano"},
+        "openrouter": {"protocol": "openai_chat", "model": "openai/gpt-5-nano"}
+      },
+      "params": "gpt-5"
+    },
+    {
+      "label": "GPT-4.1",
+      "routes": {
+        "openai": {"protocol": "openai_chat", "model": "gpt-4.1"},
+        "openrouter": {"protocol": "openai_chat", "model": "openai/gpt-4.1"}
+      },
+      "params": "gpt-4.1"
+    },
+    {
+      "label": "GPT-4.1 Mini",
+      "routes": {
+        "openai": {"protocol": "openai_chat", "model": "gpt-4.1-mini"},
+        "openrouter": {"protocol": "openai_chat", "model": "openai/gpt-4.1-mini"}
+      },
+      "params": "gpt-4.1"
+    },
+    {
+      "label": "GPT-4.1 Nano",
+      "routes": {
+        "openai": {"protocol": "openai_chat", "model": "gpt-4.1-nano"},
+        "openrouter": {"protocol": "openai_chat", "model": "openai/gpt-4.1-nano"}
+      },
+      "params": "gpt-4.1"
+    },
+    {
+      "label": "o4-mini",
+      "routes": {
+        "openai": {"protocol": "openai_chat", "model": "o4-mini"},
+        "openrouter": {"protocol": "openai_chat", "model": "openai/o4-mini"}
+      },
+      "params": "o4-mini"
+    },
+    {
+      "label": "o3",
+      "routes": {
+        "openai": {"protocol": "openai_chat", "model": "o3"},
+        "openrouter": {"protocol": "openai_chat", "model": "openai/o3"}
+      },
+      "params": "o4-mini"
+    }
+  ],
+  "custom_model": {
+    "params": [
+      {"id": "reasoning_effort", "kind": "combo", "options": ["default", "none", "minimal", "low", "medium", "high", "xhigh", "max"], "tooltip": "Reasoning effort; 'default' leaves it to the model."},
+      {"id": "verbosity", "kind": "combo", "options": ["default", "low", "medium", "high"], "advanced": true, "tooltip": "Answer length hint."},
+      {"id": "max_output_tokens", "kind": "int", "default": 16384, "min": 16, "max": 128000, "advanced": true, "tooltip": "Includes reasoning tokens; raise it if replies are empty or truncated."}
+    ]
+  }
+}

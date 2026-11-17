@@ -1,0 +1,59 @@
+{
+  "profiles": {
+    "grok-4.7": [
+      {"id": "reasoning_effort", "kind": "combo", "options": ["default", "none", "low", "medium", "high"], "tooltip": "Reasoning effort; 'default' leaves it to the model."},
+      {"id": "temperature", "kind": "float", "default": 1.0, "min": 0.0, "max": 2.0, "step": 0.01, "advanced": true, "tooltip": "Sampling randomness."},
+      {"id": "top_p", "kind": "float", "default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01, "advanced": true, "tooltip": "Nucleus sampling."},
+      {"id": "max_output_tokens", "kind": "int", "default": 16384, "min": 16, "max": 262144, "advanced": true, "tooltip": "Includes reasoning tokens."}
+    ]
+  },
+  "models": [
+    {
+      "label": "Grok 4.7",
+      "routes": {
+        "xai": {"protocol": "openai_chat", "model": "grok-4.7"},
+        "openrouter": {"protocol": "openai_chat", "model": "x-ai/grok-4.7"}
+      },
+      "params": "grok-4.7"
+    },
+    {
+      "label": "Grok 4.6",
+      "routes": {
+        "xai": {"protocol": "openai_chat", "model": "grok-4.6"},
+        "openrouter": {"protocol": "openai_chat", "model": "x-ai/grok-4.6"}
+      },
+      "params": "grok-4.7"
+    },
+    {
+      "label": "Grok 4.5",
+      "routes": {
+        "xai": {"protocol": "openai_chat", "model": "grok-4.5"},
+        "openrouter": {"protocol": "openai_chat", "model": "x-ai/grok-4.5"}
+      },
+      "params": "grok-4.7"
+    },
+    {
+      "label": "Grok 4.3",
+      "routes": {
+        "xai": {"protocol": "openai_chat", "model": "grok-4.3"},
+        "openrouter": {"protocol": "openai_chat", "model": "x-ai/grok-4.3"}
+      },
+      "params": "grok-4.7"
+    },
+    {
+      "label": "Grok 4.20",
+      "routes": {
+        "xai": {"protocol": "openai_chat", "model": "grok-4.20"},
+        "openrouter": {"protocol": "openai_chat", "model": "x-ai/grok-4.20"}
+      },
+      "params": [
+        {"id": "temperature", "kind": "float", "default": 1.0, "min": 0.0, "max": 2.0, "step": 0.01, "advanced": true, "tooltip": "Sampling randomness."},
+        {"id": "top_p", "kind": "float", "default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01, "advanced": true, "tooltip": "Nucleus sampling."},
+        {"id": "max_output_tokens", "kind": "int", "default": 16384, "min": 16, "max": 262144, "advanced": true, "tooltip": "Includes reasoning tokens."}
+      ]
+    }
+  ],
+  "custom_model": {
+    "params": "grok-4.7"
+  }
+}

@@ -1,11 +1,8 @@
-"""各声明文件共用的参数片段。"""
+"""各声明文件共用的参数片段（供应商字段和系列级参数；模型版本的参数在 models/*.json）。"""
 
 from __future__ import annotations
 
-from ..framework import combo, integer, number, text
-
-ASPECT_RATIOS = ("auto", "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9")
-ASPECT_RATIOS_EXTENDED = ASPECT_RATIOS + ("1:4", "4:1", "1:8", "8:1")
+from ..framework import integer, text
 
 
 def api_key_field(json_key: str, env: str):
@@ -25,24 +22,6 @@ def proxy_field():
 
 def timeout_field():
     return integer("timeout", 0, min=0, max=3600, tooltip="Request timeout in seconds; 0 means no limit.")
-
-
-def aspect_ratio(options=ASPECT_RATIOS, default: str = "auto"):
-    return combo(
-        "aspect_ratio",
-        options,
-        default=default,
-        tooltip="'auto' follows the reference image, or the model default when there is none.",
-    )
-
-
-def temperature(default: float = 1.0, advanced: bool = True):
-    return number("temperature", default, min=0.0, max=2.0, step=0.01, advanced=advanced,
-                  tooltip="Sampling randomness.")
-
-
-def top_p(default: float = 0.95, advanced: bool = True):
-    return number("top_p", default, min=0.0, max=1.0, step=0.01, advanced=advanced, tooltip="Nucleus sampling.")
 
 
 EXTRA = text(

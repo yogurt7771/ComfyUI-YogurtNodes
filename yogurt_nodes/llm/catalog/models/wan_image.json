@@ -1,0 +1,24 @@
+{
+  "profiles": {
+    "wan-2.7-image": [
+      {"id": "size", "kind": "combo", "options": ["auto", "1K", "2K", "Custom"], "tooltip": "Resolution tier, or Custom width x height."},
+      {"id": "custom_width", "kind": "int", "default": 1024, "min": 256, "max": 4096, "step": 16, "tooltip": "Used when size is Custom."},
+      {"id": "custom_height", "kind": "int", "default": 1024, "min": 256, "max": 4096, "step": 16, "tooltip": "Used when size is Custom."},
+      {"id": "negative_prompt", "kind": "string", "multiline": true, "tooltip": "What to avoid in the image."},
+      {"id": "thinking_mode", "kind": "bool", "default": true, "tooltip": "Reason about the prompt before drawing."},
+      {"id": "enable_sequential", "kind": "bool", "advanced": true, "tooltip": "Generate a related image set."}
+    ]
+  },
+  "models": [
+    {
+      "label": "Wan 2.7 Image",
+      "routes": {
+        "dashscope": {"protocol": "dashscope_image", "model": "wan2.7-image"}
+      },
+      "params": "wan-2.7-image"
+    }
+  ],
+  "custom_model": {
+    "params": "wan-2.7-image"
+  }
+}

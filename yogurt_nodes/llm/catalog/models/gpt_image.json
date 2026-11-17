@@ -1,0 +1,92 @@
+{
+  "profiles": {
+    "gpt-image-2.5": [
+      {"id": "size", "kind": "combo", "options": ["auto", "1024x1024", "1024x1536", "1536x1024", "2048x2048", "2048x1152", "1152x2048", "3840x2160", "2160x3840", "Custom"], "tooltip": "Output size; 'auto' lets the model choose."},
+      {"id": "custom_width", "kind": "int", "default": 1024, "min": 480, "max": 3840, "step": 16, "tooltip": "Used when size is Custom."},
+      {"id": "custom_height", "kind": "int", "default": 1024, "min": 480, "max": 3840, "step": 16, "tooltip": "Used when size is Custom."},
+      {"id": "quality", "kind": "combo", "options": ["auto", "low", "medium", "high", "xhigh", "max"], "tooltip": "Higher quality is slower and costs more."},
+      {"id": "background", "kind": "combo", "options": ["auto", "opaque", "transparent"], "tooltip": "'transparent' requires png or webp output."}
+    ],
+    "gpt-image-1": [
+      {"id": "size", "kind": "combo", "options": ["auto", "1024x1024", "1024x1536", "1536x1024"], "tooltip": "Output size; 'auto' lets the model choose."},
+      {"id": "quality", "kind": "combo", "options": ["auto", "low", "medium", "high"], "tooltip": "Higher quality is slower and costs more."},
+      {"id": "background", "kind": "combo", "options": ["auto", "opaque", "transparent"], "tooltip": "'transparent' requires png or webp output."}
+    ]
+  },
+  "models": [
+    {
+      "label": "GPT Image 2.6 Flare",
+      "routes": {
+        "openai": {"protocol": "openai_images", "model": "gpt-image-2.6-flare"},
+        "openrouter": {"protocol": "openrouter_images", "model": "openai/gpt-image-2.6-flare"}
+      },
+      "params": "gpt-image-2.5"
+    },
+    {
+      "label": "GPT Image 2.6 Sunburst",
+      "routes": {
+        "openai": {"protocol": "openai_images", "model": "gpt-image-2.6-sunburst"},
+        "openrouter": {"protocol": "openrouter_images", "model": "openai/gpt-image-2.6-sunburst"}
+      },
+      "params": "gpt-image-2.5"
+    },
+    {
+      "label": "GPT Image 2.5 Flare",
+      "routes": {
+        "openai": {"protocol": "openai_images", "model": "gpt-image-2.5-flare"},
+        "openrouter": {"protocol": "openrouter_images", "model": "openai/gpt-image-2.5-flare"}
+      },
+      "params": "gpt-image-2.5"
+    },
+    {
+      "label": "GPT Image 2.5 Sunburst",
+      "routes": {
+        "openai": {"protocol": "openai_images", "model": "gpt-image-2.5-sunburst"},
+        "openrouter": {"protocol": "openrouter_images", "model": "openai/gpt-image-2.5-sunburst"}
+      },
+      "params": "gpt-image-2.5"
+    },
+    {
+      "label": "GPT Image 2",
+      "routes": {
+        "openai": {"protocol": "openai_images", "model": "gpt-image-2"},
+        "openrouter": {"protocol": "openrouter_images", "model": "openai/gpt-image-2"},
+        "grsai": {"protocol": "grsai_draw", "model": "gpt-image-2"}
+      },
+      "params": [
+        {"id": "size", "kind": "combo", "options": ["auto", "1024x1024", "1024x1536", "1536x1024", "2048x2048", "2048x1152", "1152x2048", "3840x2160", "2160x3840", "Custom"], "tooltip": "Output size; 'auto' lets the model choose."},
+        {"id": "custom_width", "kind": "int", "default": 1024, "min": 480, "max": 3840, "step": 16, "tooltip": "Used when size is Custom."},
+        {"id": "custom_height", "kind": "int", "default": 1024, "min": 480, "max": 3840, "step": 16, "tooltip": "Used when size is Custom."},
+        {"id": "quality", "kind": "combo", "options": ["auto", "low", "medium", "high"], "tooltip": "Higher quality is slower and costs more."},
+        {"id": "background", "kind": "combo", "options": ["auto", "opaque"], "tooltip": "'transparent' requires png or webp output."}
+      ]
+    },
+    {
+      "label": "GPT Image 1.5",
+      "routes": {
+        "openai": {"protocol": "openai_images", "model": "gpt-image-1.5"},
+        "grsai": {"protocol": "grsai_draw", "model": "gpt-image-1.5"}
+      },
+      "params": "gpt-image-1"
+    },
+    {
+      "label": "GPT Image 1",
+      "routes": {
+        "openai": {"protocol": "openai_images", "model": "gpt-image-1"},
+        "openrouter": {"protocol": "openrouter_images", "model": "openai/gpt-image-1"}
+      },
+      "params": "gpt-image-1"
+    },
+    {
+      "label": "GPT Image 1 Mini",
+      "routes": {
+        "openai": {"protocol": "openai_images", "model": "gpt-image-1-mini"},
+        "openrouter": {"protocol": "openrouter_images", "model": "openai/gpt-image-1-mini"}
+      },
+      "params": "gpt-image-1"
+    }
+  ],
+  "custom_model": {
+    "params": "gpt-image-2.5"
+  }
+}

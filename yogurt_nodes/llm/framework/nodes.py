@@ -8,6 +8,7 @@ from typing import Any
 from comfy_api.latest import IO
 
 from ...node_registry import category_from_module_name
+from .catalog import FamilyModels, load_family
 from .params import Param, integer, text
 from .runtime import default_provider, image_outputs, images_from_input, merge_extra, resolve_route, run_request
 from .specs import (
@@ -98,12 +99,11 @@ class ModelFamilyNode(IO.ComfyNode):
     _SUBCATEGORY = "Image"
 
     @classmethod
-    def _models(cls) -> tuple[ModelSpec, ...]:
-        family = cls.FAMILY
-        models = family.models_loader() if family.models_loader else family.models
-        if family.custom_params is None:
-            return models
-        return models + (_custom_model_spec(family),)
+    def _models(cls, catalog: FamilyModels | None = None) -> tuple[ModelSpec, ...]:
+        catalog = catalog or load_family(cls.FAMILY.catalog)
+        if catalog.custom_params is None:
+            return catalog.models
+        return catalog.models + (_custom_model_spec(catalog.custom_params),)
 
     @classmethod
     def define_schema(cls):
@@ -184,14 +184,15 @@ class ModelFamilyNode(IO.ComfyNode):
         family = cls.FAMILY
         values = dict(model)
         label = values.pop("model")
-        spec = next((item for item in cls._models() if item.label == label), None)
+        catalog = load_family(family.catalog)
+        spec = next((item for item in cls._models(catalog) if item.label == label), None)
         if spec is None:
             raise ValueError(f"Unknown model option: {label}")
 
         provider: ProviderConfig = kwargs.get("provider") or default_provider(family.default_provider)
         params = {param.id: values.get(param.id, param.default) for param in spec.params}
         params.update({param.id: kwargs.get(param.id, param.default) for param in family.params})
-        route = _resolve(spec, provider, params, family)
+        route = _resolve(spec, provider, params, family, catalog)
         if kwargs.get("extra_params") is not None:
             params["extra"] = merge_extra(kwargs["extra_params"], params.get("extra"), route, provider)
 
@@ -243,15 +244,16 @@ def _outputs(task: str) -> list[Any]:
     ]
 
 
-def _custom_model_spec(family: FamilySpec) -> ModelSpec:
+def _custom_model_spec(custom_params: tuple[Param, ...]) -> ModelSpec:
     params: tuple[Param, ...] = (
         text("model_id", tooltip="Model id as the provider expects it; leave empty for single-model servers "
                                  "such as stable-diffusion.cpp."),
-    ) + tuple(family.custom_params or ())
+    ) + tuple(custom_params)
     return ModelSpec(label=CUSTOM_MODEL_LABEL, routes={}, params=params)
 
 
-def _resolve(spec: ModelSpec, provider: ProviderConfig, params: dict[str, Any], family: FamilySpec) -> Route:
+def _resolve(spec: ModelSpec, provider: ProviderConfig, params: dict[str, Any], family: FamilySpec,
+             catalog: FamilyModels) -> Route:
     if spec.label != CUSTOM_MODEL_LABEL:
         return resolve_route(spec, provider)
     model_id = str(params.pop("model_id", "") or "").strip()
@@ -261,4 +263,4 @@ def _resolve(spec: ModelSpec, provider: ProviderConfig, params: dict[str, Any], 
     protocol = provider_spec.custom_protocols.get(family.task) if provider_spec else None
     if not protocol:
         raise ValueError(f"Provider '{provider.kind}' does not support custom {family.task} models")
-    return Route(protocol=protocol, model=model_id, options=dict(family.custom_options))
+    return Route(protocol=protocol, model=model_id, options=dict(catalog.custom_options))

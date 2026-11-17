@@ -1,0 +1,39 @@
+{
+  "profiles": {
+    "qwen-image-3.0-pro": [
+      {"id": "size", "kind": "combo", "options": ["auto", "1024*1024", "1536*1536", "2048*2048", "1664*928", "928*1664", "1472*1104", "1104*1472", "1584*1056", "1056*1584", "2560*1440", "1440*2560", "Custom"], "tooltip": "Output size; total area 512x512 to 2560x2560, ratio 1:8 to 8:1."},
+      {"id": "custom_width", "kind": "int", "default": 1024, "min": 256, "max": 2560, "step": 16, "tooltip": "Used when size is Custom."},
+      {"id": "custom_height", "kind": "int", "default": 1024, "min": 256, "max": 2560, "step": 16, "tooltip": "Used when size is Custom."},
+      {"id": "negative_prompt", "kind": "string", "multiline": true, "tooltip": "What to avoid in the image."},
+      {"id": "prompt_extend", "kind": "bool", "default": true, "tooltip": "Let the service rewrite the prompt for better results."}
+    ]
+  },
+  "models": [
+    {
+      "label": "Qwen Image 3.0 Pro",
+      "routes": {
+        "dashscope": {"protocol": "dashscope_image", "model": "qwen-image-3.0-pro"},
+        "openrouter": {"protocol": "openrouter_images", "model": "qwen/qwen-image-3-pro"}
+      },
+      "params": "qwen-image-3.0-pro"
+    },
+    {
+      "label": "Qwen Image 3.0",
+      "routes": {
+        "dashscope": {"protocol": "dashscope_image", "model": "qwen-image-3.0"},
+        "openrouter": {"protocol": "openrouter_images", "model": "qwen/qwen-image-3"}
+      },
+      "params": "qwen-image-3.0-pro"
+    },
+    {
+      "label": "Qwen Image 2.0 Pro",
+      "routes": {
+        "dashscope": {"protocol": "dashscope_image", "model": "qwen-image-2.0-pro"}
+      },
+      "params": "qwen-image-3.0-pro"
+    }
+  ],
+  "custom_model": {
+    "params": "qwen-image-3.0-pro"
+  }
+}

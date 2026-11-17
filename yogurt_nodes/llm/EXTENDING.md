@@ -6,35 +6,46 @@
 | --- | --- | --- |
 | 协议 | `protocols/*.py` | 一种 API 格式的实现（如 `gemini`、`openai_chat`、`openai_images`、`openrouter_images`、`ark_images`、`dashscope_image`、`topaz`），用 `@register_protocol("名字")` 注册 |
 | 供应商 | `catalog/providers.py` | 一个接入渠道：节点上显示的字段、默认地址、`api_key.json` 键名与环境变量、使用哪组模型路由 |
-| 模型 | `catalog/<厂商>.py` | 模型系列（`FamilySpec`）及其版本（`ModelSpec`）：参数声明 + 在各供应商下的路由 |
+| 模型系列 | `catalog/<厂商>.py` | 一个节点（`FamilySpec`）：任务类型、默认供应商、参考图上限，以及不随版本变化的输入（seed、extra 等） |
+| 模型版本 | `catalog/models/<系列>.json` | 系列下拉里的每个版本：参数 + 在各供应商下的路由，以及 Custom model 选项的参数 |
 
-节点类（`provider_nodes.py`、`image_nodes.py`、`text_nodes.py`、`upscale_nodes.py`）只是薄壳，指向上面的声明。公共逻辑在 `framework/`：参数到 V3 输入的转换、DynamicCombo 版本切换、Autogrow 图片输入、默认供应商、路由解析、重试与报错。
+节点类（`provider_nodes.py`、`image_nodes.py`、`text_nodes.py`、`upscale_nodes.py`）只是薄壳，指向上面的声明。公共逻辑在 `framework/`：参数到 V3 输入的转换、读取模型 JSON（`framework/catalog.py`）、DynamicCombo 版本切换、Autogrow 图片输入、默认供应商、路由解析、重试与报错。
 
 ## 给已有系列加一个模型版本
 
-在对应系列的 `models` 里加一条 `ModelSpec`，不需要改节点类。以 Nano Banana 为例（`catalog/gemini.py`）：
+在系列的 JSON 的 `models` 里加一条，不需要改代码。节点每次取定义和执行时都会重读 JSON，改完刷新浏览器即可，不用重启 ComfyUI。以 GPT Image 为例（`catalog/models/gpt_image.json`）：
 
-```python
-ModelSpec(
-    "Nano Banana 3",                                   # 下拉里显示的名字
-    routes=_gemini("gemini-nano-banana-3",             # Google 官方模型 ID
-                   openrouter="google/gemini-nano-banana-3"),
-    params=(
-        aspect_ratio(ASPECT_RATIOS_EXTENDED),
-        _resolution(["1K", "2K", "4K"]),
-        _thinking_level(["MINIMAL", "HIGH"], "MINIMAL"),
-        _modalities(),
-    ),
-),
+```json
+{
+  "label": "GPT Image 2.7 Sunburst",
+  "routes": {
+    "openai": {"protocol": "openai_images", "model": "gpt-image-2.7-sunburst"},
+    "openrouter": {"protocol": "openrouter_images", "model": "openai/gpt-image-2.7-sunburst"}
+  },
+  "params": "gpt-image-2.5"
+}
 ```
 
-- `routes` 的键是供应商的 `kind`（如 `grsai`）或 `route_key`（如 `gemini`、`openai`、`openrouter`）。查找顺序是先 `kind` 后 `route_key`，所以兼容渠道会自动复用官方路由，个别渠道模型 ID 不同时再按 `kind` 单独写。
-- `params` 只写这个版本真正支持的参数；切换版本时节点上的输入会随之变化。
-- `max_images` 可限制该版本的参考图数量。
+- `label`：下拉里显示的名字，工作流按它保存选择，确定后不要再改。
+- `routes` 的键是供应商的 `kind`（如 `grsai`）或 `route_key`（如 `gemini`、`openai`、`openrouter`）。查找顺序是先 `kind` 后 `route_key`，所以兼容渠道会自动复用官方路由，个别渠道模型 ID 不同时再按 `kind` 单独写。每条路由写 `protocol`、`model`，需要时再加 `options`（交给协议的额外设置）。
+- `params` 只写这个版本真正支持的参数；切换版本时节点上的输入会随之变化。它可以是参数列表，也可以是 `profiles` 里一组参数的名字，几个版本参数相同时共用一组。
+- `max_images` 可限制该版本的参考图数量，省略则用系列的上限。
+
+参数的写法（省略的字段取默认值）：
+
+```json
+{"id": "quality", "kind": "combo", "options": ["auto", "low", "medium", "high"], "default": "auto", "advanced": true, "tooltip": "..."}
+```
+
+- `kind`：`combo`、`int`、`float`、`bool`、`string`。
+- `default`：省略时 combo 取第一个选项，bool 为 `false`，string 为空；int、float 要写。
+- 其余字段与 `framework/params.py` 的 `Param` 同名：`min`、`max`、`step`、`multiline`、`advanced`、`optional`、`control_after_generate`、`tooltip`。
+
+JSON 顶层还可以有 `custom_model`：有它时下拉里多出 `Custom model` 选项，用户可以直接填写模型 ID。它的 `params` 写法同上，`route_options` 是自定义模型路由的 `options`。
 
 ## 新增模型系列
 
-1. 在 `catalog/` 中写一个 `FamilySpec`（`task` 为 `image` / `text` / `upscale`，并给出 `default_provider`）。
+1. 在 `catalog/models/` 中写一份 JSON，在 `catalog/` 中写一个 `FamilySpec`（`catalog` 为 JSON 文件名，`task` 为 `image` / `text` / `upscale`，并给出 `default_provider`）。
 2. 在对应的 `*_nodes.py` 中加一个薄节点类：
 
    ```python
@@ -47,7 +58,7 @@ ModelSpec(
 3. 在 `llm/__init__.py` 中导出该类。节点 ID 为 `Yogurt` + 类名，确定后不要再改，否则已保存的工作流会找不到节点。
 4. 运行 `python tools/generate_readme.py` 更新 README；类的 docstring 按 `tools/sync_node_docstrings.py` 的规则生成。
 
-`custom_params` 不为空时，下拉里会多出 `Custom model` 选项，用户可以直接填写模型 ID。
+JSON 里有 `custom_model` 时，下拉里会多出 `Custom model` 选项，用户可以直接填写模型 ID。
 
 ## 新增供应商
 
@@ -75,7 +86,7 @@ ModelSpec(
    `connection` 里不写 `key_json` / `key_env` 时，key 只能在节点中填写。第三方中转应保持这样，避免把官方 key 发给第三方。
 
 2. 在 `provider_nodes.py` 中加一个 `ProviderNode` 子类，并在 `llm/__init__.py` 中导出。
-3. 如果这个渠道上的模型 ID 和官方不同，给相关 `ModelSpec` 的 `routes` 加上以该 `kind` 为键的路由。
+3. 如果这个渠道上的模型 ID 和官方不同，在相关模型 JSON 的 `routes` 里加上以该 `kind` 为键的路由。
 
 ### 全新的接口格式
 
@@ -105,7 +116,7 @@ async def run_example(provider: ProviderConfig, route: Route, request: Generatio
 
 ## 统一参数名
 
-模型声明使用下列参数名，各协议负责翻译成对应 API 的字段：
+模型 JSON 和系列声明使用下列参数名，各协议负责翻译成对应 API 的字段：
 
 | 参数 | 含义 |
 | --- | --- |

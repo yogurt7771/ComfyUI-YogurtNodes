@@ -1,0 +1,87 @@
+{
+  "models": [
+    {
+      "label": "Nano Banana 2.1",
+      "routes": {
+        "gemini": {"protocol": "gemini", "model": "gemini-nano-banana-2.1"},
+        "openrouter": {"protocol": "openrouter_images", "model": "google/gemini-nano-banana-2.1"}
+      },
+      "params": [
+        {"id": "aspect_ratio", "kind": "combo", "options": ["auto", "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9", "1:4", "4:1", "1:8", "8:1"], "tooltip": "'auto' follows the reference image, or the model default when there is none."},
+        {"id": "resolution", "kind": "combo", "options": ["1K", "2K", "4K"], "tooltip": "Output resolution."},
+        {"id": "thinking_level", "kind": "combo", "default": "MEDIUM", "options": ["MINIMAL", "MEDIUM", "HIGH"], "tooltip": "How much the model reasons before answering; higher is slower and costs more tokens."},
+        {"id": "response_modalities", "kind": "combo", "options": ["IMAGE", "IMAGE+TEXT"], "advanced": true, "tooltip": "IMAGE+TEXT also returns the model's text reply."}
+      ]
+    },
+    {
+      "label": "Nano Banana 2",
+      "routes": {
+        "gemini": {"protocol": "gemini", "model": "gemini-3.1-flash-image"},
+        "openrouter": {"protocol": "openrouter_images", "model": "google/gemini-3.1-flash-image"},
+        "grsai": {"protocol": "grsai_draw", "model": "nano-banana-2"}
+      },
+      "params": [
+        {"id": "aspect_ratio", "kind": "combo", "options": ["auto", "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9", "1:4", "4:1", "1:8", "8:1"], "tooltip": "'auto' follows the reference image, or the model default when there is none."},
+        {"id": "resolution", "kind": "combo", "options": ["1K", "2K", "4K"], "tooltip": "Output resolution."},
+        {"id": "thinking_level", "kind": "combo", "options": ["MINIMAL", "HIGH"], "tooltip": "How much the model reasons before answering; higher is slower and costs more tokens."},
+        {"id": "response_modalities", "kind": "combo", "options": ["IMAGE", "IMAGE+TEXT"], "advanced": true, "tooltip": "IMAGE+TEXT also returns the model's text reply."},
+        {"id": "temperature", "kind": "float", "default": 1.0, "min": 0.0, "max": 2.0, "step": 0.01, "advanced": true, "tooltip": "Sampling randomness."},
+        {"id": "top_p", "kind": "float", "default": 0.95, "min": 0.0, "max": 1.0, "step": 0.01, "advanced": true, "tooltip": "Nucleus sampling."}
+      ]
+    },
+    {
+      "label": "Nano Banana 2 Lite",
+      "routes": {
+        "gemini": {"protocol": "gemini", "model": "gemini-3.1-flash-lite-image"},
+        "openrouter": {"protocol": "openrouter_images", "model": "google/gemini-3.1-flash-lite-image"}
+      },
+      "params": [
+        {"id": "aspect_ratio", "kind": "combo", "options": ["auto", "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9", "1:4", "4:1", "1:8", "8:1"], "tooltip": "'auto' follows the reference image, or the model default when there is none."},
+        {"id": "resolution", "kind": "combo", "options": ["1K"], "tooltip": "Output resolution."},
+        {"id": "thinking_level", "kind": "combo", "options": ["MINIMAL", "HIGH"], "tooltip": "How much the model reasons before answering; higher is slower and costs more tokens."},
+        {"id": "response_modalities", "kind": "combo", "options": ["IMAGE", "IMAGE+TEXT"], "advanced": true, "tooltip": "IMAGE+TEXT also returns the model's text reply."},
+        {"id": "temperature", "kind": "float", "default": 1.0, "min": 0.0, "max": 2.0, "step": 0.01, "advanced": true, "tooltip": "Sampling randomness."},
+        {"id": "top_p", "kind": "float", "default": 0.95, "min": 0.0, "max": 1.0, "step": 0.01, "advanced": true, "tooltip": "Nucleus sampling."}
+      ]
+    },
+    {
+      "label": "Nano Banana Pro",
+      "routes": {
+        "gemini": {"protocol": "gemini", "model": "gemini-3-pro-image"},
+        "openrouter": {"protocol": "openrouter_images", "model": "google/gemini-3-pro-image"},
+        "grsai": {"protocol": "grsai_draw", "model": "nano-banana-pro"}
+      },
+      "params": [
+        {"id": "aspect_ratio", "kind": "combo", "options": ["auto", "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"], "tooltip": "'auto' follows the reference image, or the model default when there is none."},
+        {"id": "resolution", "kind": "combo", "options": ["1K", "2K", "4K"], "tooltip": "Output resolution."},
+        {"id": "response_modalities", "kind": "combo", "default": "IMAGE+TEXT", "options": ["IMAGE", "IMAGE+TEXT"], "advanced": true, "tooltip": "IMAGE+TEXT also returns the model's text reply."},
+        {"id": "temperature", "kind": "float", "default": 1.0, "min": 0.0, "max": 2.0, "step": 0.01, "advanced": true, "tooltip": "Sampling randomness."},
+        {"id": "top_p", "kind": "float", "default": 0.95, "min": 0.0, "max": 1.0, "step": 0.01, "advanced": true, "tooltip": "Nucleus sampling."}
+      ]
+    },
+    {
+      "label": "Nano Banana",
+      "routes": {
+        "gemini": {"protocol": "gemini", "model": "gemini-2.5-flash-image"},
+        "openrouter": {"protocol": "openrouter_images", "model": "google/gemini-2.5-flash-image"},
+        "grsai": {"protocol": "grsai_draw", "model": "nano-banana"}
+      },
+      "params": [
+        {"id": "aspect_ratio", "kind": "combo", "options": ["auto", "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"], "tooltip": "'auto' follows the reference image, or the model default when there is none."},
+        {"id": "response_modalities", "kind": "combo", "default": "IMAGE+TEXT", "options": ["IMAGE", "IMAGE+TEXT"], "advanced": true, "tooltip": "IMAGE+TEXT also returns the model's text reply."},
+        {"id": "temperature", "kind": "float", "default": 1.0, "min": 0.0, "max": 2.0, "step": 0.01, "advanced": true, "tooltip": "Sampling randomness."},
+        {"id": "top_p", "kind": "float", "default": 0.95, "min": 0.0, "max": 1.0, "step": 0.01, "advanced": true, "tooltip": "Nucleus sampling."}
+      ]
+    }
+  ],
+  "custom_model": {
+    "params": [
+      {"id": "aspect_ratio", "kind": "combo", "options": ["auto", "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9", "1:4", "4:1", "1:8", "8:1"], "tooltip": "'auto' follows the reference image, or the model default when there is none."},
+      {"id": "resolution", "kind": "combo", "options": ["auto", "1K", "2K", "4K"], "tooltip": "Output resolution."},
+      {"id": "thinking_level", "kind": "combo", "options": ["AUTO", "MINIMAL", "LOW", "MEDIUM", "HIGH"], "tooltip": "How much the model reasons before answering; higher is slower and costs more tokens."},
+      {"id": "response_modalities", "kind": "combo", "default": "IMAGE+TEXT", "options": ["IMAGE", "IMAGE+TEXT"], "advanced": true, "tooltip": "IMAGE+TEXT also returns the model's text reply."},
+      {"id": "temperature", "kind": "float", "default": 1.0, "min": 0.0, "max": 2.0, "step": 0.01, "advanced": true, "tooltip": "Sampling randomness."},
+      {"id": "top_p", "kind": "float", "default": 0.95, "min": 0.0, "max": 1.0, "step": 0.01, "advanced": true, "tooltip": "Nucleus sampling."}
+    ]
+  }
+}
