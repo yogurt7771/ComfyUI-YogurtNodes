@@ -1,14 +1,14 @@
 import { app } from "../../../scripts/app.js";
 
-// The frontend's upload-combo picker (FormDropdownMenuItem) renders audio files as
-// <img src="/api/view?filename=...">, which shows a broken image. Swap those tiles for a
-// play/pause button that streams the same URL through one shared <audio> element.
+// The frontend's upload-combo picker (FormDropdownMenuItem) renders audio-kind items as
+// <img src="/api/view?filename=...">, which shows a broken image for every audio or video file.
+// Swap those tiles for a play/pause button: audio files stream through one shared <audio>
+// element, video files get their own <video> that shows a frame and plays in the tile.
 
-const PLAYABLE_EXTENSIONS = new Set([
-    "mp3", "wav", "flac", "ogg", "oga", "opus", "m4a", "aac", "weba", "webm", "mp4", "m4v", "mov",
-]);
+const AUDIO_EXTENSIONS = new Set(["mp3", "wav", "flac", "ogg", "oga", "opus", "m4a", "aac", "weba"]);
+const VIDEO_EXTENSIONS = new Set(["mp4", "m4v", "mov", "webm", "mkv"]);
 const ITEM_IMAGE = '[data-testid="form-dropdown-menu"] img';
-const BUTTON_CLASS = "yogurt-audio-preview";
+const TILE_CLASS = "yogurt-audio-preview";
 
 const ICONS = {
     play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14z"/></svg>',
@@ -16,17 +16,15 @@ const ICONS = {
     error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
 };
 
-const player = new Audio();
-player.preload = "none";
-let activeButton = null;
+const audioPlayer = new Audio();
+audioPlayer.preload = "none";
+let activeTile = null;
 
 app.registerExtension({
     name: "YogurtNodes.AudioPickerPreview",
     setup() {
         injectStyle();
-        player.addEventListener("ended", () => setState(activeButton, "play"));
-        player.addEventListener("error", () => setState(activeButton, "error"));
-        player.addEventListener("timeupdate", updateProgress);
+        watchMedia(audioPlayer);
 
         new MutationObserver((records) => {
             for (const record of records) {
@@ -38,7 +36,7 @@ app.registerExtension({
                     }
                 }
             }
-            if (activeButton && !activeButton.isConnected) stop();
+            if (activeTile && !activeTile.isConnected) stop();
         }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["src"] });
         scan(document.body);
     },
@@ -52,114 +50,143 @@ function scan(root) {
 function enhance(img) {
     const container = img.parentElement;
     if (!container) return;
-    let button = container.querySelector(`:scope > .${BUTTON_CLASS}`);
+    let tile = container.querySelector(`:scope > .${TILE_CLASS}`);
+    const kind = mediaKind(img.src);
 
     // Vue reuses item elements when the list is filtered, so the same <img> can switch files.
-    if (!isPlayable(img.src)) {
+    if (tile && (tile.dataset.kind !== kind || tile.dataset.src !== img.src)) {
+        if (tile === activeTile) stop();
+        tile.remove();
+        tile = null;
+    }
+    if (!kind) {
         img.style.display = "";
-        if (button === activeButton) stop();
-        button?.remove();
         return;
     }
     img.style.display = "none";
-    if (!button) {
-        button = createButton();
-        container.appendChild(button);
-    }
-    if (button.dataset.src !== img.src) {
-        if (button === activeButton) stop();
-        button.dataset.src = img.src;
-        setState(button, "play");
-    }
+    if (!tile) container.appendChild(createTile(img.src, kind));
 }
 
-function isPlayable(src) {
+function mediaKind(src) {
     let name = "";
     try {
         name = new URL(src, location.href).searchParams.get("filename") || "";
     } catch {
-        return false;
+        return null;
     }
-    const dot = name.lastIndexOf(".");
-    return dot !== -1 && PLAYABLE_EXTENSIONS.has(name.slice(dot + 1).toLowerCase());
+    const extension = name.slice(name.lastIndexOf(".") + 1).toLowerCase();
+    if (!name.includes(".")) return null;
+    if (VIDEO_EXTENSIONS.has(extension)) return "video";
+    if (AUDIO_EXTENSIONS.has(extension)) return "audio";
+    return null;
 }
 
-function createButton() {
-    const button = document.createElement("div");
-    button.className = BUTTON_CLASS;
-    button.innerHTML = `<button type="button"></button><div class="${BUTTON_CLASS}-progress"></div>`;
-    const toggleButton = button.querySelector("button");
+function createTile(src, kind) {
+    const tile = document.createElement("div");
+    tile.className = TILE_CLASS;
+    tile.dataset.src = src;
+    tile.dataset.kind = kind;
+    if (kind === "video") {
+        const video = document.createElement("video");
+        video.preload = "metadata";
+        video.playsInline = true;
+        // A fragment past 0 makes the browser decode a real frame instead of a blank first one.
+        video.src = `${src}#t=0.1`;
+        watchMedia(video);
+        tile.appendChild(video);
+        tile.media = video;
+    } else {
+        tile.media = audioPlayer;
+    }
+    tile.insertAdjacentHTML("beforeend", `<button type="button"></button><div class="${TILE_CLASS}-progress"></div>`);
+
+    const button = tile.querySelector("button");
     // Keep the click from reaching the dropdown item, which would select the file and close the menu.
     for (const type of ["pointerdown", "mousedown"]) {
-        toggleButton.addEventListener(type, (event) => event.stopPropagation());
+        button.addEventListener(type, (event) => event.stopPropagation());
     }
-    toggleButton.addEventListener("click", (event) => {
+    button.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
-        toggle(button);
+        toggle(tile);
     });
-    return button;
+    setState(tile, "play");
+    return tile;
 }
 
-function toggle(button) {
-    if (button === activeButton && !player.paused) {
-        player.pause();
-        setState(button, "play");
+function watchMedia(media) {
+    const ifActive = (handler) => () => {
+        if (activeTile?.media === media) handler(activeTile);
+    };
+    media.addEventListener("ended", ifActive((tile) => setState(tile, "play")));
+    media.addEventListener("error", ifActive((tile) => setState(tile, "error")));
+    media.addEventListener(
+        "timeupdate",
+        ifActive((tile) => media.duration && setProgress(tile, media.currentTime / media.duration))
+    );
+}
+
+function toggle(tile) {
+    const media = tile.media;
+    if (tile === activeTile && !media.paused) {
+        media.pause();
+        setState(tile, "play");
         return;
     }
-    if (button !== activeButton) {
+    if (tile !== activeTile) {
         stop();
-        activeButton = button;
-        player.src = button.dataset.src;
+        activeTile = tile;
+        if (media === audioPlayer) audioPlayer.src = tile.dataset.src;
     }
-    setState(button, "pause");
-    player.play().catch((error) => {
-        if (error.name !== "AbortError") setState(button, "error");
+    setState(tile, "pause");
+    media.play().catch((error) => {
+        if (error.name !== "AbortError") setState(tile, "error");
     });
 }
 
 function stop() {
-    player.pause();
-    if (activeButton) {
-        setState(activeButton, "play");
-        setProgress(activeButton, 0);
-    }
-    activeButton = null;
+    if (!activeTile) return;
+    const media = activeTile.media;
+    media.pause();
+    if (media !== audioPlayer) media.currentTime = 0.1;
+    setState(activeTile, "play");
+    setProgress(activeTile, 0);
+    activeTile = null;
 }
 
-function setState(button, state) {
-    if (!button) return;
-    const toggleButton = button.querySelector("button");
-    toggleButton.innerHTML = ICONS[state];
-    toggleButton.title = state === "pause" ? "Pause" : state === "error" ? "Cannot play this file" : "Play";
-    button.dataset.state = state;
+function setState(tile, state) {
+    const button = tile.querySelector("button");
+    button.innerHTML = ICONS[state];
+    button.title = state === "pause" ? "Pause" : state === "error" ? "Cannot play this file" : "Play";
+    tile.dataset.state = state;
 }
 
-function updateProgress() {
-    if (activeButton && player.duration) setProgress(activeButton, player.currentTime / player.duration);
-}
-
-function setProgress(button, fraction) {
-    button.querySelector(`.${BUTTON_CLASS}-progress`).style.width = `${fraction * 100}%`;
+function setProgress(tile, fraction) {
+    tile.querySelector(`.${TILE_CLASS}-progress`).style.width = `${fraction * 100}%`;
 }
 
 function injectStyle() {
     const style = document.createElement("style");
     style.textContent = `
-.${BUTTON_CLASS} {
+.${TILE_CLASS} {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
     background: linear-gradient(to top right, #60a5fa, #14b8a6, #4ade80);
 }
-.${BUTTON_CLASS} > button {
+.${TILE_CLASS}[data-kind="video"] { background: #000; }
+.${TILE_CLASS} > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.${TILE_CLASS} > button {
+    position: relative;
     width: 42%; height: 42%; min-width: 24px; min-height: 24px; max-width: 64px; max-height: 64px;
     display: flex; align-items: center; justify-content: center; padding: 0;
     border: none; border-radius: 9999px; cursor: pointer;
-    background: rgba(0, 0, 0, 0.55); color: #fff; transition: background 0.15s, transform 0.15s;
+    background: rgba(0, 0, 0, 0.55); color: #fff; transition: background 0.15s, transform 0.15s, opacity 0.15s;
 }
-.${BUTTON_CLASS} > button:hover { background: rgba(0, 0, 0, 0.75); transform: scale(1.08); }
-.${BUTTON_CLASS} > button svg { width: 50%; height: 50%; }
-.${BUTTON_CLASS}[data-state="error"] > button { background: rgba(185, 28, 28, 0.8); }
-.${BUTTON_CLASS}-progress {
+.${TILE_CLASS} > button:hover { background: rgba(0, 0, 0, 0.75); transform: scale(1.08); }
+.${TILE_CLASS} > button svg { width: 50%; height: 50%; }
+.${TILE_CLASS}[data-kind="video"][data-state="pause"] > button { opacity: 0; }
+.${TILE_CLASS}[data-kind="video"][data-state="pause"]:hover > button { opacity: 1; }
+.${TILE_CLASS}[data-state="error"] > button { background: rgba(185, 28, 28, 0.8); }
+.${TILE_CLASS}-progress {
     position: absolute; left: 0; bottom: 0; height: 3px; width: 0; background: #fff; opacity: 0.9;
 }`;
     document.head.appendChild(style);
